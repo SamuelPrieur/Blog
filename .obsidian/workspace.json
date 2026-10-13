@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "posts/Premier Article.md",
+                "file": "posts/Article Court.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Premier Article"
+              "title": "Article Court"
             }
           }
         ]
@@ -99,7 +99,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "posts/Premier Article.md",
+                "file": "posts/Article Court.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -143,7 +143,7 @@
             "state": {
               "type": "file-properties",
               "state": {
-                "file": "posts/Premier Article.md"
+                "file": "posts/Article Court.md"
               },
               "icon": "lucide-info",
               "title": "Propriétés du fichier"
@@ -193,7 +193,7 @@
             }
           }
         ],
-        "currentTab": 3
+        "currentTab": 2
       }
     ],
     "direction": "horizontal",
@@ -201,9 +201,9 @@
   },
   "left-ribbon": {
     "hiddenItems": {
+      "canvas:Créer un nouveau canvas": false,
       "switcher:Ouvrir le sélecteur rapide": false,
       "graph:Ouvrir la vue graphique": false,
-      "canvas:Créer une nouvelle toile": false,
       "daily-notes:Ouvrir la note quotidienne": false,
       "templates:Insérer le modèle": false,
       "command-palette:Ouvrir la palette de commandes": false,
@@ -211,10 +211,17 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "5e7e953a1f2166d3",
+  "active": "b1228650643d5339",
   "lastOpenFiles": [
-    "Blog",
+    "2026-10-13.md",
+    "posts/Article Court.md",
+    "posts/dark-mode.md",
+    "posts/astuces-css.md",
+    "posts/animations-gsap.md",
+    "posts/setup-react-vite.md",
     "posts/Premier Article.md",
+    "posts/Premier Article 1.md",
+    "Blog",
     "Bienvenue.md",
     "posts"
   ]
