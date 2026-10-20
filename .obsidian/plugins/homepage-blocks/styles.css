@@ -1,0 +1,3846 @@
+/* ── GridStack Core CSS (bundled from gridstack/dist/gridstack.min.css) ── */
+.grid-stack{position:relative}.grid-stack-rtl{direction:ltr}.grid-stack-rtl>.grid-stack-item{direction:rtl}.grid-stack-placeholder>.placeholder-content{background-color:rgba(0,0,0,.1);margin:0;position:absolute;width:auto;z-index:0!important}.grid-stack>.grid-stack-item{position:absolute;padding:0;top:0;left:0;width:var(--gs-column-width);height:var(--gs-cell-height)}.grid-stack>.grid-stack-item>.grid-stack-item-content{margin:0;position:absolute;width:auto;overflow-x:hidden;overflow-y:auto}.grid-stack>.grid-stack-item.size-to-content:not(.size-to-content-max)>.grid-stack-item-content{overflow-y:hidden}.grid-stack>.grid-stack-item>.grid-stack-item-content,.grid-stack>.grid-stack-placeholder>.placeholder-content{top:var(--gs-item-margin-top);right:var(--gs-item-margin-right);bottom:var(--gs-item-margin-bottom);left:var(--gs-item-margin-left)}.grid-stack-item>.ui-resizable-handle{position:absolute;font-size:.1px;display:block;-ms-touch-action:none;touch-action:none}.grid-stack-item.ui-resizable-autohide>.ui-resizable-handle,.grid-stack-item.ui-resizable-disabled>.ui-resizable-handle{display:none}.grid-stack-item>.ui-resizable-ne,.grid-stack-item>.ui-resizable-nw,.grid-stack-item>.ui-resizable-se,.grid-stack-item>.ui-resizable-sw{background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="%23666" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 20 20"><path d="m10 3 2 2H8l2-2v14l-2-2h4l-2 2"/></svg>');background-repeat:no-repeat;background-position:center}.grid-stack-item>.ui-resizable-ne{transform:rotate(45deg)}.grid-stack-item>.ui-resizable-sw{transform:rotate(45deg)}.grid-stack-item>.ui-resizable-nw{transform:rotate(-45deg)}.grid-stack-item>.ui-resizable-se{transform:rotate(-45deg)}.grid-stack-item>.ui-resizable-nw{cursor:nw-resize;width:20px;height:20px;top:var(--gs-item-margin-top);left:var(--gs-item-margin-left)}.grid-stack-item>.ui-resizable-n{cursor:n-resize;height:10px;top:var(--gs-item-margin-top);left:25px;right:25px}.grid-stack-item>.ui-resizable-ne{cursor:ne-resize;width:20px;height:20px;top:var(--gs-item-margin-top);right:var(--gs-item-margin-right)}.grid-stack-item>.ui-resizable-e{cursor:e-resize;width:10px;top:15px;bottom:15px;right:var(--gs-item-margin-right)}.grid-stack-item>.ui-resizable-se{cursor:se-resize;width:20px;height:20px;bottom:var(--gs-item-margin-bottom);right:var(--gs-item-margin-right)}.grid-stack-item>.ui-resizable-s{cursor:s-resize;height:10px;left:25px;bottom:var(--gs-item-margin-bottom);right:25px}.grid-stack-item>.ui-resizable-sw{cursor:sw-resize;width:20px;height:20px;bottom:var(--gs-item-margin-bottom);left:var(--gs-item-margin-left)}.grid-stack-item>.ui-resizable-w{cursor:w-resize;width:10px;top:15px;bottom:15px;left:var(--gs-item-margin-left)}.grid-stack-item.ui-draggable-dragging>.ui-resizable-handle{display:none!important}.grid-stack-item.ui-draggable-dragging{will-change:left,top}.grid-stack-item.ui-resizable-resizing{will-change:width,height}.ui-draggable-dragging,.ui-resizable-resizing{z-index:10000}.ui-draggable-dragging>.grid-stack-item-content,.ui-resizable-resizing>.grid-stack-item-content{box-shadow:1px 4px 6px rgba(0,0,0,.2);opacity:.8}.grid-stack-animate,.grid-stack-animate .grid-stack-item{transition:left .3s,top .3s,height .3s,width .3s}.grid-stack-animate .grid-stack-item.grid-stack-placeholder,.grid-stack-animate .grid-stack-item.ui-draggable-dragging,.grid-stack-animate .grid-stack-item.ui-resizable-resizing{transition:left 0s,top 0s,height 0s,width 0s}.grid-stack>.grid-stack-item[gs-y="0"]{top:0}.grid-stack>.grid-stack-item[gs-x="0"]{left:0}
+
+/* ── Homepage View & Design Tokens ────────────────────────── */
+/* Override in snippets/homepage.css via .homepage-view { ... } */
+.homepage-view {
+  --hp-padding: clamp(8px, 1.5cqi, 16px);
+  --hp-card-padding: clamp(6px, 1.5cqi, 12px);
+  --hp-content-max-width: 1400px;
+
+  /* ── Design tokens ──────────────────────────────────────
+     A single scale for spacing, motion and elevation so the UI reads as
+     authored rather than hand-tuned. Prefer these over ad-hoc literals. */
+  /* Spacing (8px rhythm) */
+  --hp-space-1: 2px;
+  --hp-space-2: 4px;
+  --hp-space-3: 8px;
+  --hp-space-4: 12px;
+  --hp-space-5: 16px;
+  --hp-space-6: 24px;
+  /* Motion */
+  --hp-dur-fast: 0.12s;
+  --hp-dur-base: 0.2s;
+  --hp-dur-slow: 0.3s;
+  --hp-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --hp-ease-out: ease-out;
+  /* Elevation — single source of truth for the .block-elevation-* presets
+     and every transient shadow (hover, drag, popovers). */
+  --hp-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --hp-elevation-2: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --hp-elevation-3: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.08);
+  --hp-elevation-drag: 0 16px 40px rgba(0, 0, 0, 0.28), 0 6px 16px rgba(0, 0, 0, 0.2);
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  container-type: inline-size;
+  container-name: homepage;
+  position: relative;
+}
+
+/* ── GridStack Overrides ───────────────────────────────── */
+.homepage-grid.grid-stack {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  padding: var(--hp-padding);
+  max-width: var(--hp-content-max-width);
+  width: 100%;
+  box-sizing: border-box;
+  margin-inline: auto;
+  line-height: 1.5;
+  scroll-padding-top: 8px;
+}
+
+/* The .grid-stack-item-content is our card container */
+.homepage-grid .grid-stack-item-content {
+  overflow: visible;
+}
+
+/* GridStack placeholder during drag */
+.homepage-grid .grid-stack-placeholder > .placeholder-content {
+  border: 2px dashed var(--color-accent);
+  border-radius: var(--radius-m, 8px);
+  background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+}
+
+/* GridStack resize handles */
+.homepage-grid .ui-resizable-handle {
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+  z-index: 10;
+}
+
+/* South (bottom) handle — full-width strip */
+.homepage-grid .ui-resizable-s {
+  height: 8px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  cursor: s-resize;
+}
+
+/* East (right) handle — full-height strip */
+.homepage-grid .ui-resizable-e {
+  width: 8px;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  cursor: e-resize;
+}
+
+/* South-East corner handle */
+.homepage-grid .ui-resizable-se {
+  width: 20px;
+  height: 20px;
+  bottom: 4px;
+  right: 4px;
+  cursor: se-resize;
+}
+
+/* Show handles in edit mode */
+.homepage-grid.edit-mode .ui-resizable-handle {
+  opacity: 0.5;
+}
+
+.homepage-grid.edit-mode .grid-stack-item:hover .ui-resizable-handle {
+  opacity: 1;
+}
+
+/* Hide resize handles when not in edit mode.
+   Outspecifies GridStack's `.grid-stack-item>.ui-resizable-handle` (0,2,0);
+   GridStack never sets display inline, so no !important needed. */
+.homepage-grid:not(.edit-mode) .ui-resizable-handle {
+  display: none;
+}
+
+/* ── Block Card ─────────────────────────────────────────── */
+.homepage-block-wrapper {
+  background: var(--background-secondary);
+  border-radius: var(--hp-border-radius, var(--radius-m, 8px));
+  padding: var(--hp-card-padding);
+  border-width: var(--hp-border-width, 1px);
+  border-style: var(--hp-border-style, solid);
+  border-color: var(--background-modifier-border);
+  box-shadow: none;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--hp-title-gap, 8px);
+  height: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  container-type: inline-size;
+  backdrop-filter: var(--hp-backdrop-blur, none);
+  -webkit-backdrop-filter: var(--hp-backdrop-blur, none);
+  transition:
+    opacity 0.15s ease-out,
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.2s ease-out,
+    box-shadow 0.2s ease-out;
+}
+
+/* Staggered card entry — animation-delay set via --hp-card-anim-delay custom property */
+.homepage-grid--animating .homepage-block-wrapper {
+  animation: hp-card-enter 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation-delay: var(--hp-card-anim-delay, 0ms);
+}
+
+@keyframes hp-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.homepage-block-wrapper:hover {
+  border-color: var(--background-modifier-border-hover, var(--background-modifier-border));
+}
+
+/* Hover highlight (opt-in via settings) — subtly lifts the card on mouseover. */
+.homepage-hover-highlight .homepage-block-wrapper:hover {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+/* Edit mode owns its own visual language (dashed accent border, drag handles) —
+   don't layer the passive hover shadow on top. */
+.homepage-hover-highlight .homepage-grid.edit-mode .homepage-block-wrapper:hover {
+  box-shadow: none;
+}
+
+/* ── Accent Color ────────────────────────────────────────── */
+/* A single --block-accent color derives the entire card palette.
+   --block-accent-pct sets the background tint strength (default 15%).
+   All other derived values scale proportionally.
+   Using srgb to avoid oklch hue shifts (e.g. yellow -> green).
+   Darkened control variant (40% black mix) keeps controls visible on
+   accent-tinted backgrounds -- light accents like yellow need this. */
+.block-accented {
+  --_ap: var(--block-accent-pct, 15%);
+  --_accent-bg: color-mix(in srgb, var(--block-accent) var(--_ap), var(--background-secondary));
+  --_accent-border: color-mix(in srgb, var(--block-accent) 50%, var(--background-modifier-border));
+  --_accent-border-hover: color-mix(in srgb, var(--block-accent) 70%, var(--background-modifier-border));
+  --_accent-header-bg: color-mix(in srgb, var(--block-accent) 22%, transparent);
+  --_accent-header-text: color-mix(in srgb, var(--block-accent) 85%, var(--text-normal));
+  --_accent-divider: color-mix(in srgb, var(--block-accent) 40%, var(--background-modifier-border));
+  --_ctrl: color-mix(in srgb, var(--block-accent) 60%, black);
+  --_ctrl-hover: color-mix(in srgb, var(--block-accent) 50%, black);
+  background: var(--_accent-bg);
+  border-color: var(--_accent-border);
+  --interactive-accent: var(--_ctrl);
+  --interactive-accent-hover: var(--_ctrl-hover);
+  --color-accent: var(--_ctrl);
+  --color-accent-1: color-mix(in srgb, var(--_ctrl) 90%, white);
+  --color-accent-2: var(--_ctrl);
+  --text-accent: var(--_ctrl);
+  --text-accent-hover: var(--_ctrl-hover);
+  --checkbox-color: var(--_ctrl);
+  --checkbox-color-hover: var(--_ctrl-hover);
+}
+
+.block-accented:hover {
+  border-color: var(--_accent-border-hover);
+}
+
+.block-accented .block-header-zone {
+  background: var(--_accent-header-bg);
+  border-radius: var(--radius-s, 4px);
+  margin: -4px -6px 0;
+  padding: 4px 6px;
+}
+
+.block-accented .block-header {
+  color: var(--_accent-header-text);
+}
+
+.block-accented .block-header-divider {
+  background: var(--_accent-divider);
+}
+
+/* Bright accent: force dark text so content stays readable on light/bright backgrounds.
+   Scoped to .theme-dark only — on light themes --text-normal is already dark and
+   the card background (dark bg + bright accent) is already light enough. */
+.theme-dark .block-accented.block-bright-accent {
+  --_bright-text: #1a1a1a;
+  --_bright-interactive: color-mix(in srgb, var(--block-accent) 50%, black);
+  --_bright-interactive-hover: color-mix(in srgb, var(--block-accent) 40%, black);
+  --text-normal: var(--_bright-text);
+  --text-muted: rgba(0, 0, 0, 0.6);
+  --text-faint: rgba(0, 0, 0, 0.5);
+  /* Override accent-derived control colors so links, checkboxes, and interactive
+     elements stay distinguishable from body text on the bright card background. */
+  --_ctrl: var(--_bright-interactive);
+  --_ctrl-hover: var(--_bright-interactive-hover);
+  --interactive-accent: var(--_bright-interactive);
+  --interactive-accent-hover: var(--_bright-interactive-hover);
+  --color-accent: var(--_bright-interactive);
+  --color-accent-1: var(--_bright-interactive-hover);
+  --color-accent-2: var(--_bright-interactive);
+  --text-accent: var(--_bright-interactive);
+  --text-accent-hover: var(--_bright-interactive-hover);
+  --checkbox-color: var(--_bright-interactive);
+  --checkbox-color-hover: var(--_bright-interactive-hover);
+  /* Header text: override the accent-derived mix so it stays dark on the tinted bg */
+  --_accent-header-text: var(--_bright-text);
+}
+
+/* Re-assert overrides on .block-content and .markdown-rendered so Obsidian theme
+   rules (e.g. .theme-dark .markdown-rendered { --text-normal: #dcddde }) that
+   re-declare variables on an intermediate element cannot shadow our overrides. */
+.theme-dark .block-accented.block-bright-accent .block-content,
+.theme-dark .block-accented.block-bright-accent .markdown-rendered {
+  --text-normal: var(--_bright-text);
+  --text-muted: rgba(0, 0, 0, 0.6);
+  --text-faint: rgba(0, 0, 0, 0.5);
+  --text-accent: var(--_bright-interactive);
+  --text-accent-hover: var(--_bright-interactive-hover);
+  --color-accent: var(--_bright-interactive);
+  --interactive-accent: var(--_bright-interactive);
+  --interactive-accent-hover: var(--_bright-interactive-hover);
+  --checkbox-color: var(--_bright-interactive);
+  --checkbox-color-hover: var(--_bright-interactive-hover);
+  --link-color: var(--_bright-interactive);
+  --link-color-hover: var(--_bright-interactive-hover);
+  --hr-color: rgba(0, 0, 0, 0.2);
+  color: var(--_bright-text);
+}
+
+/* Force direct color on task items and links inside bright-accent MarkdownRenderer
+   in case theme applies color via a more specific selector. */
+.theme-dark .block-accented.block-bright-accent .task-list-item {
+  color: var(--_bright-text);
+}
+.theme-dark .block-accented.block-bright-accent .task-list-item.is-checked {
+  color: rgba(0, 0, 0, 0.5);
+}
+.theme-dark .block-accented.block-bright-accent a {
+  color: var(--_bright-interactive);
+}
+.theme-dark .block-accented.block-bright-accent hr {
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Hide header accent — keep card border/bg tint but neutralize header zone */
+.block-accented.block-no-header-accent .block-header-zone {
+  background: transparent;
+  margin: 0 -4px;
+  padding: 2px 4px;
+}
+.block-accented.block-no-header-accent .block-header {
+  color: var(--text-normal);
+}
+
+/* ── Preset color swatches ─────────────────────────────── */
+.accent-preset-row {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0 12px;
+  flex-wrap: wrap;
+}
+
+.accent-preset-swatch {
+  /* Rendered as a <button> for keyboard access — reset the UA button chrome. */
+  appearance: none;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: var(--hp-swatch-bg);
+  transition: transform 0.12s ease-out, border-color 0.12s ease-out, box-shadow 0.12s ease-out;
+}
+
+.accent-preset-swatch:hover {
+  transform: scale(1.2);
+  border-color: var(--text-normal);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Live preview card in block settings modal */
+.settings-preview-card {
+  margin: 0 0 16px;
+  pointer-events: none;
+  transition: background 0.15s, border-color 0.15s, padding 0.15s;
+}
+
+.settings-preview-body {
+  padding: 12px 0 4px;
+}
+
+.settings-preview-body-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── Granular visibility flags ──────────────────────────── */
+.homepage-block-wrapper.block-no-border,
+.homepage-block-wrapper.block-no-border:hover,
+.homepage-block-wrapper.block-no-border.block-accented,
+.homepage-block-wrapper.block-no-border.block-accented:hover {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.homepage-block-wrapper.block-no-background,
+.homepage-block-wrapper.block-no-background:hover,
+.homepage-block-wrapper.block-no-background.block-accented,
+.homepage-block-wrapper.block-no-background.block-accented:hover {
+  background: transparent;
+}
+
+.homepage-block-wrapper.block-no-background.block-accented .block-header-zone {
+  background: transparent;
+  /* Keep same margin/padding as accented state — removing them would change
+     header zone height, shifting block-content dimensions and flipping
+     container query breakpoints (layout jump on background toggle). */
+}
+
+.homepage-view.homepage-no-scrollbar,
+.homepage-view.homepage-no-scrollbar * {
+  scrollbar-width: none;           /* Firefox */
+}
+.homepage-view.homepage-no-scrollbar::-webkit-scrollbar,
+.homepage-view.homepage-no-scrollbar *::-webkit-scrollbar {
+  display: none;                   /* Chrome / Safari / Electron */
+}
+
+.block-content {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Block Header / Label ───────────────────────────────── */
+.block-header {
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-normal);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.block-header-h1 {
+  font-size: var(--h1-size, 2.4rem);
+  font-weight: var(--h1-weight, 700);
+  line-height: var(--h1-line-height, 1.2);
+  letter-spacing: -0.015em;
+  font-style: var(--h1-style, normal);
+  font-family: var(--h1-font, inherit);
+  color: var(--h1-color, var(--text-normal));
+}
+.block-header-h2 {
+  font-size: var(--h2-size, 1.9rem);
+  font-weight: var(--h2-weight, 600);
+  line-height: var(--h2-line-height, 1.3);
+  font-style: var(--h2-style, normal);
+  font-family: var(--h2-font, inherit);
+  color: var(--h2-color, var(--text-normal));
+}
+.block-header-h3 {
+  font-size: var(--h3-size, 1.5rem);
+  font-weight: var(--h3-weight, 600);
+  line-height: var(--h3-line-height, 1.4);
+  font-style: var(--h3-style, normal);
+  font-family: var(--h3-font, inherit);
+  color: var(--h3-color, var(--text-normal));
+}
+.block-header-h4 {
+  font-size: var(--h4-size, 1.25rem);
+  font-weight: var(--h4-weight, 600);
+  line-height: var(--h4-line-height, 1.5);
+  font-style: var(--h4-style, normal);
+  font-family: var(--h4-font, inherit);
+  color: var(--h4-color, var(--text-normal));
+}
+.block-header-h5 {
+  font-size: var(--h5-size, 1.05rem);
+  font-weight: var(--h5-weight, 600);
+  line-height: var(--h5-line-height, 1.5);
+  font-style: var(--h5-style, normal);
+  font-family: var(--h5-font, inherit);
+  color: var(--h5-color, var(--text-normal));
+}
+.block-header-h6 {
+  font-size: var(--h6-size, 0.95rem);
+  font-weight: var(--h6-weight, 400);
+  line-height: var(--h6-line-height, 1.5);
+  font-style: var(--h6-style, normal);
+  font-family: var(--h6-font, inherit);
+  color: var(--h6-color, var(--text-muted));
+}
+
+/* ── Block Header Divider ──────────────────────────────── */
+.block-header-divider {
+  height: 1px;
+  background: var(--background-modifier-border);
+  margin: 4px 0 8px 0;
+  flex-shrink: 0;
+}
+
+/* Hide divider when block is collapsed (content is hidden) */
+.homepage-block-wrapper.block-collapsed .block-header-divider {
+  display: none;
+}
+
+/* Hide divider in edit mode (compact placeholder, no real content) */
+.edit-mode .block-header-divider {
+  display: none;
+}
+
+/* ── Homepage-level Empty State ─────────────────────────── */
+.homepage-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(40px, 8cqi, 80px) clamp(16px, 4cqi, 32px);
+  color: var(--text-muted);
+  text-align: center;
+  gap: 16px;
+}
+
+.homepage-empty-state p {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.homepage-empty-icon {
+  font-size: 3rem;
+  line-height: 1;
+  opacity: 0.3;
+}
+
+.homepage-empty-state .homepage-empty-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin: 0;
+}
+
+.homepage-empty-state .homepage-empty-desc {
+  font-size: var(--font-interface-size, 0.8125rem);
+  margin: 0;
+  max-width: 320px;
+  line-height: 1.6;
+}
+
+.homepage-empty-cta {
+  margin-top: 8px;
+  background: var(--color-accent);
+  color: var(--text-on-accent, #fff);
+  border: none;
+  border-radius: var(--radius-m, 8px);
+  padding: 8px 20px;
+  min-height: 44px;
+  font-size: var(--font-interface-size, 0.8125rem);
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease-out;
+  box-shadow: none;
+}
+
+.homepage-empty-cta:hover {
+  opacity: 0.85;
+}
+
+.homepage-empty-cta:active {
+  transform: scale(0.97);
+}
+
+/* ── Block-level Empty Hint ────────────────────────────── */
+.block-empty-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.block-empty-hint-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  opacity: 0.4;
+}
+
+.block-empty-hint-text {
+  font-size: var(--font-interface-size, 0.8125rem);
+  line-height: 1.5;
+}
+
+/* Error variant of the empty-hint — a failed render reads as intentional. */
+.block-error-hint .block-empty-hint-icon {
+  color: var(--text-error);
+  opacity: 0.8;
+}
+.block-error-hint .block-empty-hint-text {
+  color: var(--text-muted);
+}
+
+/* ── Block Loading Placeholder ──────────────────────────── */
+.block-loading {
+  color: var(--text-muted);
+  font-size: var(--font-interface-size, 0.8125rem);
+  padding: 8px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.block-loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--color-accent) 8%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: hp-shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes hp-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Skeleton Loading Overlay ──────────────────────────── */
+.hp-skeleton-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: calc(var(--hp-card-padding) + var(--hp-title-gap, 8px) + 1.2em) var(--hp-card-padding) var(--hp-card-padding);
+  pointer-events: none;
+  border-radius: inherit;
+  background: var(--background-secondary);
+  transition: opacity 0.2s ease-out;
+}
+
+.hp-skeleton-overlay--out {
+  opacity: 0;
+}
+
+.hp-skeleton-line {
+  height: 12px;
+  border-radius: 6px;
+  background: var(--background-modifier-hover);
+  position: relative;
+  overflow: hidden;
+}
+
+.hp-skeleton-line:nth-child(1) { width: 75%; }
+.hp-skeleton-line:nth-child(2) { width: 55%; }
+.hp-skeleton-line:nth-child(3) { width: 65%; }
+
+.hp-skeleton-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--color-accent) 8%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: hp-shimmer 1.8s ease-in-out infinite;
+}
+
+.block-collapsed .hp-skeleton-overlay { display: none; }
+
+/* ── Greeting base (wide row) ──────────────────────────── */
+/* Wide card: emoji left, "Salut, Name" inline, time right.
+   Like the "1x4 Panoramic" reference — everything on one line. */
+.homepage-block-wrapper .block-content.greeting-block {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: auto;
+  gap: clamp(8px, 2cqi, 16px);
+  flex-wrap: wrap;
+  container-type: size;
+  height: 100%;
+}
+
+.greeting-emoji {
+  font-size: clamp(1.75rem, 5cqi, 3rem);
+  line-height: 1;
+  flex-shrink: 0;
+  transition: font-size 0.25s ease-out;
+}
+
+.greeting-name {
+  font-size: clamp(1.5rem, 4cqi, 2.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+  color: var(--text-normal);
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  transition: font-size 0.25s ease-out, gap 0.2s ease-out;
+}
+
+.greeting-salut {
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+  transition: font-size 0.25s ease-out, color 0.2s ease-out;
+}
+
+.greeting-user {
+  font-weight: 700;
+  color: var(--text-normal);
+  letter-spacing: -0.01em;
+  transition: font-size 0.25s ease-out;
+}
+
+.greeting-time {
+  font-size: 0.8125rem;
+  /* --text-faint already encodes the theme-calibrated muting; no extra opacity. */
+  color: var(--text-faint);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+  margin-left: auto;
+  transition: font-size 0.25s ease-out;
+}
+
+/* ── Greeting responsive ──────────────────────────────── */
+
+/* Vertical stack: emoji hero on top, salutation + bold name below.
+   Like "2x2 Block" and "1x2 Half-Width" references.
+   Triggers when card is narrow (< 350px).
+   Uses max(cqi, cqb) to scale with the LARGER dimension. */
+@container (max-width: 350px) {
+  .block-content.greeting-block {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: clamp(2px, 2cqb, 16px);
+    min-height: auto;
+    flex-wrap: nowrap;
+  }
+  .greeting-emoji {
+    font-size: clamp(2.5rem, max(25cqi, 18cqb), 5rem);
+    line-height: 1;
+  }
+  .greeting-name {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0px, 0.5cqb, 3px);
+    font-size: inherit;
+    white-space: normal;
+  }
+  .greeting-salut {
+    font-size: clamp(0.95rem, max(9cqi, 5.5cqb), 1.5rem);
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+    text-transform: none;
+    line-height: 1.2;
+  }
+  .greeting-user {
+    font-size: clamp(1.5rem, max(14cqi, 8cqb), 2.8rem);
+    font-weight: 700;
+    color: var(--text-normal);
+    letter-spacing: -0.015em;
+    line-height: 1.05;
+  }
+  .greeting-time {
+    font-size: clamp(0.65rem, max(4cqi, 2cqb), 0.85rem);
+    color: var(--text-faint);
+    letter-spacing: 0.06em;
+  }
+}
+
+/* Compact horizontal: forced row when card is short (< 200px tall).
+   Like "1x4 Panoramic" reference — emoji left, stacked salut/name right.
+   Declared AFTER the narrow query with equal specificity, so it wins by
+   source order when both match (small square card). Keep this block below
+   the max-width query. */
+@container (max-height: 200px) {
+  .block-content.greeting-block {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    flex-wrap: nowrap;
+    overflow-x: hidden;
+    gap: clamp(6px, 3cqi, 16px);
+  }
+  .greeting-name {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    gap: 0;
+  }
+  .greeting-salut {
+    font-size: clamp(0.85rem, max(5cqi, 20cqh), 1.4rem);
+    font-weight: 400;
+    color: var(--text-muted);
+    line-height: 1.15;
+    letter-spacing: 0.03em;
+  }
+  .greeting-user {
+    font-size: clamp(1.3rem, max(7cqi, 28cqh), 2.8rem);
+    font-weight: 700;
+    color: var(--text-normal);
+    letter-spacing: -0.015em;
+    line-height: 1.05;
+  }
+  .greeting-emoji {
+    font-size: clamp(2rem, max(10cqi, 50cqh), 4.5rem);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .greeting-time {
+    display: none;
+  }
+}
+
+/* ── Greeting emoji pool chips (settings modal) ────────── */
+.greeting-emoji-pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.greeting-emoji-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--background-modifier-hover);
+  border-radius: var(--radius-s, 4px);
+  padding: 2px 4px 2px 6px;
+  font-size: 1.2em;
+}
+
+.greeting-emoji-chip-del {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.7em;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.greeting-emoji-chip-del:hover {
+  color: var(--text-error);
+}
+
+.greeting-emoji-pool-add {
+  display: inline-flex;
+}
+
+/* ── Clock Block ────────────────────────────────────────── */
+.clock-block {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  container-type: size;
+}
+
+.clock-time {
+  font-size: var(--h3-size, 2rem);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  color: var(--text-normal);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.clock-date {
+  font-size: var(--font-interface-size, 0.8125rem);
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Clock styles */
+.clock-style-centered {
+  align-items: center;
+  text-align: center;
+}
+.clock-style-centered .clock-time {
+  font-size: 2.5rem;
+  font-weight: 200;
+}
+.clock-style-centered .clock-date {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.clock-style-large {
+  align-items: center;
+  text-align: center;
+}
+.clock-style-large .clock-time {
+  font-size: 3.75rem;
+  font-weight: 100;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.clock-style-large .clock-date {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-top: 8px;
+}
+
+.clock-style-accent .clock-time {
+  font-size: 2.25rem;
+  font-weight: 600;
+  color: var(--block-accent, var(--color-accent));
+}
+.clock-style-accent .clock-date {
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--block-accent, var(--color-accent)) 60%, var(--text-muted));
+  letter-spacing: 0.04em;
+}
+
+/* Clock: short card — scale time to fill height.
+   Wins over the .clock-style-* rules above by source order (equal
+   specificity) and, for the large variant, by specificity (0,3,0). */
+@container (max-height: 160px) {
+  .clock-block .clock-time {
+    font-size: clamp(1.4rem, 45cqh, 3rem);
+    line-height: 1;
+  }
+  .clock-block .clock-date {
+    font-size: clamp(0.6rem, 14cqh, 0.8rem);
+    margin-top: 2px;
+  }
+  .clock-block.clock-style-large .clock-time {
+    font-size: clamp(1.6rem, 55cqh, 4rem);
+  }
+}
+
+/* ── Folder Links Block ─────────────────────────────────── */
+.folder-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0 -6px;
+}
+
+.folder-link-item {
+  display: flex;
+  align-items: center;
+}
+
+.folder-links-align-left .folder-link-btn,
+.folder-links-align-center .folder-link-btn,
+.folder-links-align-right .folder-link-btn {
+  width: auto;
+  display: inline-flex;
+}
+
+.folder-links-align-center .folder-link-item {
+  justify-content: center;
+}
+
+.folder-links-align-right .folder-link-item {
+  justify-content: flex-end;
+}
+
+.folder-links-align-center .folder-link-btn:hover,
+.folder-links-align-right .folder-link-btn:hover {
+  transform: none;
+}
+
+.folder-link-btn {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: var(--text-normal);
+  font-size: var(--font-text-size, 0.875rem);
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border-radius: var(--radius-s, 4px);
+  transition:
+    background 0.12s ease-out,
+    color 0.12s ease-out,
+    transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: none;
+  text-decoration: none;
+}
+
+.folder-link-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-accent, var(--color-accent));
+  text-decoration: none;
+  transform: translateX(2px);
+}
+
+.folder-link-btn:active {
+  background: var(--background-modifier-active-hover, var(--background-modifier-hover));
+}
+
+.link-emoji {
+  font-size: 1em;
+  flex-shrink: 0;
+  opacity: 0.85;
+  transition: transform 0.15s ease-out;
+}
+
+.folder-link-btn:hover .link-emoji {
+  transform: scale(1.1);
+}
+
+/* Link emoji picker row */
+.link-emoji-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 0 8px 0;
+}
+
+.link-emoji-picker-row .emoji-picker-trigger.is-placeholder span:first-child {
+  color: var(--text-muted);
+  font-size: var(--font-smallest);
+}
+
+.link-emoji-panel {
+  margin-bottom: 8px;
+}
+
+/* Accent-aware link colors */
+.block-accented .folder-link-btn {
+  color: var(--_accent-header-text);
+}
+
+.block-accented .folder-link-btn:hover {
+  color: var(--block-accent);
+  background: color-mix(in oklch, var(--block-accent) 15%, transparent);
+}
+
+/* ── Insight Block (single-mode quotes / random-note) ──── */
+.insight-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: var(--hp-quote-valign, flex-start);
+  height: 100%;
+  margin-top: 4px;
+}
+
+.insight-title {
+  color: var(--color-accent);
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: inherit;
+}
+
+.insight-body {
+  border-left: 3px solid var(--color-accent);
+  padding-left: 12px;
+  color: var(--text-normal);
+  font-size: inherit;
+  line-height: 1.6;
+}
+.quote-no-accent .insight-body {
+  border-left: none;
+  padding-left: 0;
+}
+
+/* ── Vault Search Block ─────────────────────────────────── */
+.vault-search-block {
+  position: relative;
+}
+
+.vault-search-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.vault-search-input-wrapper:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 0;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 15%, transparent);
+  border-radius: var(--radius-s, 4px);
+}
+
+.vault-search-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.vault-search-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.vault-search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-normal);
+  font-size: var(--font-ui-medium);
+  width: 100%;
+  padding: 2px 0;
+}
+
+.vault-search-input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.vault-search-input::placeholder {
+  color: var(--text-faint);
+}
+
+.vault-search-dropdown {
+  position: fixed;
+  /*
+   * Position is computed in JS (positionDropdown) and written via custom
+   * properties so we don't run afoul of eslint-plugin-obsidianmd's
+   * no-static-styles-assignment heuristic. Defaults of 0 keep the dropdown
+   * off-screen until the first measurement lands.
+   */
+  top: var(--hp-search-dropdown-top, 0);
+  left: var(--hp-search-dropdown-left, 0);
+  width: var(--hp-search-dropdown-width, 0);
+  z-index: 9999;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m, 8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.vault-search-dropdown--hidden {
+  display: none;
+}
+
+.vault-search-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-s, 4px);
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.vault-search-result:hover,
+.vault-search-result.is-selected {
+  background: var(--background-modifier-hover);
+}
+
+.vault-search-result-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.vault-search-result-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.vault-search-result-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.vault-search-result-name {
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vault-search-result-path {
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller, 0.75rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Voice Dictation Block ──────────────────────────────── */
+.voice-block {
+  container-type: size;
+  height: 100%;
+  /* Use the theme's red so the recording indicator matches high-contrast /
+     colorblind themes; fall back to a fixed red only if the theme omits it. */
+  --voice-recording-color: var(--color-red, hsl(0, 72%, 56%));
+}
+.voice-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 3cqh, 16px);
+  height: 100%;
+  padding: clamp(4px, 2cqh, 8px) 0;
+}
+
+/* Status label */
+.voice-status {
+  font-size: clamp(0.7rem, 3.5cqw, 0.8125rem);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+  min-height: 1.2em;
+}
+
+[data-voice-state="recording"] .voice-status {
+  color: var(--voice-recording-color);
+}
+
+/* Mic zone */
+.voice-mic-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+[data-voice-state="saved"] .voice-mic-zone,
+[data-voice-state="transcribing"] .voice-mic-zone {
+  display: none;
+}
+
+/* Mic button */
+.voice-mic {
+  --voice-mic-size: 64px;
+  position: relative;
+  width: var(--voice-mic-size);
+  height: var(--voice-mic-size);
+  border-radius: 50%;
+  border: none;
+  background: var(--block-accent, var(--color-accent));
+  color: var(--text-on-accent, #fff);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease-out, transform 0.1s ease-out;
+  flex-shrink: 0;
+}
+
+.voice-mic:active {
+  transform: scale(0.95);
+}
+
+.voice-mic--unavailable {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.voice-mic-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Pulse ring (recording state) */
+.voice-mic::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--voice-recording-color);
+  opacity: 0;
+  pointer-events: none;
+}
+
+[data-voice-state="recording"] .voice-mic {
+  background: var(--voice-recording-color);
+}
+
+[data-voice-state="recording"] .voice-mic::after {
+  animation: voice-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes voice-pulse {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* Transcribing state: dim mic, add spinner */
+[data-voice-state="transcribing"] .voice-mic {
+  background: var(--background-modifier-hover);
+  pointer-events: none;
+}
+
+[data-voice-state="transcribing"] .voice-mic-icon {
+  animation: voice-spin 1s linear infinite;
+}
+
+@keyframes voice-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Elapsed timer */
+.voice-timer {
+  font-size: clamp(0.75rem, 4cqw, 0.875rem);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  text-align: center;
+  min-height: 1.2em;
+  display: none;
+}
+
+[data-voice-state="recording"] .voice-timer {
+  display: block;
+}
+
+/* Saved flash */
+.voice-saved-flash {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--block-accent, var(--color-accent));
+}
+
+[data-voice-state="saved"] .voice-saved-flash {
+  display: flex;
+  animation: voice-flash-in 0.3s ease-out;
+}
+
+[data-voice-state="saved"] .voice-status {
+  display: none;
+}
+
+.voice-saved-flash svg {
+  width: 32px;
+  height: 32px;
+}
+
+.voice-saved-label {
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+@keyframes voice-flash-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Narrow block (< 200px wide) */
+@container (max-width: 200px) {
+  .voice-mic {
+    --voice-mic-size: 48px;
+  }
+  .voice-mic-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Short block (< 180px tall) — still vertical */
+@container (max-height: 180px) and (min-height: 121px) {
+  .voice-body {
+    gap: 4px;
+    padding: 2px 0;
+  }
+  .voice-mic-zone {
+    padding: 4px 0;
+  }
+  .voice-mic {
+    --voice-mic-size: 48px;
+  }
+  .voice-status {
+    font-size: 0.65rem;
+  }
+}
+
+/* Horizontal layout — wide & short block (e.g. 2×1) */
+@container (max-height: 120px) and (min-width: 200px) {
+  .voice-body {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    padding: 0 12px;
+  }
+  .voice-mic-zone {
+    order: -1;
+    flex-direction: row;
+    padding: 0;
+    gap: 0;
+  }
+  .voice-mic {
+    --voice-mic-size: 36px;
+  }
+  .voice-mic-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+  .voice-status {
+    font-size: 0.75rem;
+  }
+  .voice-timer {
+    display: none;
+  }
+  [data-voice-state="recording"] .voice-timer {
+    display: inline;
+    margin-left: 8px;
+    font-size: 0.7rem;
+  }
+  .voice-saved-flash {
+    flex-direction: row;
+    gap: 6px;
+  }
+  .voice-saved-flash svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Mobile */
+.is-mobile .voice-mic {
+  --voice-mic-size: 64px;
+}
+
+.is-mobile .voice-mic:hover,
+.is-mobile .voice-mic:active {
+  transform: none;
+}
+
+/* Single-column grid */
+.homepage-grid.grid-stack.hp-single-column .voice-mic {
+  --voice-mic-size: 56px;
+}
+
+/* ── Random Note Block ──────────────────────────────────── */
+.random-note-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  container-type: size;
+}
+
+.random-note-cover {
+  width: 100%;
+  max-height: 200px;
+  flex: 0 1 auto;
+  object-fit: contain;
+  object-position: center;
+  border-radius: var(--radius-s, 4px);
+  display: block;
+}
+
+.random-note-title {
+  appearance: none;
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  font-weight: 600;
+  font-size: 1em;
+  color: var(--text-accent, var(--color-accent));
+  cursor: pointer;
+  line-height: 1.35;
+  font-family: inherit;
+}
+
+.random-note-title:hover {
+  text-decoration: underline;
+}
+
+.random-note-preview {
+  font-size: 0.9em;
+  color: var(--text-muted);
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.random-note-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.random-note-filename {
+  font-size: 0.8em;
+  color: var(--text-faint, var(--text-muted));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.random-note-open-btn {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent, #fff);
+  border: none;
+  border-radius: var(--radius-s, 4px);
+  padding: 3px 10px;
+  font-size: 0.82em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease-out;
+}
+
+.random-note-open-btn:hover {
+  background: var(--interactive-accent-hover, var(--interactive-accent));
+}
+
+/* Random note: short card — hide cover, compact layout */
+@container (max-height: 160px) {
+  .random-note-cover { display: none; }
+  .random-note-block { gap: 4px; }
+  .random-note-title { font-size: clamp(0.9rem, 25cqh, 1.3rem); }
+  .random-note-preview { display: none; }
+  .random-note-footer { gap: 4px; }
+  .random-note-open-btn { padding: 2px 8px; font-size: 0.75em; }
+}
+
+/* ── Button Grid Block ──────────────────────────────────── */
+.button-grid-block {
+  container-type: inline-size;
+}
+
+.button-grid {
+  display: grid;
+  gap: 8px;
+}
+
+/* Specificity note: `.button-grid .grid-btn` is (0,2,0) — needed to beat
+   Obsidian's theme rules that set `button { background-color: ... }` with
+   (0,1,1) specificity. `.grid-btn` alone (0,1,0) lost the cascade duel on
+   background-color while winning on border/color. */
+.button-grid .grid-btn {
+  background: var(--hp-btn-bg, var(--background-primary));
+  border: var(--hp-btn-border, 1px solid var(--background-modifier-border));
+  border-radius: var(--hp-btn-radius, var(--radius-m, 8px));
+  padding: var(--hp-btn-padding, 8px 12px);
+  text-align: left;
+  cursor: pointer;
+  font-size: inherit;
+  color: var(--hp-btn-color, var(--text-normal));
+  transition:
+    background 0.15s ease-out,
+    border-color 0.15s ease-out,
+    transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.15s ease-out;
+  box-shadow: var(--hp-btn-shadow, none);
+  display: flex;
+  align-items: center;
+  gap: var(--hp-btn-gap, 6px);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.button-grid .grid-btn > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.button-grid .grid-btn:hover {
+  background: var(--hp-btn-hover-bg, var(--background-modifier-hover));
+  border-color: var(--hp-btn-hover-border-color,
+    var(--background-modifier-border-hover, var(--background-modifier-border)));
+  transform: var(--hp-btn-hover-transform, translateY(-1px));
+  box-shadow: var(--hp-btn-hover-shadow, 0 2px 6px rgba(0, 0, 0, 0.06));
+}
+
+.button-grid .grid-btn:active {
+  transform: var(--hp-btn-active-transform, translateY(0) scale(0.98));
+  box-shadow: var(--hp-btn-active-shadow, none);
+}
+
+.button-grid .grid-btn-emoji {
+  font-size: var(--hp-btn-emoji-size, 1rem);
+}
+
+/* ── Button Grid responsive ───────────────────────────── */
+@container (max-width: 250px) {
+  .button-grid {
+    --hp-grid-cols: 1fr;
+    gap: 6px;
+  }
+  .grid-btn {
+    padding: 6px 10px;
+    font-size: 0.9em;
+  }
+  .bookmark-grid {
+    --hp-grid-cols: 1fr;
+    gap: 4px;
+  }
+}
+
+/* ── Quotes List Block ──────────────────────────────────── */
+.quotes-columns {
+  display: grid;
+  grid-template-columns: repeat(var(--hp-column-count, 2), 1fr);
+  gap: 14px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* In extend mode, block-content itself gets the --extend class (el IS block-content).
+   Allow overflow so CSS columns can report their natural height for auto-height. */
+.homepage-block-wrapper .block-content.quotes-list-block--extend {
+  overflow: visible;
+}
+
+.homepage-block-wrapper .block-content.quotes-list-block--extend > * {
+  overflow: visible;
+}
+
+.homepage-block-wrapper.block-collapsed .block-content.quotes-list-block--extend {
+  overflow: hidden;
+}
+
+.homepage-block-wrapper.block-collapsed .block-content.quotes-list-block--extend > * {
+  overflow: hidden;
+}
+
+.quotes-list-block--extend .quotes-columns {
+  max-height: none;
+}
+
+.quote-item {
+}
+
+.quote-content {
+  border-left: 3px solid var(--color-accent);
+  margin: 0 0 4px 0;
+  padding: 4px 0 4px 12px;
+  font-size: inherit;
+  line-height: 1.6;
+  color: var(--text-normal);
+}
+.quote-no-accent .quote-content {
+  border-left: none;
+  padding-left: 0;
+}
+
+.quote-source {
+  font-size: var(--font-interface-size, 0.8125rem);
+  color: var(--text-muted);
+  padding-left: 12px;
+}
+
+/* ── Quote style: centered ──────────────────────────────── */
+.quotes-list-block.quote-style-centered .quotes-columns {
+  grid-template-columns: 1fr;
+}
+.quotes-list-block.quote-style-centered .quote-item {
+  text-align: center;
+  margin-bottom: 16px;
+  padding: 0 8px;
+}
+.quotes-list-block.quote-style-centered .quote-content {
+  border-left: none;
+  padding: 0;
+  font-style: italic;
+}
+.quotes-list-block.quote-style-centered .quote-content::before {
+  content: '\201C';
+  display: block;
+  font-size: 2.5em;
+  line-height: 1;
+  color: var(--color-accent);
+  opacity: 0.55;
+  font-style: normal;
+  margin-bottom: -6px;
+}
+.quotes-list-block.quote-style-centered .quote-source {
+  padding-left: 0;
+  text-align: center;
+  font-style: italic;
+}
+.quotes-list-block.quote-style-centered .quote-source::before {
+  content: '— ';
+}
+
+/* ── Quote style: card ───────────────────────────────────── */
+.quotes-list-block.quote-style-card .quote-item {
+  background: color-mix(in srgb, var(--color-accent) 6%, var(--background-primary));
+  border: 1px solid color-mix(in srgb, var(--color-accent) 18%, var(--background-modifier-border));
+  border-radius: var(--radius-m, 8px);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.quotes-list-block.quote-style-card .quote-content {
+  border-left: none;
+  padding: 0;
+  margin-bottom: 8px;
+  font-style: italic;
+}
+.quotes-list-block.quote-style-card .quote-source {
+  padding-left: 0;
+  text-align: right;
+  font-size: 0.8em;
+}
+.quotes-list-block.quote-style-card .quote-source::before {
+  content: '— ';
+}
+
+/* ── Quote font ──────────────────────────────────────────── */
+/* --hp-quote-font is set by a preset class below or overridden by inline style
+   (custom font via setProperty). The base rule always consumes it. */
+.quotes-list-block .quote-content,
+.quotes-list-block .quote-source,
+.quotes-list-block .insight-body,
+.quotes-list-block .insight-title {
+  font-family: var(--hp-quote-font, inherit);
+}
+
+.quotes-list-block.quote-font-serif {
+  --hp-quote-font: Georgia, 'Times New Roman', serif;
+}
+
+.quotes-list-block.quote-font-handwriting {
+  --hp-quote-font: 'Dancing Script', 'Caveat', 'Patrick Hand', 'Segoe Script', cursive;
+  --hp-quote-line-height: 1.9;
+}
+
+.quotes-list-block .quote-content,
+.quotes-list-block .insight-body {
+  line-height: var(--hp-quote-line-height, 1.6);
+}
+
+.quotes-list-block .quote-content strong,
+.quotes-list-block .insight-body strong {
+  font-weight: 700;
+  color: var(--text-normal);
+}
+
+.quote-hashtag {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 0.85em;
+  font-weight: 500;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+/* ── Image Gallery Block ────────────────────────────────── */
+/* Container queries sized from the block wrapper, not .image-gallery itself,
+   to avoid breaking auto-height offsetHeight measurement. */
+.image-gallery-block {
+  container-type: inline-size;
+}
+
+.image-gallery {
+  display: grid;
+  gap: 8px;
+}
+
+.gallery-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-m, 8px);
+  cursor: pointer;
+}
+
+.gallery-item img {
+  width: 100%;
+  display: block;
+  border-radius: var(--radius-m, 8px);
+  transition:
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 0.25s ease-out;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+
+.gallery-item:hover img,
+.gallery-item:focus-visible img {
+  transform: scale(1.03);
+  filter: brightness(1.04);
+}
+
+.gallery-item:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Fixed-height mode: scroll instead of auto-expand */
+.image-gallery.image-gallery--fixed-height {
+  overflow-y: auto;
+  height: 100%;
+}
+
+/* Masonry layout (CSS multicolumn).
+   Lint flags multicolumn as "partially supported", but the partial bits are
+   column-span/balancing, which aren't used here; column flow + break-inside
+   work on every Obsidian platform and need no JS measurement. Width caps
+   arrive via --hp-masonry-cap / --hp-masonry-gap from the container queries
+   below (custom properties, so no !important war with the JS-set
+   --hp-masonry-cols inline variable). */
+.image-gallery.masonry-layout {
+  display: block;
+  column-gap: var(--hp-masonry-gap, 8px);
+}
+
+.image-gallery.masonry-layout .gallery-item {
+  break-inside: avoid;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.image-gallery.masonry-layout .gallery-item img {
+  aspect-ratio: auto;
+  object-fit: unset;
+}
+
+/* ── Gallery thumbnail loading shimmer ─────────────────── */
+.gallery-item--loading {
+  background: var(--background-secondary);
+}
+.gallery-item--loading img {
+  /* Ensure placeholder takes space before thumbnail src is set */
+  aspect-ratio: 3 / 2;
+}
+.gallery-item--loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--background-modifier-hover) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: hp-shimmer 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ── Gallery responsive ───────────────────────────────── */
+/* Width caps are expressed as custom properties (--hp-grid-cap,
+   --hp-masonry-cap, --hp-masonry-gap) consumed by the base rules in the
+   "Responsive grid columns" section at the end of this file. JS sets
+   --hp-grid-cols / --hp-masonry-cols as inline custom properties, which a
+   direct declaration here could only beat with !important; the second
+   variable layer sidesteps the war. When several queries match, the last
+   block wins by source order — keep them ordered widest to narrowest. */
+/* 500px — cap at 3 columns, slightly tighter gap */
+@container (max-width: 500px) {
+  .image-gallery {
+    gap: 6px;
+    --hp-grid-cap: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  .image-gallery.masonry-layout { --hp-masonry-gap: 6px; --hp-masonry-cap: 3; }
+}
+
+/* 400px — force 2 columns max */
+@container (max-width: 400px) {
+  .image-gallery {
+    gap: 4px;
+    --hp-grid-cap: repeat(2, 1fr);
+  }
+  .gallery-item,
+  .gallery-item img,
+  .gallery-item video {
+    border-radius: var(--radius-s, 4px);
+  }
+  .image-gallery.masonry-layout { --hp-masonry-gap: 4px; --hp-masonry-cap: 2; }
+  .image-gallery.masonry-layout .gallery-item { margin-bottom: 4px; }
+}
+
+/* 280px — single column */
+@container (max-width: 280px) {
+  .image-gallery {
+    --hp-grid-cap: 1fr;
+  }
+  .image-gallery.masonry-layout { --hp-masonry-cap: 1; }
+}
+
+/* ── Lightbox ──────────────────────────────────────────── */
+.gallery-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 99999; /* Above Obsidian modals (which use ~9000-10000) */
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  animation: lightbox-fade-in 0.15s ease-out;
+}
+
+.gallery-lightbox-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gallery-lightbox-img,
+.gallery-lightbox-video {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: var(--radius-m, 8px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  cursor: default;
+}
+
+.gallery-lightbox-prev,
+.gallery-lightbox-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  --_lb-nav-bg: rgba(255, 255, 255, 0.15);
+  --_lb-nav-color: rgba(255, 255, 255, 0.8);
+  background: var(--_lb-nav-bg);
+  color: var(--_lb-nav-color);
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  z-index: 1;
+}
+
+.gallery-lightbox-prev:hover,
+.gallery-lightbox-next:hover {
+  --_lb-nav-bg: rgba(255, 255, 255, 0.3);
+  --_lb-nav-color: #fff;
+}
+
+.gallery-lightbox-prev { left: 16px; }
+.gallery-lightbox-next { right: 16px; }
+
+.gallery-lightbox-nav-hidden { display: none; }
+
+.gallery-lightbox-counter {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+}
+
+/* ── Lightbox mobile ───────────────────────────────────── */
+/* Lightbox is position:fixed on document.body — no container ancestor, so @media is correct */
+@media (max-width: 600px) {
+  .gallery-lightbox-img,
+  .gallery-lightbox-video {
+    max-width: 98vw;
+    max-height: 85vh;
+    border-radius: var(--radius-s, 4px);
+  }
+  .gallery-lightbox-prev,
+  .gallery-lightbox-next {
+    width: 44px;
+    height: 44px;
+  }
+  .gallery-lightbox-prev { left: 6px; }
+  .gallery-lightbox-next { right: 6px; }
+  .gallery-lightbox-counter {
+    bottom: 8px;
+    font-size: 0.75rem;
+  }
+}
+
+@keyframes lightbox-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.gallery-item video {
+  width: 100%;
+  display: block;
+  border-radius: var(--radius-m, 8px);
+}
+
+.video-play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--text-on-accent, #fff);
+  font-size: 1.25rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease-out,
+    transform 0.2s ease-out,
+    background 0.2s ease-out;
+  z-index: 1;
+  backdrop-filter: blur(4px);
+}
+
+.gallery-item-video:hover .video-play-overlay {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.8);
+}
+
+/* ── Embedded Note Block ────────────────────────────────── */
+.embedded-note-content {
+  font-size: inherit;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* In grow mode, block-content itself gets the --grow class (el IS block-content). */
+.homepage-block-wrapper .block-content.embedded-note-block--grow {
+  overflow: visible;
+}
+
+.homepage-block-wrapper .block-content.embedded-note-block--grow > * {
+  overflow: visible;
+}
+
+.homepage-block-wrapper.block-collapsed .block-content.embedded-note-block--grow {
+  overflow: hidden;
+}
+
+.homepage-block-wrapper.block-collapsed .block-content.embedded-note-block--grow > * {
+  overflow: hidden;
+}
+
+.embedded-note-block--grow .embedded-note-content {
+  max-height: none;
+  overflow-y: visible;
+}
+
+/* ── Static Text Block ──────────────────────────────────── */
+.static-text-block {
+  position: relative;
+}
+
+.static-text-edit-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 5;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.static-text-block:hover .static-text-edit-btn {
+  opacity: 1;
+}
+
+/* On mobile, always show the edit button (no hover state) */
+.is-mobile .static-text-edit-btn {
+  opacity: 0.6;
+}
+
+.static-text-edit-btn:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.edit-mode .static-text-edit-btn {
+  display: none;
+}
+
+.homepage-block-wrapper .block-content > .static-text-content {
+  font-size: inherit;
+  line-height: 1.6;
+  overflow-y: auto;
+}
+
+/* ── Inline Editor (Static Text) ────────────────────────── */
+.static-text-inline-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 120px;
+}
+
+.static-text-inline-editor textarea {
+  flex: 1;
+  min-height: 100px;
+  width: 100%;
+  font-family: var(--font-monospace);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  padding: 8px;
+  resize: vertical;
+}
+
+.static-text-inline-editor textarea:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.inline-edit-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.inline-edit-btn {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+}
+
+.inline-edit-btn:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.inline-edit-save:hover {
+  color: var(--color-accent);
+}
+
+/* ── Video Embed Block ──────────────────────────────────── */
+.video-embed-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.video-embed-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-m, 8px);
+}
+
+.video-embed-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: var(--radius-m, 8px);
+}
+
+
+/* ── HTML Block ─────────────────────────────────────────── */
+.html-block-content {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  font-size: inherit;
+  line-height: 1.6;
+}
+
+.hp-html-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  overflow: hidden;
+  display: block;
+  background: transparent;
+}
+
+/* ── Settings textarea (Static Text and HTML blocks) ────── */
+.static-text-settings-textarea,
+.html-settings-textarea {
+  width: 100%;
+  font-family: var(--font-monospace);
+  font-size: 0.8125rem;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  padding: 8px;
+  resize: vertical;
+  margin-bottom: 16px;
+}
+
+.static-text-settings-textarea:focus-visible,
+.html-settings-textarea:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ── Edit FAB — floating trigger visible in read mode ────── */
+.homepage-edit-fab {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 20;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: var(--shadow-s, 0 1px 4px rgba(0,0,0,0.08));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  cursor: pointer;
+  user-select: none;
+  opacity: 0.3;
+  transform: scale(0.85);
+  transition:
+    opacity 0.2s ease-out,
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s ease-out;
+}
+
+.homepage-edit-fab:hover,
+.homepage-edit-fab:focus-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.homepage-edit-fab:hover {
+  box-shadow: var(--shadow-l, 0 4px 12px rgba(0,0,0,0.12));
+  background: var(--background-modifier-hover);
+}
+
+.homepage-edit-fab:active {
+  transform: scale(0.94);
+}
+
+.homepage-edit-fab.is-hidden {
+  display: none;
+}
+
+/* ── Toolbar — hidden in read mode, shown in edit mode ───── */
+.homepage-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 var(--hp-padding, 16px);
+  border-bottom: 1px solid transparent;
+  background: var(--background-secondary);
+  flex-shrink: 0;
+  z-index: 10;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s ease-out,
+    padding 0.25s ease-out,
+    border-color 0.2s ease-out;
+}
+
+.homepage-toolbar.is-visible {
+  max-height: 60px;
+  opacity: 1;
+  padding: 8px var(--hp-padding, 16px);
+  border-bottom-color: var(--color-accent);
+  overflow: visible;
+  position: sticky;
+  top: 0;
+}
+
+/* When toolbar is visible (edit mode), the view itself scrolls so the
+   toolbar can stick to the top. The grid yields scrolling to the view.
+   hp-toolbar-open is toggled by EditToolbar.syncVisibility(). */
+.homepage-view.hp-toolbar-open {
+  overflow-y: auto;
+}
+
+.homepage-view.hp-toolbar-open .homepage-grid.grid-stack {
+  overflow-y: visible;
+  min-height: auto;
+  /* Add breathing room between the editing toolbar and the grid content. */
+  margin-top: 12px;
+}
+
+.toolbar-edit-indicator {
+  font-size: var(--font-interface-size, 0.8125rem);
+  color: var(--color-accent);
+  font-weight: 500;
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.toolbar-edit-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  animation: hp-edit-dot-pulse 2s ease-in-out 4;
+}
+
+@keyframes hp-edit-dot-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Reset Obsidian's default button box-shadow for all plugin buttons */
+.homepage-view button {
+  box-shadow: none;
+}
+
+.toolbar-col-select {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  padding: 4px 8px;
+  font-size: var(--font-interface-size, 0.8125rem);
+  color: var(--text-normal);
+  cursor: pointer;
+  transition: background 0.15s ease-out, border-color 0.15s ease-out;
+}
+
+.toolbar-col-select:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--background-modifier-border-hover, var(--background-modifier-border));
+}
+
+.toolbar-col-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Zoom slider ──────────────────────────────────────────── */
+.toolbar-zoom-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbar-zoom-label {
+  font-size: var(--font-interface-size, 0.8125rem);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.toolbar-zoom-slider {
+  width: 90px;
+  cursor: pointer;
+  accent-color: var(--color-accent);
+}
+
+.toolbar-zoom-value {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 32px;
+  text-align: right;
+}
+
+.toolbar-edit-btn,
+.toolbar-add-btn,
+.toolbar-discard-btn {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  padding: 4px 12px;
+  font-size: var(--font-interface-size, 0.8125rem);
+  color: var(--text-normal);
+  cursor: pointer;
+  transition:
+    background 0.15s ease-out,
+    border-color 0.15s ease-out,
+    color 0.15s ease-out,
+    transform 0.12s ease-out,
+    box-shadow 0.15s ease-out;
+}
+
+.toolbar-edit-btn:hover,
+.toolbar-add-btn:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--background-modifier-border-hover, var(--background-modifier-border));
+}
+
+.toolbar-edit-btn:active,
+.toolbar-add-btn:active {
+  transform: scale(0.97);
+}
+
+.toolbar-edit-btn.toolbar-btn-active,
+.toolbar-add-btn.toolbar-btn-active {
+  background: var(--color-accent);
+  color: var(--text-on-accent, #fff);
+  border-color: var(--color-accent);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* Discard button — inherits base from the shared selector above, overrides color only */
+.toolbar-discard-btn {
+  color: var(--text-muted);
+}
+
+.toolbar-discard-btn:hover {
+  background: var(--background-modifier-error, rgba(220, 50, 50, 0.1));
+  border-color: var(--text-error, #e05252);
+  color: var(--text-error, #e05252);
+}
+
+/* ── Collapsible blocks ─────────────────────────────────── */
+.block-header-zone {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: var(--radius-s, 4px);
+  padding: 2px 4px;
+  margin: 0 -4px;
+  transition: background 0.1s ease-out;
+}
+/* When title is hidden, the header zone only contains the collapse chevron.
+   Collapse it to zero height so it doesn't consume vertical space.
+   hp-header-empty is stamped by buildBlockWrapper and kept in sync by
+   BaseBlock.renderHeader / renderCompactPlaceholder. */
+.block-header-zone.hp-header-empty {
+  padding: 0;
+  margin: 0;
+  min-height: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.block-header-zone:hover {
+  background: var(--background-modifier-hover);
+}
+
+/* In edit mode the handle bar owns interaction — header zone is not clickable */
+.edit-mode .block-header-zone {
+  cursor: default;
+  pointer-events: none;
+}
+
+.edit-mode .block-header-zone:hover {
+  background: transparent;
+}
+
+.block-header-zone .block-header {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+/* Collapse/expand chevron — hidden by default. When the hover-highlight option
+   is enabled, fades in on card hover and stays visible when the block is
+   collapsed so the state is still readable without hovering. */
+.block-collapse-chevron {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  opacity: 0;
+  line-height: 1;
+  flex-shrink: 0;
+  display: inline-block;
+  transform: rotate(270deg);
+  transition: opacity 0.15s ease-out, transform 0.2s ease-out;
+}
+
+.block-collapse-chevron::before {
+  content: '›';
+}
+
+.block-collapse-chevron.is-collapsed {
+  transform: rotate(90deg);
+}
+
+.homepage-hover-highlight .block-collapse-chevron.is-collapsed {
+  opacity: 1;
+}
+
+.homepage-hover-highlight .homepage-block-wrapper:hover .block-collapse-chevron {
+  opacity: 1;
+}
+
+
+/* Smooth collapse via grid-template-rows */
+.homepage-block-wrapper .block-content {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.25s ease-out, opacity 0.2s ease-out;
+}
+
+.homepage-block-wrapper .block-content > * {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.homepage-block-wrapper.block-collapsed .block-content {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.homepage-block-wrapper.block-collapsed {
+  min-height: unset;
+}
+
+/* Override the generic collapse rules for blocks that use flex layout directly
+   on .block-content — their children must remain visible and content-sized. */
+.homepage-block-wrapper .block-content.greeting-block > * {
+  overflow: visible;
+  min-height: auto;
+}
+
+
+/* ── Focus visible (keyboard navigation) ────────────────── */
+.homepage-view button:focus-visible,
+.homepage-view select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 15%, transparent);
+}
+
+.homepage-view input:focus-visible,
+.homepage-view textarea:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 0;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 15%, transparent);
+}
+
+/* ── Viewport-fit (scale-to-fit in edit mode) ───────────── */
+/* overflow:visible prevents clipping GridStack resize handles at the last card's edge. */
+/* The grid box = naturalH (flex-shrink:0) so there is no actual overflow to hide. */
+.homepage-grid.viewport-fit {
+  overflow: visible;
+}
+
+/* ── Edit Mode ──────────────────────────────────────────── */
+.homepage-grid.edit-mode .homepage-block-wrapper {
+  border: 2px dashed var(--color-accent);
+  outline: none;
+}
+
+/* Compact edit cards: overflow visible so the compact placeholder is never
+   clipped by GridStack's default overflow-y:auto on .grid-stack-item-content. */
+.homepage-grid.edit-mode > .grid-stack-item > .grid-stack-item-content {
+  overflow: visible;
+}
+
+/* Hide vertical resize handles for auto-height blocks — their height is auto-managed */
+.homepage-grid.edit-mode .is-auto-height > .ui-resizable-s,
+.homepage-grid.edit-mode .is-auto-height > .ui-resizable-se {
+  display: none;
+}
+
+/* ── Edit Mode Compact Placeholder ──────────────────────── */
+.edit-mode .block-collapse-chevron {
+  display: none;
+}
+
+.block-compact-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 4px 0;
+  color: var(--text-muted);
+  font-size: var(--font-interface-size, 0.8125rem);
+}
+
+.block-compact-type {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+}
+
+.block-compact-size {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.5;
+}
+
+.edit-mode .block-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.block-handle-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: 6px;
+}
+
+.block-move-handle {
+  cursor: grab;
+  color: var(--text-muted);
+  padding: 2px 4px;
+  flex: 1;
+  user-select: none;
+  border-radius: var(--radius-s, 4px);
+  display: flex;
+  align-items: center;
+  transition: color 0.12s ease-out, background 0.12s ease-out;
+}
+
+.block-move-handle:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 15%, transparent);
+}
+
+.block-move-handle:active {
+  cursor: grabbing;
+}
+
+.block-handle-bar button svg,
+.block-move-handle svg {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+/* Shared base for all handle-bar action buttons */
+.block-move-up-btn,
+.block-move-down-btn,
+.block-settings-btn,
+.block-remove-btn,
+.block-duplicate-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 4px 6px;
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: var(--radius-s, 4px);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 0.12s ease-out,
+    background 0.12s ease-out,
+    transform 0.12s ease-out;
+}
+
+.block-move-up-btn:hover,
+.block-move-down-btn:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.block-move-up-btn svg,
+.block-move-down-btn svg {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.block-settings-btn:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+  transform: scale(1.1);
+}
+
+.block-settings-btn:active {
+  transform: scale(0.95);
+}
+
+.block-remove-btn:hover {
+  color: var(--text-error);
+  background: var(--background-modifier-hover);
+  transform: scale(1.1);
+}
+
+.block-remove-btn:active {
+  transform: scale(0.95);
+}
+
+/* Dim the non-dragged blocks so the picked-up card stands out.
+   hp-dragging is toggled by GridLayout's dragstart/dragstop handlers. */
+.homepage-grid.grid-stack.hp-dragging .grid-stack-item:not(.ui-draggable-dragging) {
+  opacity: 0.5;
+  transition: opacity var(--hp-dur-base, 0.2s) var(--hp-ease-out, ease-out);
+}
+
+/* GridStack drag styling — same elevation language as the .block-elevation-* scale */
+.grid-stack-item.ui-draggable-dragging > .grid-stack-item-content .homepage-block-wrapper {
+  box-shadow:
+    0 0 0 1px var(--background-modifier-border),
+    var(--hp-elevation-drag);
+  border-color: color-mix(in srgb, var(--color-accent) 25%, transparent);
+  opacity: 0.95;
+}
+
+/* ── Add Block picker (command-palette-style SuggestModal) ─────────── */
+.add-block-suggestion {
+  display: flex;
+  align-items: center;
+  gap: var(--hp-space-4, 12px);
+}
+
+.add-block-suggestion-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  width: 1.6rem;
+  text-align: center;
+  flex: 0 0 auto;
+  font-style: normal;
+}
+
+.add-block-suggestion-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hp-space-1, 2px);
+  min-width: 0;
+}
+
+.add-block-suggestion-name {
+  font-size: var(--font-interface-size, 0.8125rem);
+  color: var(--text-normal);
+  font-weight: 500;
+}
+
+.add-block-suggestion-desc {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Block header emoji ─────────────────────────────────── */
+.block-header-emoji {
+  font-style: normal;
+  margin-right: 0;
+  font-size: 1.25em;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* ── Emoji picker (BlockSettingsModal) ──────────────────── */
+.emoji-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.emoji-picker-row > .emoji-picker-trigger {
+  margin-left: auto;
+}
+
+.emoji-picker-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m, 8px);
+  padding: 4px 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--text-normal);
+  box-shadow: none;
+  min-width: 52px;
+  transition: border-color 0.12s ease-out;
+}
+
+.emoji-picker-trigger:hover {
+  border-color: var(--color-accent);
+}
+
+.emoji-picker-chevron {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.emoji-picker-clear {
+  background: none;
+  border: none;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-s, 4px);
+  box-shadow: none;
+  line-height: 1.4;
+}
+
+.emoji-picker-clear:hover {
+  color: var(--text-error);
+  background: var(--background-modifier-hover);
+}
+
+.emoji-picker-panel {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m, 8px);
+  padding: 8px;
+  margin-bottom: 4px;
+}
+
+.emoji-picker-search {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  padding: 5px 8px;
+  font-size: var(--font-interface-size, 0.8125rem);
+  margin-bottom: 8px;
+}
+
+.emoji-picker-search:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.emoji-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.emoji-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-s, 4px);
+  padding: 5px 2px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1;
+  box-shadow: none;
+  transition:
+    background 0.1s ease-out,
+    transform 0.1s ease-out;
+}
+
+.emoji-btn:hover {
+  background: var(--background-modifier-hover);
+  transform: scale(1.15);
+}
+
+.emoji-btn:active {
+  transform: scale(0.95);
+}
+
+.emoji-btn.is-selected {
+  background: var(--background-modifier-hover);
+  border-color: var(--color-accent);
+}
+
+.emoji-picker-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--font-interface-size, 0.8125rem);
+  padding: 12px 0;
+}
+
+/* ── Button Grid block — item list editor ──────────────── */
+.btn-grid-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.btn-grid-item-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.btn-grid-emoji-picker-row {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.btn-grid-emoji-picker-row .emoji-picker-trigger {
+  min-width: unset;
+  padding: 4px 6px;
+}
+
+.btn-grid-emoji-picker-row .emoji-picker-clear {
+  padding: 2px 4px;
+}
+
+.btn-grid-item-label {
+  flex: 1;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  padding: 4px 8px;
+  font-size: inherit;
+}
+
+.btn-grid-item-link {
+  flex: 1.5;
+  background: var(--background-primary);
+  color: var(--text-muted);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  padding: 4px 8px;
+  font-size: var(--font-interface-size, 0.8125rem);
+}
+
+.btn-grid-item-label:focus-visible,
+.btn-grid-item-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.btn-grid-item-del {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-s, 4px);
+  font-size: 0.75rem;
+  box-shadow: none;
+  flex-shrink: 0;
+}
+
+.btn-grid-item-del:hover {
+  color: var(--text-error);
+  background: var(--background-modifier-hover);
+}
+
+/* ── Drag-to-reorder in settings modals ────────────────── */
+.drag-grip {
+  cursor: grab;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 2px 4px;
+  flex-shrink: 0;
+  user-select: none;
+  opacity: 0.5;
+  transition: opacity 0.1s ease-out;
+}
+.drag-grip:hover {
+  opacity: 1;
+}
+.btn-grid-item-row.is-dragging,
+.bookmark-item-row.is-dragging,
+.settings-link-row.is-dragging {
+  opacity: 0.4;
+}
+.btn-grid-item-row.drag-over,
+.bookmark-item-row.drag-over,
+.settings-link-row.drag-over {
+  border-top: 2px solid var(--color-accent);
+}
+
+/* ── Settings rows ──────────────────────────────────────── */
+.settings-link-row .setting-item {
+  border-top: none;
+  padding: 4px 0;
+}
+
+/* ── Single-Column Mode (mobile / narrow panes) ────────── */
+/* When GridLayout collapses to 1 column, override GridStack's absolute
+   positioning with a simple flex column so blocks shrink-wrap their content
+   instead of occupying fixed grid rows.  The class is toggled by
+   GridLayout.applyColumnChange() and initGridStack(). */
+.homepage-grid.grid-stack.hp-single-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* GridStack writes top/left/width/height as INLINE styles on every item
+   (gridstack.js updateStyles) — !important is the only stylesheet-side way to
+   reclaim them. position/margin have no inline counterpart and win on
+   specificity alone. */
+.homepage-grid.grid-stack.hp-single-column > .grid-stack-item {
+  position: relative;
+  top: auto !important;
+  left: auto !important;
+  width: 100% !important;
+  height: auto !important;
+  margin: 0;
+}
+/* Let block wrapper and content fill naturally */
+.homepage-grid.grid-stack.hp-single-column .homepage-block-wrapper {
+  height: auto;
+}
+/* grid-stack-item-content is position:absolute in GridStack's base CSS
+   (specificity 0,3,0 — this selector outranks it at 0,4,0; GridStack sets no
+   inline styles on item-content). Override to relative so the parent
+   auto-heights correctly. */
+.homepage-grid.grid-stack.hp-single-column .grid-stack-item-content {
+  position: relative;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  height: auto;
+}
+.homepage-grid.grid-stack.hp-single-column .block-content {
+  height: auto;
+  min-height: 60px;
+}
+.homepage-grid.grid-stack.hp-single-column .block-content.spacer-block {
+  min-height: 0;
+}
+/* Pomodoro & Voice use container-type:size + position:absolute on
+   .block-content which needs an explicit height.  In single-column
+   flex mode, remove the absolute positioning so blocks participate
+   in the flex flow and auto-height correctly. */
+.homepage-grid.grid-stack.hp-single-column .homepage-block-wrapper.hp-block-pomodoro .block-content,
+.homepage-grid.grid-stack.hp-single-column .homepage-block-wrapper.hp-block-voice-dictation .block-content {
+  position: relative;
+  inset: auto;
+}
+.homepage-grid.grid-stack.hp-single-column .voice-block {
+  container-type: inline-size;
+  height: auto;
+}
+.homepage-grid.grid-stack.hp-single-column .voice-body {
+  height: auto;
+  gap: 12px;
+  padding: 8px 0;
+}
+.homepage-grid.grid-stack.hp-single-column .pomodoro-block {
+  container-type: inline-size;
+  height: auto;
+}
+.homepage-grid.grid-stack.hp-single-column .pomodoro-container {
+  flex-direction: row;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 8px;
+  height: auto;
+}
+.homepage-grid.grid-stack.hp-single-column .pomodoro-ring {
+  --ring-size: 100px;
+}
+.homepage-grid.grid-stack.hp-single-column .pomodoro-time {
+  font-size: 1.4rem;
+  font-weight: 400;
+}
+.homepage-grid.grid-stack.hp-single-column .pomodoro-controls {
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+}
+.homepage-grid.grid-stack.hp-single-column .pomodoro-btn {
+  min-height: 44px;
+  padding: 6px 16px;
+  font-size: 0.8125rem;
+}
+
+/* ── Container Query Responsive Breakpoints ────────────── */
+/* CSS breakpoints: 380 / 540 / 768 (UI adaptation).
+   See also GridLayout.ts computeEffective(): 480 / 768 / 1024 (column reduction). */
+
+/* ── Medium-narrow (tablets, split panes) ──────────────── */
+@container homepage (max-width: 768px) {
+  /* Enlarge edit-mode handle bar buttons for touch */
+  .block-handle-bar button,
+  .block-move-handle {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Enlarge GridStack resize handles for touch */
+  .homepage-grid .ui-resizable-se {
+    width: 28px;
+    height: 28px;
+  }
+  .homepage-grid .ui-resizable-s {
+    height: 16px;
+  }
+  .homepage-grid .ui-resizable-e {
+    width: 16px;
+  }
+
+  /* Enlarge FAB for touch */
+  .homepage-edit-fab {
+    width: 44px;
+    height: 44px;
+    font-size: 1rem;
+  }
+}
+
+/* ── Narrow (phones, narrow panes) ─────────────────────── */
+@container homepage (max-width: 540px) {
+  .homepage-toolbar.is-visible {
+    padding: 6px 12px;
+    gap: 6px;
+    flex-wrap: wrap;
+    max-height: none;
+  }
+
+  /* Touch-friendly toolbar controls */
+  .homepage-toolbar button,
+  .homepage-toolbar select,
+  .toolbar-col-select {
+    min-height: 44px;
+  }
+
+  /* Shrink zoom group */
+  .toolbar-zoom-label { display: none; }
+  .toolbar-zoom-slider { width: 60px; }
+
+  .homepage-empty-state {
+    padding: 40px 16px;
+  }
+
+  /* Tighter grid spacing on narrow screens */
+  .homepage-grid.grid-stack.hp-single-column {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  /* Slightly smaller card padding */
+  .homepage-block-wrapper {
+    padding: var(--hp-card-padding, 10px);
+  }
+
+  /* Disable staggered block entry animation */
+  .homepage-grid--animating .homepage-block-wrapper {
+    animation: none;
+    opacity: 1;
+  }
+
+  /* Disable hover transforms on interactive grids */
+  .grid-btn:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .bookmark-card:hover {
+    transform: none;
+  }
+
+  /* ── Folder links: flow as horizontal chips on narrow screens ── */
+  .folder-links-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+  }
+  .folder-link-btn {
+    padding: 8px 14px;
+    background: var(--background-modifier-hover);
+    border-radius: var(--radius-m, 8px);
+    font-size: var(--font-text-size, 0.875rem);
+    width: auto;
+  }
+  .folder-link-btn:hover {
+    transform: none;
+  }
+  /* Centre and right alignment: let chips wrap naturally */
+  .folder-links-align-center .folder-link-item,
+  .folder-links-align-right .folder-link-item {
+    justify-content: flex-start;
+  }
+
+  /* ── Touch targets for all interactive block elements ── */
+  .folder-link-btn,
+  .grid-btn,
+  .bookmark-card,
+  .recent-file-btn,
+  .random-note-open-btn,
+  .random-note-title {
+    min-height: 44px;
+  }
+
+  /* ── Quote items: tighter on narrow ── */
+  .quote-content {
+    font-size: 0.9375rem;
+  }
+}
+
+/* ── Very narrow (small phones) ────────────────────────── */
+@container homepage (max-width: 380px) {
+  /* Reduce grid padding */
+  .homepage-grid.grid-stack {
+    padding: 4px;
+  }
+
+  /* Reduce block card padding */
+  .homepage-block-wrapper {
+    padding: 8px;
+  }
+
+  /* Hide zoom group — auto-columns handles layout */
+  .toolbar-zoom-group { display: none; }
+
+  /* Hide column selector — auto-columns handles it */
+  .toolbar-col-group { display: none; }
+
+  /* Add button: icon only */
+  .toolbar-add-text { display: none; }
+}
+
+@container homepage (min-width: 1200px) {
+  .homepage-grid {
+    padding: 32px;
+  }
+}
+
+/* ── Newly Added Block Highlight ────────────────────────── */
+.homepage-block-wrapper.block-just-added {
+  animation: hp-block-appear 0.4s ease-out;
+}
+
+@keyframes hp-block-appear {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Elevation Presets (driven by the --hp-elevation-* tokens) ─────── */
+.block-elevation-1 {
+  box-shadow: var(--hp-elevation-1);
+}
+.block-elevation-2 {
+  box-shadow: var(--hp-elevation-2);
+}
+.block-elevation-3 {
+  box-shadow: var(--hp-elevation-3);
+}
+
+/* ── Background Opacity ────────────────────────────────── */
+.homepage-block-wrapper.block-custom-opacity {
+  background: color-mix(in srgb, var(--background-secondary) var(--hp-bg-opacity, 100%), transparent);
+}
+.homepage-block-wrapper.block-custom-opacity.block-accented {
+  background: color-mix(in srgb, var(--_accent-bg, var(--background-secondary)) var(--hp-bg-opacity, 100%), transparent);
+}
+
+/* ── Tabbed Block Settings modal ──────────────────────────── */
+.hp-block-settings-modal .setting-item:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.hp-settings-preview-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 14px;
+  margin-bottom: 4px;
+}
+
+.hp-settings-preview-wrap .settings-preview-card {
+  width: 100%;
+  max-width: 360px;
+}
+
+.hp-settings-tabbar {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin: 0 0 6px;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.hp-settings-tab {
+  flex: 1 1 auto;
+  min-width: max-content;
+  text-align: center;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-interface-size, 0.8125rem);
+  font-weight: 500;
+  user-select: none;
+  transition: background 0.12s ease-out, color 0.12s ease-out;
+  outline: none;
+}
+
+.hp-settings-tab:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.hp-settings-tab.is-active {
+  background: var(--background-primary);
+  color: var(--text-normal);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.hp-settings-tab:focus-visible {
+  box-shadow: 0 0 0 2px var(--interactive-accent);
+}
+
+.hp-settings-tabbody {
+  min-height: 160px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.hp-settings-tabbody .setting-item:first-of-type {
+  border-top: none;
+  padding-top: 6px;
+}
+
+/* Shown in the Content tab when a block has no content-specific settings. */
+.hp-settings-empty {
+  margin: 24px 0;
+  color: var(--text-faint);
+  font-style: italic;
+  text-align: center;
+}
+
+/* Section sub-header inside a tab (e.g. "Border", "Shadow", "Background gradient") */
+.hp-settings-subhead {
+  margin: 18px 0 0;
+  padding: 10px 0 4px;
+  border-top: 1px solid var(--background-modifier-border);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hp-settings-subhead-desc {
+  margin: 0 0 4px;
+  color: var(--text-faint);
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
+/* ── Custom CSS section (Button Grid settings modal) ────── */
+.hp-custom-css-section {
+  margin: 1.2em 0;
+  padding-top: 0.9em;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.hp-custom-css-section .setting-item-name {
+  font-size: var(--font-ui-medium);
+  font-weight: var(--font-semibold);
+  margin-bottom: 0.6em;
+}
+
+.hp-custom-css-textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 160px;
+  padding: 10px 12px;
+  font-family: var(--font-monospace);
+  font-size: 0.85em;
+  line-height: 1.5;
+  resize: vertical;
+  white-space: pre;
+  background: var(--background-primary-alt);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+}
+
+.hp-custom-css-textarea:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+}
+
+/* ── Duplicate Button ──────────────────────────────────── */
+.block-duplicate-btn:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+  transform: scale(1.1);
+}
+.block-duplicate-btn:active {
+  transform: scale(0.95);
+}
+
+/* ── Bookmark Block ────────────────────────────────────── */
+.bookmark-grid {
+  display: grid;
+  gap: 6px;
+}
+.bookmark-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 10px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-normal);
+  font-size: inherit;
+  transition: background 0.12s ease-out, border-color 0.12s ease-out, transform 0.12s ease-out;
+}
+.bookmark-card:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+}
+.bookmark-card:active {
+  transform: translateY(0) scale(0.99);
+}
+.bookmark-emoji {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+.bookmark-label {
+  font-weight: 500;
+  font-size: var(--font-interface-size, 0.8125rem);
+}
+.bookmark-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* ── Bookmark Settings Item List ───────────────────────── */
+.bookmark-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.bookmark-item-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.bookmark-item-row input {
+  background: var(--background-primary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  padding: 4px 8px;
+  font-size: var(--font-interface-size, 0.8125rem);
+}
+.bookmark-item-emoji { width: 3.5rem; flex-shrink: 0; text-align: center; }
+.bookmark-item-label { flex: 1; min-width: 80px; }
+.bookmark-item-url { flex: 2; min-width: 120px; }
+.bookmark-item-desc { flex: 2; min-width: 120px; color: var(--text-muted); }
+.bookmark-item-del {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-s, 4px);
+  font-size: 0.75rem;
+  box-shadow: none;
+  flex-shrink: 0;
+}
+.bookmark-item-del:hover {
+  color: var(--text-error);
+  background: var(--background-modifier-hover);
+}
+
+/* ── Recent Files Block ────────────────────────────────── */
+.recent-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.recent-file-item {
+  border-radius: var(--radius-s, 4px);
+}
+.recent-file-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  font-size: var(--font-interface-size, 0.8125rem);
+  color: var(--text-normal);
+  cursor: pointer;
+  border-radius: var(--radius-s, 4px);
+  text-align: left;
+  transition: background 0.1s ease-out;
+}
+.recent-file-btn:hover {
+  background: var(--background-modifier-hover);
+}
+.recent-file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recent-file-time {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ── Pomodoro Block ────────────────────────────────────── */
+/* Center pomodoro and voice content relative to the full card, not just below
+   the header. hp-block-<type> is stamped by buildBlockWrapper; the
+   :not(.edit-mode) scope preserves the old :has(.pomodoro-block) behavior,
+   which never matched in edit mode (compact placeholders render no block
+   content). */
+.homepage-grid:not(.edit-mode) .homepage-block-wrapper.hp-block-pomodoro .block-content,
+.homepage-grid:not(.edit-mode) .homepage-block-wrapper.hp-block-voice-dictation .block-content {
+  position: absolute;
+  inset: var(--hp-card-padding);
+  z-index: 0;
+}
+.homepage-grid:not(.edit-mode) .homepage-block-wrapper.hp-block-pomodoro .block-header-zone,
+.homepage-grid:not(.edit-mode) .homepage-block-wrapper.hp-block-voice-dictation .block-header-zone {
+  z-index: 1;
+}
+
+.pomodoro-block {
+  container-type: size;
+  height: 100%;
+}
+
+.pomodoro-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(4px, 3cqh, 12px);
+  height: 100%;
+  padding: clamp(2px, 2cqh, 8px) 0;
+}
+
+.pomodoro-ring {
+  position: relative;
+  --ring-size: min(40cqh, 80cqw, 140px);
+  width: var(--ring-size);
+  height: var(--ring-size);
+  flex-shrink: 0;
+}
+
+.pomodoro-ring svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pomodoro-time {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(0.9rem, 12cqh, 1.8rem);
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-normal);
+  line-height: 1;
+}
+
+.pomodoro-phase {
+  font-size: clamp(0.6rem, 5cqh, 0.85rem);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pomodoro-dots {
+  display: flex;
+  gap: clamp(3px, 1.5cqw, 6px);
+}
+
+.pomodoro-dot {
+  --dot-size: clamp(5px, 3cqh, 8px);
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 50%;
+  background: var(--background-modifier-border);
+  transition: background 0.2s ease-out;
+}
+
+.pomodoro-dot.is-complete {
+  background: var(--color-accent);
+}
+
+.pomodoro-controls {
+  display: flex;
+  gap: clamp(4px, 2cqw, 8px);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pomodoro-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  padding: clamp(3px, 2cqh, 6px) clamp(8px, 4cqw, 14px);
+  font-size: clamp(0.65rem, 4cqh, 0.8125rem);
+  color: var(--text-normal);
+  cursor: pointer;
+  transition: background 0.12s ease-out, border-color 0.12s ease-out;
+}
+
+.pomodoro-btn-icon { display: none; }
+.pomodoro-btn-icon svg { width: 1em; height: 1em; }
+
+.pomodoro-btn:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--background-modifier-border-hover, var(--background-modifier-border));
+}
+
+.pomodoro-btn.is-primary {
+  background: var(--block-accent, var(--color-accent));
+  color: var(--text-on-accent, #fff);
+  border-color: var(--block-accent, var(--color-accent));
+}
+
+.pomodoro-btn.is-primary:hover {
+  opacity: 0.9;
+}
+
+/* Small card: controls left (stacked), timer right */
+@container (max-height: 220px) {
+  .pomodoro-container {
+    flex-direction: row-reverse;
+    gap: 16px;
+    justify-content: center;
+    padding: 0; /* Remove vertical padding to maximize space */
+  }
+  .pomodoro-ring {
+    --ring-size: clamp(64px, 85cqh, 120px);
+  }
+  .pomodoro-time {
+    font-size: clamp(1rem, 18cqh, 1.6rem);
+    font-weight: 400;
+  }
+  .pomodoro-controls {
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .pomodoro-btn {
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    min-width: 0;
+    min-height: 0;
+    font-size: 0.75rem;
+    border-radius: var(--radius-s, 4px);
+  }
+  .pomodoro-btn-icon { display: flex; }
+  .pomodoro-btn-icon svg { width: 14px; height: 14px; }
+  .pomodoro-btn-label { display: none; }
+  .pomodoro-phase,
+  .pomodoro-dots { display: none; }
+}
+
+/* Very flat card (1 unit tall): ring + timer + buttons in a row */
+@container (max-height: 120px) {
+  .pomodoro-container {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 4px 8px;
+    gap: 16px;
+  }
+  .pomodoro-ring {
+    --ring-size: clamp(52px, 95cqh, 90px);
+  }
+  .pomodoro-time {
+    font-size: clamp(1rem, 28cqh, 1.5rem);
+    font-weight: 400;
+  }
+  .pomodoro-controls {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 0;
+  }
+  .pomodoro-btn {
+    padding: 0;
+    width: clamp(28px, 40cqh, 36px);
+    height: clamp(28px, 40cqh, 36px);
+    min-width: 0;
+    max-width: none;
+    min-height: 0;
+    border-radius: var(--radius-s, 4px);
+  }
+  .pomodoro-btn-icon { display: flex; }
+  .pomodoro-btn-icon svg { width: 16px; height: 16px; }
+  .pomodoro-btn-label { display: none; }
+}
+
+/* ── Obsidian Mobile (.is-mobile) ──────────────────────── */
+/* .is-mobile is set on <body> by Obsidian on iOS / Android.
+   These rules target the mobile *app* specifically, not just narrow panes.
+   Some rules intentionally duplicate the @container (max-width: 540px) block
+   above because .is-mobile catches the app even on wide viewports (e.g.
+   iPad landscape) while container queries only fire on narrow containers. */
+.is-mobile .homepage-view {
+  --hp-padding: 6px;
+  --hp-card-padding: 10px;
+  padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Bigger tap targets across all interactive elements on mobile */
+.is-mobile .folder-link-btn,
+.is-mobile .grid-btn,
+.is-mobile .bookmark-card,
+.is-mobile .recent-file-btn,
+.is-mobile .random-note-open-btn,
+.is-mobile .random-note-title,
+.is-mobile .pomodoro-btn {
+  min-height: 44px;
+}
+
+/* Folder links as chips on mobile */
+.is-mobile .folder-links-list {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+.is-mobile .folder-link-btn {
+  padding: 8px 14px;
+  background: var(--background-modifier-hover);
+  border-radius: var(--radius-m, 8px);
+  width: auto;
+}
+.is-mobile .folder-link-btn:hover {
+  transform: none;
+}
+
+/* Disable all hover transforms on mobile (no hover state) */
+.is-mobile .grid-btn:hover,
+.is-mobile .bookmark-card:hover,
+.is-mobile .folder-link-btn:hover .link-emoji {
+  transform: none;
+}
+
+/* Single-column: tighter gap */
+.is-mobile .homepage-grid.grid-stack.hp-single-column {
+  gap: 6px;
+  padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ── Reduced Motion ─────────────────────────────────────── */
+/* !important is deliberate here: this is the canonical prefers-reduced-motion
+   kill-switch and must defeat every higher-specificity transition/animation
+   declaration in the file. */
+@media (prefers-reduced-motion: reduce) {
+  .homepage-view,
+  .homepage-view * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  /* Allow collapse/expand to still transition at reduced speed */
+  .homepage-block-wrapper .block-content {
+    transition-duration: 0.15s !important;
+  }
+
+  .toolbar-edit-dot {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+/* ── Utility Classes (inline style replacements) ──────── */
+.hp-hidden { display: none; }
+
+/* Grid zoom state (GridLayout.ts setZoom) */
+.homepage-grid.grid-stack.hp-zoomed {
+  flex-shrink: 0;
+  transform-origin: top center;
+  transform: var(--hp-grid-transform, none);
+}
+
+/* Auto-height measurement helpers (GridLayout.ts resizeBlockToContent).
+   Single-class JS toggles that must beat any component-level specificity
+   while measuring — hence !important. */
+.hp-no-transition { transition: none !important; }
+.hp-auto-rows { grid-template-rows: max-content !important; }
+
+/* Gradient background for cards (blockStyling.ts) */
+.homepage-block-wrapper.block-has-gradient {
+  background: var(--hp-bg-gradient);
+}
+
+/* No cursor pointer for unlinked buttons (ButtonGridBlock.ts) */
+.hp-cursor-default { cursor: default; }
+
+/* Greeting settings preview hint */
+.hp-preview-hint {
+  padding: 0 0 8px 0;
+  opacity: 0.7;
+}
+
+/* Full-width textarea in quotes settings */
+.hp-textarea-full {
+  width: 100%;
+  margin-top: 8px;
+  font-family: var(--font-monospace);
+  font-size: 12px;
+}
+
+/* Column-direction setting row */
+.hp-setting-column {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* No bottom padding (VideoEmbedBlock empty state) */
+.hp-no-padding-bottom { padding-bottom: 0; }
+
+/* Quote accent color via custom property */
+.quote-content.quote-colored {
+  border-left-color: var(--hp-quote-color);
+  color: var(--hp-quote-color);
+}
+
+/* Responsive grid columns via custom property. --hp-grid-cols and
+   --hp-masonry-cols are inline custom properties set from JS;
+   --hp-grid-cap / --hp-masonry-cap are stylesheet-side width caps from the
+   "Gallery responsive" container queries. min() clamps the masonry count to
+   the user's configured columns (the old `columns: N !important` cap could
+   force MORE columns than configured). */
+.button-grid { grid-template-columns: var(--hp-grid-cols); }
+.bookmark-grid { grid-template-columns: var(--hp-grid-cols); }
+.image-gallery:not(.masonry-layout) { grid-template-columns: var(--hp-grid-cap, var(--hp-grid-cols)); }
+.image-gallery.masonry-layout { column-count: min(var(--hp-masonry-cap, 99), var(--hp-masonry-cols, 3)); }
+.quotes-columns { grid-template-columns: repeat(var(--hp-column-count, 2), 1fr); }

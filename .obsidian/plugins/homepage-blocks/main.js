@@ -1,0 +1,13230 @@
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/main.ts
+var main_exports = {};
+__export(main_exports, {
+  default: () => HomepagePlugin
+});
+module.exports = __toCommonJS(main_exports);
+var import_obsidian28 = require("obsidian");
+
+// src/HomepageView.ts
+var import_obsidian6 = require("obsidian");
+
+// node_modules/gridstack/dist/utils.js
+var Utils = class _Utils {
+  /**
+   * Convert a potential selector into an actual list of HTML elements.
+   * Supports CSS selectors, element references, and special ID handling.
+   *
+   * @param els selector string, HTMLElement, or array of elements
+   * @param root optional root element to search within (defaults to document, useful for shadow DOM)
+   * @returns array of HTML elements matching the selector
+   *
+   * @example
+   * const elements = Utils.getElements('.grid-item');
+   * const byId = Utils.getElements('#myWidget');
+   * const fromShadow = Utils.getElements('.item', shadowRoot);
+   */
+  static getElements(els, root = document) {
+    if (typeof els === "string") {
+      const doc = "getElementById" in root ? root : void 0;
+      if (doc && !isNaN(+els[0])) {
+        const el = doc.getElementById(els);
+        return el ? [el] : [];
+      }
+      let list = root.querySelectorAll(els);
+      if (!list.length && els[0] !== "." && els[0] !== "#") {
+        list = root.querySelectorAll("." + els);
+        if (!list.length)
+          list = root.querySelectorAll("#" + els);
+        if (!list.length) {
+          const el = root.querySelector(`[gs-id="${els}"]`);
+          return el ? [el] : [];
+        }
+      }
+      return Array.from(list);
+    }
+    return [els];
+  }
+  /**
+   * Convert a potential selector into a single HTML element.
+   * Similar to getElements() but returns only the first match.
+   *
+   * @param els selector string or HTMLElement
+   * @param root optional root element to search within (defaults to document)
+   * @returns the first HTML element matching the selector, or null if not found
+   *
+   * @example
+   * const element = Utils.getElement('#myWidget');
+   * const first = Utils.getElement('.grid-item');
+   */
+  static getElement(els, root = document) {
+    if (typeof els === "string") {
+      const doc = "getElementById" in root ? root : void 0;
+      if (!els.length)
+        return null;
+      if (doc && els[0] === "#") {
+        return doc.getElementById(els.substring(1));
+      }
+      if (els[0] === "#" || els[0] === "." || els[0] === "[") {
+        return root.querySelector(els);
+      }
+      if (doc && !isNaN(+els[0])) {
+        return doc.getElementById(els);
+      }
+      let el = root.querySelector(els);
+      if (doc && !el) {
+        el = doc.getElementById(els);
+      }
+      if (!el) {
+        el = root.querySelector("." + els);
+      }
+      return el;
+    }
+    return els;
+  }
+  /**
+   * Check if a widget should be lazy loaded based on node or grid settings.
+   *
+   * @param n the grid node to check
+   * @returns true if the item should be lazy loaded
+   *
+   * @example
+   * if (Utils.lazyLoad(node)) {
+   *   // Set up intersection observer for lazy loading
+   * }
+   */
+  static lazyLoad(n) {
+    return n.lazyLoad || n.grid?.opts?.lazyLoad && n.lazyLoad !== false;
+  }
+  /**
+   * Create a div element with the specified CSS classes.
+   *
+   * @param classes array of CSS class names to add
+   * @param parent optional parent element to append the div to
+   * @returns the created div element
+   *
+   * @example
+   * const div = Utils.createDiv(['grid-item', 'draggable']);
+   * const nested = Utils.createDiv(['content'], parentDiv);
+   */
+  static createDiv(classes, parent) {
+    const el = document.createElement("div");
+    classes.forEach((c) => {
+      if (c)
+        el.classList.add(c);
+    });
+    parent?.appendChild(el);
+    return el;
+  }
+  /**
+   * Check if a widget should resize to fit its content.
+   *
+   * @param n the grid node to check (can be undefined)
+   * @param strict if true, only returns true for explicit sizeToContent:true (not numbers)
+   * @returns true if the widget should resize to content
+   *
+   * @example
+   * if (Utils.shouldSizeToContent(node)) {
+   *   // Trigger content-based resizing
+   * }
+   */
+  static shouldSizeToContent(n, strict = false) {
+    return n?.grid && (strict ? n.sizeToContent === true || n.grid.opts.sizeToContent === true && n.sizeToContent === void 0 : !!n.sizeToContent || n.grid.opts.sizeToContent && n.sizeToContent !== false);
+  }
+  /**
+   * Check if two grid positions overlap/intersect.
+   *
+   * @param a first position with x, y, w, h properties
+   * @param b second position with x, y, w, h properties
+   * @returns true if the positions overlap
+   *
+   * @example
+   * const overlaps = Utils.isIntercepted(
+   *   {x: 0, y: 0, w: 2, h: 1},
+   *   {x: 1, y: 0, w: 2, h: 1}
+   * ); // true - they overlap
+   */
+  static isIntercepted(a, b) {
+    return !(a.y >= b.y + b.h || a.y + a.h <= b.y || a.x + a.w <= b.x || a.x >= b.x + b.w);
+  }
+  /**
+   * Check if two grid positions are touching (edges or corners).
+   *
+   * @param a first position
+   * @param b second position
+   * @returns true if the positions are touching
+   *
+   * @example
+   * const touching = Utils.isTouching(
+   *   {x: 0, y: 0, w: 2, h: 1},
+   *   {x: 2, y: 0, w: 1, h: 1}
+   * ); // true - they share an edge
+   */
+  static isTouching(a, b) {
+    return _Utils.isIntercepted(a, { x: b.x - 0.5, y: b.y - 0.5, w: b.w + 1, h: b.h + 1 });
+  }
+  /**
+   * Calculate the overlapping area between two grid positions.
+   *
+   * @param a first position
+   * @param b second position
+   * @returns the area of overlap (0 if no overlap)
+   *
+   * @example
+   * const overlap = Utils.areaIntercept(
+   *   {x: 0, y: 0, w: 3, h: 2},
+   *   {x: 1, y: 0, w: 3, h: 2}
+   * ); // returns 4 (2x2 overlap)
+   */
+  static areaIntercept(a, b) {
+    const x0 = a.x > b.x ? a.x : b.x;
+    const x1 = a.x + a.w < b.x + b.w ? a.x + a.w : b.x + b.w;
+    if (x1 <= x0)
+      return 0;
+    const y0 = a.y > b.y ? a.y : b.y;
+    const y1 = a.y + a.h < b.y + b.h ? a.y + a.h : b.y + b.h;
+    if (y1 <= y0)
+      return 0;
+    return (x1 - x0) * (y1 - y0);
+  }
+  /**
+   * Calculate the total area of a grid position.
+   *
+   * @param a position with width and height
+   * @returns the total area (width * height)
+   *
+   * @example
+   * const area = Utils.area({x: 0, y: 0, w: 3, h: 2}); // returns 6
+   */
+  static area(a) {
+    return a.w * a.h;
+  }
+  /**
+   * Sort an array of grid nodes by position (y first, then x).
+   *
+   * @param nodes array of nodes to sort
+   * @param dir sort direction: 1 for ascending (top-left first), -1 for descending
+   * @returns the sorted array (modifies original)
+   *
+   * @example
+   * const sorted = Utils.sort(nodes); // Sort top-left to bottom-right
+   * const reverse = Utils.sort(nodes, -1); // Sort bottom-right to top-left
+   */
+  static sort(nodes, dir = 1) {
+    const und = 1e4;
+    return nodes.sort((a, b) => {
+      const diffY = dir * ((a.y ?? und) - (b.y ?? und));
+      if (diffY === 0)
+        return dir * ((a.x ?? und) - (b.x ?? und));
+      return diffY;
+    });
+  }
+  /**
+   * Find a grid node by its ID.
+   *
+   * @param nodes array of nodes to search
+   * @param id the ID to search for
+   * @returns the node with matching ID, or undefined if not found
+   *
+   * @example
+   * const node = Utils.find(nodes, 'widget-1');
+   * if (node) console.log('Found node at:', node.x, node.y);
+   */
+  static find(nodes, id) {
+    return id ? nodes.find((n) => n.id === id) : void 0;
+  }
+  /**
+   * Convert various value types to boolean.
+   * Handles strings like 'false', 'no', '0' as false.
+   *
+   * @param v value to convert
+   * @returns boolean representation
+   *
+   * @example
+   * Utils.toBool('true');  // true
+   * Utils.toBool('false'); // false
+   * Utils.toBool('no');    // false
+   * Utils.toBool('1');     // true
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static toBool(v) {
+    if (typeof v === "boolean") {
+      return v;
+    }
+    if (typeof v === "string") {
+      v = v.toLowerCase();
+      return !(v === "" || v === "no" || v === "false" || v === "0");
+    }
+    return Boolean(v);
+  }
+  /**
+   * Convert a string value to a number, handling null and empty strings.
+   *
+   * @param value string or null value to convert
+   * @returns number value, or undefined for null/empty strings
+   *
+   * @example
+   * Utils.toNumber('42');  // 42
+   * Utils.toNumber('');    // undefined
+   * Utils.toNumber(null);  // undefined
+   */
+  static toNumber(value) {
+    return value === null || value.length === 0 ? void 0 : Number(value);
+  }
+  /**
+   * Parse a height value with units into numeric value and unit string.
+   * Supports px, em, rem, vh, vw, %, cm, mm units.
+   *
+   * @param val height value as number or string with units
+   * @returns object with h (height) and unit properties
+   *
+   * @example
+   * Utils.parseHeight('100px');  // {h: 100, unit: 'px'}
+   * Utils.parseHeight('2rem');   // {h: 2, unit: 'rem'}
+   * Utils.parseHeight(50);       // {h: 50, unit: 'px'}
+   */
+  static parseHeight(val) {
+    let h;
+    let unit = "px";
+    if (typeof val === "string") {
+      if (val === "auto" || val === "")
+        h = 0;
+      else {
+        const match = val.match(/^(-[0-9]+\.[0-9]+|[0-9]*\.[0-9]+|-[0-9]+|[0-9]+)(px|em|rem|vh|vw|%|cm|mm)?$/);
+        if (!match) {
+          throw new Error(`Invalid height val = ${val}`);
+        }
+        unit = match[2] || "px";
+        h = parseFloat(match[1]);
+      }
+    } else {
+      h = val;
+    }
+    return { h, unit };
+  }
+  /**
+   * Copy unset fields from source objects to target object (shallow merge with defaults).
+   * Similar to Object.assign but only sets undefined/null fields.
+   *
+   * @param target the object to copy defaults into
+   * @param sources one or more source objects to copy defaults from
+   * @returns the modified target object
+   *
+   * @example
+   * const config = { width: 100 };
+   * Utils.defaults(config, { width: 200, height: 50 });
+   * // config is now { width: 100, height: 50 }
+   */
+  // eslint-disable-next-line
+  static defaults(target, ...sources) {
+    sources.forEach((source) => {
+      for (const key in source) {
+        if (!source.hasOwnProperty(key))
+          return;
+        if (target[key] === null || target[key] === void 0) {
+          target[key] = source[key];
+        } else if (typeof source[key] === "object" && typeof target[key] === "object") {
+          _Utils.defaults(target[key], source[key]);
+        }
+      }
+    });
+    return target;
+  }
+  /**
+   * Compare two objects for equality (shallow comparison).
+   * Checks if objects have the same fields and values at one level deep.
+   *
+   * @param a first object to compare
+   * @param b second object to compare
+   * @returns true if objects have the same values
+   *
+   * @example
+   * Utils.same({x: 1, y: 2}, {x: 1, y: 2}); // true
+   * Utils.same({x: 1}, {x: 1, y: 2}); // false
+   */
+  static same(a, b) {
+    if (typeof a !== "object")
+      return a == b;
+    if (typeof a !== typeof b)
+      return false;
+    if (Object.keys(a).length !== Object.keys(b).length)
+      return false;
+    for (const key in a) {
+      if (a[key] !== b[key])
+        return false;
+    }
+    return true;
+  }
+  /**
+   * Copy position and size properties from one widget to another.
+   * Copies x, y, w, h and optionally min/max constraints.
+   *
+   * @param a target widget to copy to
+   * @param b source widget to copy from
+   * @param doMinMax if true, also copy min/max width/height constraints
+   * @returns the target widget (a)
+   *
+   * @example
+   * Utils.copyPos(widget1, widget2); // Copy position/size
+   * Utils.copyPos(widget1, widget2, true); // Also copy constraints
+   */
+  static copyPos(a, b, doMinMax = false) {
+    if (b.x !== void 0)
+      a.x = b.x;
+    if (b.y !== void 0)
+      a.y = b.y;
+    if (b.w !== void 0)
+      a.w = b.w;
+    if (b.h !== void 0)
+      a.h = b.h;
+    if (doMinMax) {
+      if (b.minW)
+        a.minW = b.minW;
+      if (b.minH)
+        a.minH = b.minH;
+      if (b.maxW)
+        a.maxW = b.maxW;
+      if (b.maxH)
+        a.maxH = b.maxH;
+    }
+    return a;
+  }
+  /** true if a and b has same size & position */
+  static samePos(a, b) {
+    return a && b && a.x === b.x && a.y === b.y && (a.w || 1) === (b.w || 1) && (a.h || 1) === (b.h || 1);
+  }
+  /** given a node, makes sure it's min/max are valid */
+  static sanitizeMinMax(node) {
+    if (!node.minW) {
+      delete node.minW;
+    }
+    if (!node.minH) {
+      delete node.minH;
+    }
+    if (!node.maxW) {
+      delete node.maxW;
+    }
+    if (!node.maxH) {
+      delete node.maxH;
+    }
+  }
+  /** removes field from the first object if same as the second objects (like diffing) and internal '_' for saving */
+  static removeInternalAndSame(a, b) {
+    if (typeof a !== "object" || typeof b !== "object")
+      return;
+    if (Array.isArray(a) || Array.isArray(b))
+      return;
+    for (let key in a) {
+      const aVal = a[key];
+      const bVal = b[key];
+      if (key[0] === "_" || aVal === bVal) {
+        delete a[key];
+      } else if (aVal && typeof aVal === "object" && bVal !== void 0) {
+        _Utils.removeInternalAndSame(aVal, bVal);
+        if (!Object.keys(aVal).length) {
+          delete a[key];
+        }
+      }
+    }
+  }
+  /** removes internal fields '_' and default values for saving */
+  static removeInternalForSave(n, removeEl = true) {
+    for (let key in n) {
+      if (key[0] === "_" || n[key] === null || n[key] === void 0)
+        delete n[key];
+    }
+    delete n.grid;
+    if (removeEl)
+      delete n.el;
+    if (!n.autoPosition)
+      delete n.autoPosition;
+    if (!n.noResize)
+      delete n.noResize;
+    if (!n.noMove)
+      delete n.noMove;
+    if (!n.locked)
+      delete n.locked;
+    if (n.w === 1 || n.w === n.minW)
+      delete n.w;
+    if (n.h === 1 || n.h === n.minH)
+      delete n.h;
+  }
+  /** return the closest parent (or itself) matching the given class */
+  // static closestUpByClass(el: HTMLElement, name: string): HTMLElement {
+  //   while (el) {
+  //     if (el.classList.contains(name)) return el;
+  //     el = el.parentElement
+  //   }
+  //   return null;
+  // }
+  /** delay calling the given function for given delay, preventing new calls from happening while waiting */
+  static throttle(func, delay) {
+    let isWaiting = false;
+    return (...args) => {
+      if (!isWaiting) {
+        isWaiting = true;
+        setTimeout(() => {
+          func(...args);
+          isWaiting = false;
+        }, delay);
+      }
+    };
+  }
+  static removePositioningStyles(el) {
+    const style = el.style;
+    if (style.position) {
+      style.removeProperty("position");
+    }
+    if (style.left) {
+      style.removeProperty("left");
+    }
+    if (style.top) {
+      style.removeProperty("top");
+    }
+    if (style.width) {
+      style.removeProperty("width");
+    }
+    if (style.height) {
+      style.removeProperty("height");
+    }
+  }
+  /** @internal returns the passed element if scrollable, else the closest parent that will, up to the entire document scrolling element */
+  static getScrollElement(el) {
+    if (!el)
+      return document.scrollingElement || document.documentElement;
+    const style = getComputedStyle(el);
+    const overflowRegex = /(auto|scroll)/;
+    if (overflowRegex.test(style.overflow + style.overflowY)) {
+      return el;
+    } else {
+      return _Utils.getScrollElement(el.parentElement);
+    }
+  }
+  /** @internal */
+  static updateScrollPosition(el, position, distance) {
+    const scrollEl = _Utils.getScrollElement(el);
+    if (!scrollEl)
+      return;
+    const elRect = el.getBoundingClientRect();
+    const scrollRect = scrollEl.getBoundingClientRect();
+    const innerHeightOrClientHeight = window.innerHeight || document.documentElement.clientHeight;
+    const offsetDiffDown = elRect.bottom - Math.min(scrollRect.bottom, innerHeightOrClientHeight);
+    const offsetDiffUp = elRect.top - Math.max(scrollRect.top, 0);
+    const prevScroll = scrollEl.scrollTop;
+    if (offsetDiffUp < 0 && distance < 0) {
+      if (el.offsetHeight > scrollRect.height) {
+        scrollEl.scrollTop += distance;
+      } else {
+        scrollEl.scrollTop += Math.abs(offsetDiffUp) > Math.abs(distance) ? distance : offsetDiffUp;
+      }
+    } else if (offsetDiffDown > 0 && distance > 0) {
+      if (el.offsetHeight > scrollRect.height) {
+        scrollEl.scrollTop += distance;
+      } else {
+        scrollEl.scrollTop += offsetDiffDown > distance ? distance : offsetDiffDown;
+      }
+    }
+    position.top += scrollEl.scrollTop - prevScroll;
+  }
+  /**
+   * @internal Function used to scroll the page.
+   *
+   * @param event `MouseEvent` that triggers the resize
+   * @param el `HTMLElement` that's being resized
+   * @param distance Distance from the V edges to start scrolling
+   */
+  static updateScrollResize(event, el, distance) {
+    const scrollEl = _Utils.getScrollElement(el);
+    const height = scrollEl.clientHeight;
+    const offsetTop = scrollEl === _Utils.getScrollElement() ? 0 : scrollEl.getBoundingClientRect().top;
+    const pointerPosY = event.clientY - offsetTop;
+    const top = pointerPosY < distance;
+    const bottom = pointerPosY > height - distance;
+    if (top) {
+      scrollEl.scrollBy({ behavior: "smooth", top: pointerPosY - distance });
+    } else if (bottom) {
+      scrollEl.scrollBy({ behavior: "smooth", top: distance - (height - pointerPosY) });
+    }
+  }
+  /** single level clone, returning a new object with same top fields. This will share sub objects and arrays */
+  static clone(obj) {
+    if (obj === null || obj === void 0 || typeof obj !== "object") {
+      return obj;
+    }
+    if (obj instanceof Array) {
+      return [...obj];
+    }
+    return { ...obj };
+  }
+  /**
+   * Recursive clone version that returns a full copy, checking for nested objects and arrays ONLY.
+   * Note: this will use as-is any key starting with double __ (and not copy inside) some lib have circular dependencies.
+   */
+  static cloneDeep(obj) {
+    const skipFields = ["parentGrid", "el", "grid", "subGrid", "engine"];
+    const ret = _Utils.clone(obj);
+    for (const key in ret) {
+      if (ret.hasOwnProperty(key) && typeof ret[key] === "object" && key.substring(0, 2) !== "__" && !skipFields.find((k) => k === key)) {
+        ret[key] = _Utils.cloneDeep(obj[key]);
+      }
+    }
+    return ret;
+  }
+  /** deep clone the given HTML node, removing teh unique id field */
+  static cloneNode(el) {
+    const node = el.cloneNode(true);
+    node.removeAttribute("id");
+    return node;
+  }
+  static appendTo(el, parent) {
+    let parentNode;
+    if (typeof parent === "string") {
+      parentNode = _Utils.getElement(parent);
+    } else {
+      parentNode = parent;
+    }
+    if (parentNode) {
+      parentNode.appendChild(el);
+    }
+  }
+  // public static setPositionRelative(el: HTMLElement): void {
+  //   if (!(/^(?:r|a|f)/).test(getComputedStyle(el).position)) {
+  //     el.style.position = "relative";
+  //   }
+  // }
+  static addElStyles(el, styles) {
+    if (styles instanceof Object) {
+      for (const s in styles) {
+        if (styles.hasOwnProperty(s)) {
+          if (Array.isArray(styles[s])) {
+            styles[s].forEach((val) => {
+              el.style[s] = val;
+            });
+          } else {
+            el.style[s] = styles[s];
+          }
+        }
+      }
+    }
+  }
+  static initEvent(e, info) {
+    const evt = { type: info.type };
+    const obj = {
+      button: 0,
+      which: 0,
+      buttons: 1,
+      bubbles: true,
+      cancelable: true,
+      target: info.target ? info.target : e.target
+    };
+    ["altKey", "ctrlKey", "metaKey", "shiftKey"].forEach((p) => evt[p] = e[p]);
+    ["pageX", "pageY", "clientX", "clientY", "screenX", "screenY"].forEach((p) => evt[p] = e[p]);
+    return { ...evt, ...obj };
+  }
+  /** copies the MouseEvent (or convert Touch) properties and sends it as another event to the given target */
+  static simulateMouseEvent(e, simulatedType, target) {
+    const me = e;
+    const simulatedEvent = new MouseEvent(simulatedType, {
+      bubbles: true,
+      composed: true,
+      cancelable: true,
+      view: window,
+      detail: 1,
+      screenX: e.screenX,
+      screenY: e.screenY,
+      clientX: e.clientX,
+      clientY: e.clientY,
+      ctrlKey: me.ctrlKey ?? false,
+      altKey: me.altKey ?? false,
+      shiftKey: me.shiftKey ?? false,
+      metaKey: me.metaKey ?? false,
+      button: 0,
+      relatedTarget: e.target
+    });
+    (target || e.target).dispatchEvent(simulatedEvent);
+  }
+  /**
+   * defines an element that is used to get the offset and scale from grid transforms
+   * returns the scale and offsets from said element
+  */
+  static getValuesFromTransformedElement(parent) {
+    const transformReference = document.createElement("div");
+    _Utils.addElStyles(transformReference, {
+      opacity: "0",
+      position: "fixed",
+      top: "0px",
+      left: "0px",
+      width: "1px",
+      height: "1px",
+      zIndex: "-999999"
+    });
+    parent.appendChild(transformReference);
+    const transformValues = transformReference.getBoundingClientRect();
+    parent.removeChild(transformReference);
+    transformReference.remove();
+    return {
+      xScale: 1 / transformValues.width,
+      yScale: 1 / transformValues.height,
+      xOffset: transformValues.left,
+      yOffset: transformValues.top
+    };
+  }
+  /** swap the given object 2 field values */
+  static swap(o, a, b) {
+    if (!o)
+      return;
+    const tmp = o[a];
+    o[a] = o[b];
+    o[b] = tmp;
+  }
+  /** returns true if event is inside the given element rectangle */
+  // Note: Safari Mac has null event.relatedTarget which causes #1684 so check if DragEvent is inside the coordinates instead
+  //    Utils.el.contains(event.relatedTarget as HTMLElement)
+  // public static inside(e: MouseEvent, el: HTMLElement): boolean {
+  //   // srcElement, toElement, target: all set to placeholder when leaving simple grid, so we can't use that (Chrome)
+  //   const target: HTMLElement = e.relatedTarget || (e as any).fromElement;
+  //   if (!target) {
+  //     const { bottom, left, right, top } = el.getBoundingClientRect();
+  //     return (e.x < right && e.x > left && e.y < bottom && e.y > top);
+  //   }
+  //   return el.contains(target);
+  // }
+  /** true if the item can be rotated (checking for prop, not space available) */
+  static canBeRotated(n) {
+    return !(!n || n.w === n.h || n.locked || n.noResize || n.grid?.opts.disableResize || n.minW && n.minW === n.maxW || n.minH && n.minH === n.maxH);
+  }
+};
+
+// node_modules/gridstack/dist/gridstack-engine.js
+var GridStackEngine = class _GridStackEngine {
+  constructor(opts = {}) {
+    this.addedNodes = [];
+    this.removedNodes = [];
+    this.defaultColumn = 12;
+    this.column = opts.column || this.defaultColumn;
+    if (this.column > this.defaultColumn)
+      this.defaultColumn = this.column;
+    this.maxRow = opts.maxRow;
+    this._float = opts.float;
+    this.nodes = opts.nodes || [];
+    this.onChange = opts.onChange;
+  }
+  /**
+   * Enable/disable batch mode for multiple operations to optimize performance.
+   * When enabled, layout updates are deferred until batch mode is disabled.
+   *
+   * @param flag true to enable batch mode, false to disable and apply changes
+   * @param doPack if true (default), pack/compact nodes when disabling batch mode
+   * @returns the engine instance for chaining
+   *
+   * @example
+   * // Start batch mode for multiple operations
+   * engine.batchUpdate(true);
+   * engine.addNode(node1);
+   * engine.addNode(node2);
+   * engine.batchUpdate(false); // Apply all changes at once
+   */
+  batchUpdate(flag = true, doPack = true) {
+    if (!!this.batchMode === flag)
+      return this;
+    this.batchMode = flag;
+    if (flag) {
+      this._prevFloat = this._float;
+      this._float = true;
+      this.cleanNodes();
+      this.saveInitial();
+    } else {
+      this._float = this._prevFloat;
+      delete this._prevFloat;
+      if (doPack)
+        this._packNodes();
+      this._notify();
+    }
+    return this;
+  }
+  // use entire row for hitting area (will use bottom reverse sorted first) if we not actively moving DOWN and didn't already skip
+  _useEntireRowArea(node, nn) {
+    return (!this.float || this.batchMode && !this._prevFloat) && !this._hasLocked && (!node._moving || node._skipDown || nn.y <= node.y);
+  }
+  /** @internal fix collision on given 'node', going to given new location 'nn', with optional 'collide' node already found.
+   * return true if we moved. */
+  _fixCollisions(node, nn = node, collide, opt = {}) {
+    this.sortNodes(-1);
+    collide = collide || this.collide(node, nn);
+    if (!collide)
+      return false;
+    if (node._moving && !opt.nested && !this.float) {
+      if (this.swap(node, collide))
+        return true;
+    }
+    let area = nn;
+    if (!this._loading && this._useEntireRowArea(node, nn)) {
+      area = { x: 0, w: this.column, y: nn.y, h: nn.h };
+      collide = this.collide(node, area, opt.skip);
+    }
+    let didMove = false;
+    const newOpt = { nested: true, pack: false };
+    let counter = 0;
+    while (collide = collide || this.collide(node, area, opt.skip)) {
+      if (counter++ > this.nodes.length * 2) {
+        throw new Error("Infinite collide check");
+      }
+      let moved;
+      if (collide.locked || this._loading || node._moving && !node._skipDown && nn.y > node.y && !this.float && // can take space we had, or before where we're going
+      (!this.collide(collide, { ...collide, y: node.y }, node) || !this.collide(collide, { ...collide, y: nn.y - collide.h }, node))) {
+        node._skipDown = node._skipDown || nn.y > node.y;
+        const newNN = { ...nn, y: collide.y + collide.h, ...newOpt };
+        moved = this._loading && Utils.samePos(node, newNN) ? true : this.moveNode(node, newNN);
+        if ((collide.locked || this._loading) && moved) {
+          Utils.copyPos(nn, node);
+        } else if (!collide.locked && moved && opt.pack) {
+          this._packNodes();
+          nn.y = collide.y + collide.h;
+          Utils.copyPos(node, nn);
+        }
+        didMove = didMove || moved;
+      } else {
+        moved = this.moveNode(collide, { ...collide, y: nn.y + nn.h, skip: node, ...newOpt });
+      }
+      if (!moved)
+        return didMove;
+      collide = void 0;
+    }
+    return didMove;
+  }
+  /**
+   * Return the first node that intercepts/collides with the given node or area.
+   * Used for collision detection during drag and drop operations.
+   *
+   * @param skip the node to skip in collision detection (usually the node being moved)
+   * @param area the area to check for collisions (defaults to skip node's area)
+   * @param skip2 optional second node to skip in collision detection
+   * @returns the first colliding node, or undefined if no collision
+   *
+   * @example
+   * const colliding = engine.collide(draggedNode, {x: 2, y: 1, w: 2, h: 1});
+   * if (colliding) {
+   *   console.log('Would collide with:', colliding.id);
+   * }
+   */
+  collide(skip, area = skip, skip2) {
+    const skipId = skip._id;
+    const skip2Id = skip2?._id;
+    return this.nodes.find((n) => n._id !== skipId && n._id !== skip2Id && Utils.isIntercepted(n, area));
+  }
+  /**
+   * Return all nodes that intercept/collide with the given node or area.
+   * Similar to collide() but returns all colliding nodes instead of just the first.
+   *
+   * @param skip the node to skip in collision detection
+   * @param area the area to check for collisions (defaults to skip node's area)
+   * @param skip2 optional second node to skip in collision detection
+   * @returns array of all colliding nodes
+   *
+   * @example
+   * const allCollisions = engine.collideAll(draggedNode);
+   * console.log('Colliding with', allCollisions.length, 'nodes');
+   */
+  collideAll(skip, area = skip, skip2) {
+    const skipId = skip._id;
+    const skip2Id = skip2?._id;
+    return this.nodes.filter((n) => n._id !== skipId && n._id !== skip2Id && Utils.isIntercepted(n, area));
+  }
+  /** does a pixel coverage collision based on where we started, returning the node that has the most coverage that is >50% mid line */
+  directionCollideCoverage(node, o, collides) {
+    if (!o.rect || !node._rect)
+      return;
+    const r0 = node._rect;
+    const r = { ...o.rect };
+    if (r.y > r0.y) {
+      r.h += r.y - r0.y;
+      r.y = r0.y;
+    } else {
+      r.h += r0.y - r.y;
+    }
+    if (r.x > r0.x) {
+      r.w += r.x - r0.x;
+      r.x = r0.x;
+    } else {
+      r.w += r0.x - r.x;
+    }
+    let collide;
+    let overMax = 0.5;
+    for (let n of collides) {
+      if (n.locked || !n._rect) {
+        break;
+      }
+      const r2 = n._rect;
+      let yOver = Number.MAX_VALUE, xOver = Number.MAX_VALUE;
+      if (r0.y < r2.y) {
+        yOver = (r.y + r.h - r2.y) / r2.h;
+      } else if (r0.y + r0.h > r2.y + r2.h) {
+        yOver = (r2.y + r2.h - r.y) / r2.h;
+      }
+      if (r0.x < r2.x) {
+        xOver = (r.x + r.w - r2.x) / r2.w;
+      } else if (r0.x + r0.w > r2.x + r2.w) {
+        xOver = (r2.x + r2.w - r.x) / r2.w;
+      }
+      const over = Math.min(xOver, yOver);
+      if (over > overMax) {
+        overMax = over;
+        collide = n;
+      }
+    }
+    o.collide = collide;
+    return collide;
+  }
+  /** does a pixel coverage returning the node that has the most coverage by area */
+  /*
+  protected collideCoverage(r: GridStackPosition, collides: GridStackNode[]): {collide: GridStackNode, over: number} {
+    const collide: GridStackNode;
+    const overMax = 0;
+    collides.forEach(n => {
+      if (n.locked || !n._rect) return;
+      const over = Utils.areaIntercept(r, n._rect);
+      if (over > overMax) {
+        overMax = over;
+        collide = n;
+      }
+    });
+    return {collide, over: overMax};
+  }
+  */
+  /**
+   * Cache the pixel rectangles for all nodes used for collision detection during drag operations.
+   * This optimization converts grid coordinates to pixel coordinates for faster collision detection.
+   *
+   * @param w width of a single grid cell in pixels
+   * @param h height of a single grid cell in pixels
+   * @param top top margin/padding in pixels
+   * @param right right margin/padding in pixels
+   * @param bottom bottom margin/padding in pixels
+   * @param left left margin/padding in pixels
+   * @returns the engine instance for chaining
+   *
+   * @internal This is typically called by GridStack during resize events
+   */
+  cacheRects(w, h, top, right, bottom, left) {
+    this.nodes.forEach((n) => n._rect = {
+      y: n.y * h + top,
+      x: n.x * w + left,
+      w: n.w * w - left - right,
+      h: n.h * h - top - bottom
+    });
+    return this;
+  }
+  /**
+   * Attempt to swap the positions of two nodes if they meet swapping criteria.
+   * Nodes can swap if they are the same size or in the same column/row, not locked, and touching.
+   *
+   * @param a first node to swap
+   * @param b second node to swap
+   * @returns true if swap was successful, false if not possible, undefined if not applicable
+   *
+   * @example
+   * const swapped = engine.swap(nodeA, nodeB);
+   * if (swapped) {
+   *   console.log('Nodes swapped successfully');
+   * }
+   */
+  swap(a, b) {
+    if (!b || b.locked || !a || a.locked)
+      return false;
+    function _doSwap() {
+      const x = b.x, y = b.y;
+      b.x = a.x;
+      b.y = a.y;
+      if (a.h != b.h) {
+        a.x = x;
+        a.y = b.y + b.h;
+      } else if (a.w != b.w) {
+        a.x = b.x + b.w;
+        a.y = y;
+      } else {
+        a.x = x;
+        a.y = y;
+      }
+      a._dirty = b._dirty = true;
+      return true;
+    }
+    let touching;
+    if (a.w === b.w && a.h === b.h && (a.x === b.x || a.y === b.y) && (touching = Utils.isTouching(a, b)))
+      return _doSwap();
+    if (touching === false)
+      return;
+    if (a.w === b.w && a.x === b.x && (touching || (touching = Utils.isTouching(a, b)))) {
+      if (b.y < a.y) {
+        const t = a;
+        a = b;
+        b = t;
+      }
+      return _doSwap();
+    }
+    if (touching === false)
+      return;
+    if (a.h === b.h && a.y === b.y && (touching || (touching = Utils.isTouching(a, b)))) {
+      if (b.x < a.x) {
+        const t = a;
+        a = b;
+        b = t;
+      }
+      return _doSwap();
+    }
+    return false;
+  }
+  /**
+   * Check if the specified rectangular area is empty (no nodes occupy any part of it).
+   *
+   * @param x the x coordinate (column) of the area to check
+   * @param y the y coordinate (row) of the area to check
+   * @param w the width in columns of the area to check
+   * @param h the height in rows of the area to check
+   * @returns true if the area is completely empty, false if any node overlaps
+   *
+   * @example
+   * if (engine.isAreaEmpty(2, 1, 3, 2)) {
+   *   console.log('Area is available for placement');
+   * }
+   */
+  isAreaEmpty(x, y, w, h) {
+    const nn = { x: x || 0, y: y || 0, w: w || 1, h: h || 1 };
+    return !this.collide(nn);
+  }
+  /**
+   * Re-layout grid items to reclaim any empty space.
+   * This optimizes the grid layout by moving items to fill gaps.
+   *
+   * @param layout layout algorithm to use:
+   *   - 'compact' (default): find truly empty spaces, may reorder items
+   *   - 'list': keep the sort order exactly the same, move items up sequentially
+   * @param doSort if true (default), sort nodes by position before compacting
+   * @returns the engine instance for chaining
+   *
+   * @example
+   * // Compact to fill empty spaces
+   * engine.compact();
+   *
+   * // Compact preserving item order
+   * engine.compact('list');
+   */
+  compact(layout = "compact", doSort = true) {
+    if (this.nodes.length === 0)
+      return this;
+    if (doSort)
+      this.sortNodes();
+    const wasBatch = this.batchMode;
+    if (!wasBatch)
+      this.batchUpdate();
+    const wasColumnResize = this._inColumnResize;
+    if (!wasColumnResize)
+      this._inColumnResize = true;
+    const copyNodes = this.nodes;
+    this.nodes = [];
+    copyNodes.forEach((n, index, list) => {
+      let after;
+      if (!n.locked) {
+        n.autoPosition = true;
+        if (layout === "list" && index)
+          after = list[index - 1];
+      }
+      this.addNode(n, false, after);
+    });
+    if (!wasColumnResize)
+      delete this._inColumnResize;
+    if (!wasBatch)
+      this.batchUpdate(false);
+    return this;
+  }
+  /**
+   * Enable/disable floating widgets (default: `false`).
+   * When floating is enabled, widgets can move up to fill empty spaces.
+   * See [example](http://gridstackjs.com/demo/float.html)
+   *
+   * @param val true to enable floating, false to disable
+   *
+   * @example
+   * engine.float = true;  // Enable floating
+   * engine.float = false; // Disable floating (default)
+   */
+  set float(val) {
+    if (this._float === val)
+      return;
+    this._float = val || false;
+    if (!val) {
+      this._packNodes()._notify();
+    }
+  }
+  /**
+   * Get the current floating mode setting.
+   *
+   * @returns true if floating is enabled, false otherwise
+   *
+   * @example
+   * const isFloating = engine.float;
+   * console.log('Floating enabled:', isFloating);
+   */
+  get float() {
+    return this._float || false;
+  }
+  /**
+   * Sort the nodes array from first to last, or reverse.
+   * This is called during collision/placement operations to enforce a specific order.
+   *
+   * @param dir sort direction: 1 for ascending (first to last), -1 for descending (last to first)
+   * @returns the engine instance for chaining
+   *
+   * @example
+   * engine.sortNodes();    // Sort ascending (default)
+   * engine.sortNodes(-1);  // Sort descending
+   */
+  sortNodes(dir = 1) {
+    this.nodes = Utils.sort(this.nodes, dir);
+    return this;
+  }
+  /** @internal called to top gravity pack the items back OR revert back to original Y positions when floating */
+  _packNodes() {
+    if (this.batchMode) {
+      return this;
+    }
+    this.sortNodes();
+    if (this.float) {
+      this.nodes.forEach((n) => {
+        if (n._updating || n._orig === void 0 || n.y === n._orig.y)
+          return;
+        let newY = n.y;
+        while (newY > n._orig.y) {
+          --newY;
+          const collide = this.collide(n, { x: n.x, y: newY, w: n.w, h: n.h });
+          if (!collide) {
+            n._dirty = true;
+            n.y = newY;
+          }
+        }
+      });
+    } else {
+      this.nodes.forEach((n, i) => {
+        if (n.locked)
+          return;
+        while (n.y > 0) {
+          const newY = i === 0 ? 0 : n.y - 1;
+          const canBeMoved = i === 0 || !this.collide(n, { x: n.x, y: newY, w: n.w, h: n.h });
+          if (!canBeMoved)
+            break;
+          n._dirty = n.y !== newY;
+          n.y = newY;
+        }
+      });
+    }
+    return this;
+  }
+  /**
+   * Prepare and validate a node's coordinates and values for the current grid.
+   * This ensures the node has valid position, size, and properties before being added to the grid.
+   *
+   * @param node the node to prepare and validate
+   * @param resizing if true, resize the node down if it's out of bounds; if false, move it to fit
+   * @returns the prepared node with valid coordinates
+   *
+   * @example
+   * const node = { w: 3, h: 2, content: 'Hello' };
+   * const prepared = engine.prepareNode(node);
+   * console.log('Node prepared at:', prepared.x, prepared.y);
+   */
+  prepareNode(node, resizing) {
+    node._id = node._id ?? _GridStackEngine._idSeq++;
+    const id = node.id;
+    if (id) {
+      let count = 1;
+      while (this.nodes.find((n) => n.id === node.id && n !== node)) {
+        node.id = id + "_" + count++;
+      }
+    }
+    if (node.x === void 0 || node.y === void 0 || node.x === null || node.y === null) {
+      node.autoPosition = true;
+    }
+    const defaults = { x: 0, y: 0, w: 1, h: 1 };
+    Utils.defaults(node, defaults);
+    if (!node.autoPosition) {
+      delete node.autoPosition;
+    }
+    if (!node.noResize) {
+      delete node.noResize;
+    }
+    if (!node.noMove) {
+      delete node.noMove;
+    }
+    Utils.sanitizeMinMax(node);
+    if (typeof node.x == "string") {
+      node.x = Number(node.x);
+    }
+    if (typeof node.y == "string") {
+      node.y = Number(node.y);
+    }
+    if (typeof node.w == "string") {
+      node.w = Number(node.w);
+    }
+    if (typeof node.h == "string") {
+      node.h = Number(node.h);
+    }
+    if (isNaN(node.x)) {
+      node.x = defaults.x;
+      node.autoPosition = true;
+    }
+    if (isNaN(node.y)) {
+      node.y = defaults.y;
+      node.autoPosition = true;
+    }
+    if (isNaN(node.w)) {
+      node.w = defaults.w;
+    }
+    if (isNaN(node.h)) {
+      node.h = defaults.h;
+    }
+    this.nodeBoundFix(node, resizing);
+    return node;
+  }
+  /**
+   * Part 2 of preparing a node to fit inside the grid - validates and fixes coordinates and dimensions.
+   * This ensures the node fits within grid boundaries and respects min/max constraints.
+   *
+   * @param node the node to validate and fix
+   * @param resizing if true, resize the node to fit; if false, move the node to fit
+   * @returns the engine instance for chaining
+   *
+   * @example
+   * // Fix a node that might be out of bounds
+   * engine.nodeBoundFix(node, true); // Resize to fit
+   * engine.nodeBoundFix(node, false); // Move to fit
+   */
+  nodeBoundFix(node, resizing) {
+    const before = node._orig || Utils.copyPos({}, node);
+    if (node.maxW) {
+      node.w = Math.min(node.w || 1, node.maxW);
+    }
+    if (node.maxH) {
+      node.h = Math.min(node.h || 1, node.maxH);
+    }
+    if (node.minW) {
+      node.w = Math.max(node.w || 1, node.minW);
+    }
+    if (node.minH) {
+      node.h = Math.max(node.h || 1, node.minH);
+    }
+    const saveOrig = (node.x || 0) + (node.w || 1) > this.column;
+    if (saveOrig && this.column < this.defaultColumn && !this._inColumnResize && !this.skipCacheUpdate && node._id != null && this.findCacheLayout(node, this.defaultColumn) === -1) {
+      const copy = { ...node };
+      if (copy.autoPosition || copy.x === void 0) {
+        delete copy.x;
+        delete copy.y;
+      } else
+        copy.x = Math.min(this.defaultColumn - 1, copy.x);
+      copy.w = Math.min(this.defaultColumn, copy.w || 1);
+      this.cacheOneLayout(copy, this.defaultColumn);
+    }
+    if (node.w > this.column) {
+      node.w = this.column;
+    } else if (node.w < 1) {
+      node.w = 1;
+    }
+    if (this.maxRow && node.h > this.maxRow) {
+      node.h = this.maxRow;
+    } else if (node.h < 1) {
+      node.h = 1;
+    }
+    if (node.x < 0) {
+      node.x = 0;
+    }
+    if (node.y < 0) {
+      node.y = 0;
+    }
+    if (node.x + node.w > this.column) {
+      if (resizing) {
+        node.w = this.column - node.x;
+      } else {
+        node.x = this.column - node.w;
+      }
+    }
+    if (this.maxRow && node.y + node.h > this.maxRow) {
+      if (resizing) {
+        node.h = this.maxRow - node.y;
+      } else {
+        node.y = this.maxRow - node.h;
+      }
+    }
+    if (!Utils.samePos(node, before)) {
+      node._dirty = true;
+    }
+    return this;
+  }
+  /**
+   * Returns a list of nodes that have been modified from their original values.
+   * This is used to track which nodes need DOM updates.
+   *
+   * @param verify if true, performs additional verification by comparing current vs original positions
+   * @returns array of nodes that have been modified
+   *
+   * @example
+   * const changed = engine.getDirtyNodes();
+   * console.log('Modified nodes:', changed.length);
+   *
+   * // Get verified dirty nodes
+   * const verified = engine.getDirtyNodes(true);
+   */
+  getDirtyNodes(verify) {
+    if (verify) {
+      return this.nodes.filter((n) => n._dirty && !Utils.samePos(n, n._orig));
+    }
+    return this.nodes.filter((n) => n._dirty);
+  }
+  /** @internal call this to call onChange callback with dirty nodes so DOM can be updated */
+  _notify(removedNodes) {
+    if (this.batchMode || !this.onChange)
+      return this;
+    const dirtyNodes = (removedNodes || []).concat(this.getDirtyNodes());
+    this.onChange(dirtyNodes);
+    return this;
+  }
+  /**
+   * Clean all dirty and last tried information from nodes.
+   * This resets the dirty state tracking for all nodes.
+   *
+   * @returns the engine instance for chaining
+   *
+   * @internal
+   */
+  cleanNodes() {
+    if (this.batchMode)
+      return this;
+    this.nodes.forEach((n) => {
+      delete n._dirty;
+      delete n._lastTried;
+    });
+    return this;
+  }
+  /**
+   * Save the initial position/size of all nodes to track real dirty state.
+   * This creates a snapshot of current positions that can be restored later.
+   *
+   * Note: Should be called right after change events and before move/resize operations.
+   *
+   * @returns the engine instance for chaining
+   *
+   * @internal
+   */
+  saveInitial() {
+    this.nodes.forEach((n) => {
+      n._orig = Utils.copyPos({}, n);
+      delete n._dirty;
+    });
+    this._hasLocked = this.nodes.some((n) => n.locked);
+    return this;
+  }
+  /**
+   * Restore all nodes back to their initial values.
+   * This is typically called when canceling an operation (e.g., Esc key during drag).
+   *
+   * @returns the engine instance for chaining
+   *
+   * @internal
+   */
+  restoreInitial() {
+    this.nodes.forEach((n) => {
+      if (!n._orig || Utils.samePos(n, n._orig))
+        return;
+      Utils.copyPos(n, n._orig);
+      n._dirty = true;
+    });
+    this._notify();
+    return this;
+  }
+  /**
+   * Find the first available empty spot for the given node dimensions.
+   * Updates the node's x,y attributes with the found position.
+   *
+   * @param node the node to find a position for (w,h must be set)
+   * @param nodeList optional list of nodes to check against (defaults to engine nodes)
+   * @param column optional column count (defaults to engine column count)
+   * @param after optional node to start search after (maintains order)
+   * @returns true if an empty position was found and node was updated
+   *
+   * @example
+   * const node = { w: 2, h: 1 };
+   * if (engine.findEmptyPosition(node)) {
+   *   console.log('Found position at:', node.x, node.y);
+   * }
+   */
+  findEmptyPosition(node, nodeList = this.nodes, column = this.column, after) {
+    const start = after ? after.y * column + (after.x + after.w) : 0;
+    let found = false;
+    for (let i = start; !found; ++i) {
+      const x = i % column;
+      const y = Math.floor(i / column);
+      if (x + node.w > column) {
+        continue;
+      }
+      const box = { x, y, w: node.w, h: node.h };
+      if (!nodeList.find((n) => Utils.isIntercepted(box, n))) {
+        if (node.x !== x || node.y !== y)
+          node._dirty = true;
+        node.x = x;
+        node.y = y;
+        delete node.autoPosition;
+        found = true;
+      }
+    }
+    return found;
+  }
+  /**
+   * Add the given node to the grid, handling collision detection and re-packing.
+   * This is the main method for adding new widgets to the engine.
+   *
+   * @param node the node to add to the grid
+   * @param triggerAddEvent if true, adds node to addedNodes list for event triggering
+   * @param after optional node to place this node after (for ordering)
+   * @returns the added node (or existing node if duplicate)
+   *
+   * @example
+   * const node = { x: 0, y: 0, w: 2, h: 1, content: 'Hello' };
+   * const added = engine.addNode(node, true);
+   */
+  addNode(node, triggerAddEvent = false, after) {
+    const dup = this.nodes.find((n) => n._id === node._id);
+    if (dup)
+      return dup;
+    this._inColumnResize ? this.nodeBoundFix(node) : this.prepareNode(node);
+    delete node._temporaryRemoved;
+    delete node._removeDOM;
+    let skipCollision;
+    if (node.autoPosition && this.findEmptyPosition(node, this.nodes, this.column, after)) {
+      delete node.autoPosition;
+      skipCollision = true;
+    }
+    this.nodes.push(node);
+    if (triggerAddEvent) {
+      this.addedNodes.push(node);
+    }
+    if (!skipCollision)
+      this._fixCollisions(node);
+    if (!this.batchMode) {
+      this._packNodes()._notify();
+    }
+    return node;
+  }
+  /**
+   * Remove the given node from the grid.
+   *
+   * @param node the node to remove
+   * @param removeDOM if true (default), marks node for DOM removal
+   * @param triggerEvent if true, adds node to removedNodes list for event triggering
+   * @returns the engine instance for chaining
+   *
+   * @example
+   * engine.removeNode(node, true, true);
+   */
+  removeNode(node, removeDOM = true, triggerEvent = false) {
+    if (!this.nodes.find((n) => n._id === node._id)) {
+      return this;
+    }
+    if (triggerEvent) {
+      this.removedNodes.push(node);
+    }
+    if (removeDOM)
+      node._removeDOM = true;
+    this.nodes = this.nodes.filter((n) => n._id !== node._id);
+    if (!node._isAboutToRemove)
+      this._packNodes();
+    this._notify([node]);
+    return this;
+  }
+  /**
+   * Remove all nodes from the grid.
+   *
+   * @param removeDOM if true (default), marks all nodes for DOM removal
+   * @param triggerEvent if true (default), triggers removal events
+   * @returns the engine instance for chaining
+   *
+   * @example
+   * engine.removeAll(); // Remove all nodes
+   */
+  removeAll(removeDOM = true, triggerEvent = true) {
+    delete this._layouts;
+    if (!this.nodes.length)
+      return this;
+    removeDOM && this.nodes.forEach((n) => n._removeDOM = true);
+    const removedNodes = this.nodes;
+    this.removedNodes = triggerEvent ? removedNodes : [];
+    this.nodes = [];
+    return this._notify(removedNodes);
+  }
+  /**
+   * Check if a node can be moved to a new position, considering layout constraints.
+   * This is a safer version of moveNode() that validates the move first.
+   *
+   * For complex cases (like maxRow constraints), it simulates the move in a clone first,
+   * then applies the changes only if they meet all specifications.
+   *
+   * @param node the node to move
+   * @param o move options including target position
+   * @returns true if the node was successfully moved
+   *
+   * @example
+   * const canMove = engine.moveNodeCheck(node, { x: 2, y: 1 });
+   * if (canMove) {
+   *   console.log('Node moved successfully');
+   * }
+   */
+  moveNodeCheck(node, o) {
+    if (!this.changedPosConstrain(node, o))
+      return false;
+    o.pack = true;
+    if (!this.maxRow) {
+      return this.moveNode(node, o);
+    }
+    let clonedNode;
+    const clone = new _GridStackEngine({
+      column: this.column,
+      float: this.float,
+      nodes: this.nodes.map((n) => {
+        if (n._id === node._id) {
+          clonedNode = { ...n };
+          return clonedNode;
+        }
+        return { ...n };
+      })
+    });
+    if (!clonedNode)
+      return false;
+    const canMove = clone.moveNode(clonedNode, o) && clone.getRow() <= Math.max(this.getRow(), this.maxRow);
+    if (!canMove && !o.resizing && o.collide) {
+      const collide = o.collide.el.gridstackNode;
+      if (this.swap(node, collide)) {
+        this._notify();
+        return true;
+      }
+    }
+    if (!canMove)
+      return false;
+    clone.nodes.filter((n) => n._dirty).forEach((c) => {
+      const n = this.nodes.find((a) => a._id === c._id);
+      if (!n)
+        return;
+      Utils.copyPos(n, c);
+      n._dirty = true;
+    });
+    this._notify();
+    return true;
+  }
+  /** return true if can fit in grid height constrain only (always true if no maxRow) */
+  willItFit(node) {
+    delete node._willFitPos;
+    if (!this.maxRow)
+      return true;
+    const clone = new _GridStackEngine({
+      column: this.column,
+      float: this.float,
+      nodes: this.nodes.map((n2) => {
+        return { ...n2 };
+      })
+    });
+    const n = { ...node };
+    this.cleanupNode(n);
+    delete n.el;
+    delete n._id;
+    delete n.content;
+    delete n.grid;
+    clone.addNode(n);
+    if (clone.getRow() <= this.maxRow) {
+      node._willFitPos = Utils.copyPos({}, n);
+      return true;
+    }
+    return false;
+  }
+  /** true if x,y or w,h are different after clamping to min/max */
+  changedPosConstrain(node, p) {
+    p.w = p.w || node.w;
+    p.h = p.h || node.h;
+    if (node.x !== p.x || node.y !== p.y)
+      return true;
+    if (node.maxW) {
+      p.w = Math.min(p.w, node.maxW);
+    }
+    if (node.maxH) {
+      p.h = Math.min(p.h, node.maxH);
+    }
+    if (node.minW) {
+      p.w = Math.max(p.w, node.minW);
+    }
+    if (node.minH) {
+      p.h = Math.max(p.h, node.minH);
+    }
+    return node.w !== p.w || node.h !== p.h;
+  }
+  /** return true if the passed in node was actually moved (checks for no-op and locked) */
+  moveNode(node, o) {
+    if (!node || /*node.locked ||*/
+    !o)
+      return false;
+    let wasUndefinedPack;
+    if (o.pack === void 0 && !this.batchMode) {
+      wasUndefinedPack = o.pack = true;
+    }
+    if (typeof o.x !== "number") {
+      o.x = node.x;
+    }
+    if (typeof o.y !== "number") {
+      o.y = node.y;
+    }
+    if (typeof o.w !== "number") {
+      o.w = node.w;
+    }
+    if (typeof o.h !== "number") {
+      o.h = node.h;
+    }
+    const resizing = node.w !== o.w || node.h !== o.h;
+    const nn = Utils.copyPos({}, node, true);
+    Utils.copyPos(nn, o);
+    this.nodeBoundFix(nn, resizing);
+    Utils.copyPos(o, nn);
+    if (!o.forceCollide && Utils.samePos(node, o))
+      return false;
+    const prevPos = Utils.copyPos({}, node);
+    const collides = this.collideAll(node, nn, o.skip);
+    let needToMove = true;
+    if (collides.length) {
+      const activeDrag = node._moving && !o.nested;
+      let collide = activeDrag ? this.directionCollideCoverage(node, o, collides) : collides[0];
+      if (activeDrag && collide && node.grid?.opts?.subGridDynamic && !node.grid._isTemp) {
+        const over = Utils.areaIntercept(o.rect, collide._rect);
+        const a1 = Utils.area(o.rect);
+        const a2 = Utils.area(collide._rect);
+        const perc = over / (a1 < a2 ? a1 : a2);
+        if (perc > 0.8) {
+          collide.grid.makeSubGrid(collide.el, void 0, node);
+          collide = void 0;
+        }
+      }
+      if (collide) {
+        needToMove = !this._fixCollisions(node, nn, collide, o);
+      } else {
+        needToMove = false;
+        if (wasUndefinedPack)
+          delete o.pack;
+      }
+    }
+    if (needToMove && !Utils.samePos(node, nn)) {
+      node._dirty = true;
+      Utils.copyPos(node, nn);
+    }
+    if (o.pack) {
+      this._packNodes()._notify();
+    }
+    return !Utils.samePos(node, prevPos);
+  }
+  getRow() {
+    return this.nodes.reduce((row, n) => Math.max(row, n.y + n.h), 0);
+  }
+  beginUpdate(node) {
+    if (!node._updating) {
+      node._updating = true;
+      delete node._skipDown;
+      if (!this.batchMode)
+        this.saveInitial();
+    }
+    return this;
+  }
+  endUpdate() {
+    const n = this.nodes.find((n2) => n2._updating);
+    if (n) {
+      delete n._updating;
+      delete n._skipDown;
+    }
+    return this;
+  }
+  /** saves a copy of the largest column layout (eg 12 even when rendering 1 column) so we don't loose orig layout, unless explicity column
+   * count to use is given. returning a list of widgets for serialization
+   * @param saveElement if true (default), the element will be saved to GridStackWidget.el field, else it will be removed.
+   * @param saveCB callback for each node -> widget, so application can insert additional data to be saved into the widget data structure.
+   * @param column if provided, the grid will be saved for the given column count (IFF we have matching internal saved layout, or current layout).
+   * Note: nested grids will ALWAYS save the container w to match overall layouts (parent + child) to be consistent.
+  */
+  save(saveElement = true, saveCB, column) {
+    const len = this._layouts?.length || 0;
+    let layout;
+    if (len) {
+      if (column) {
+        if (column !== this.column)
+          layout = this._layouts[column];
+      } else if (this.column !== len - 1) {
+        layout = this._layouts[len - 1];
+      }
+    }
+    const list = [];
+    this.sortNodes();
+    this.nodes.forEach((n) => {
+      const wl = layout?.find((l) => l._id === n._id);
+      const w = { ...n, ...wl || {} };
+      Utils.removeInternalForSave(w, !saveElement);
+      if (saveCB)
+        saveCB(n, w);
+      list.push(w);
+    });
+    return list;
+  }
+  /** @internal called whenever a node is added or moved - updates the cached layouts */
+  layoutsNodesChange(nodes) {
+    if (!this._layouts || this._inColumnResize)
+      return this;
+    this._layouts.forEach((layout, column) => {
+      if (!layout || column === this.column)
+        return this;
+      if (column < this.column) {
+        this._layouts[column] = void 0;
+      } else {
+        const ratio = column / this.column;
+        nodes.forEach((node) => {
+          if (!node._orig)
+            return;
+          const n = layout.find((l) => l._id === node._id);
+          if (!n)
+            return;
+          if (n.y >= 0 && node.y !== node._orig.y) {
+            n.y += node.y - node._orig.y;
+            if (n.y < 0)
+              n.y = 0;
+          }
+          if (node.x !== node._orig.x) {
+            n.x = Math.round(node.x * ratio);
+            if (n.x < 0)
+              n.x = 0;
+          }
+          if (node.w !== node._orig.w) {
+            n.w = Math.round(node.w * ratio);
+            if (n.w < 1)
+              n.w = 1;
+          }
+        });
+      }
+    });
+    return this;
+  }
+  /**
+   * @internal Called to scale the widget width & position up/down based on the column change.
+   * Note we store previous layouts (especially original ones) to make it possible to go
+   * from say 12 -> 1 -> 12 and get back to where we were.
+   *
+   * @param prevColumn previous number of columns
+   * @param column  new column number
+   * @param layout specify the type of re-layout that will happen (position, size, etc...).
+   * Note: items will never be outside of the current column boundaries. default (moveScale). Ignored for 1 column
+   */
+  columnChanged(prevColumn, column, layout = "moveScale") {
+    if (!this.nodes.length || !column || prevColumn === column)
+      return this;
+    const doCompact = layout === "compact" || layout === "list";
+    if (doCompact) {
+      this.sortNodes(1);
+    }
+    if (column < prevColumn)
+      this.cacheLayout(this.nodes, prevColumn);
+    this.batchUpdate();
+    let newNodes = [];
+    let nodes = doCompact ? this.nodes : Utils.sort(this.nodes, -1);
+    if (column > prevColumn && this._layouts) {
+      const cacheNodes = this._layouts[column] || [];
+      const lastIndex = this._layouts.length - 1;
+      if (!cacheNodes.length && prevColumn !== lastIndex && this._layouts[lastIndex]?.length) {
+        prevColumn = lastIndex;
+        this._layouts[lastIndex].forEach((cacheNode) => {
+          const n = nodes.find((n2) => n2._id === cacheNode._id);
+          if (n) {
+            if (!doCompact && !cacheNode.autoPosition) {
+              n.x = cacheNode.x ?? n.x;
+              n.y = cacheNode.y ?? n.y;
+            }
+            n.w = cacheNode.w ?? n.w;
+            if (cacheNode.x == void 0 || cacheNode.y === void 0)
+              n.autoPosition = true;
+          }
+        });
+      }
+      cacheNodes.forEach((cacheNode) => {
+        const j = nodes.findIndex((n) => n._id === cacheNode._id);
+        if (j !== -1) {
+          const n = nodes[j];
+          if (doCompact) {
+            n.w = cacheNode.w;
+            return;
+          }
+          if (cacheNode.autoPosition || isNaN(cacheNode.x) || isNaN(cacheNode.y)) {
+            this.findEmptyPosition(cacheNode, newNodes);
+          }
+          if (!cacheNode.autoPosition) {
+            n.x = cacheNode.x ?? n.x;
+            n.y = cacheNode.y ?? n.y;
+            n.w = cacheNode.w ?? n.w;
+            newNodes.push(n);
+          }
+          nodes.splice(j, 1);
+        }
+      });
+    }
+    if (doCompact) {
+      this.compact(layout, false);
+    } else {
+      if (nodes.length) {
+        if (typeof layout === "function") {
+          layout(column, prevColumn, newNodes, nodes);
+        } else {
+          const ratio = doCompact || layout === "none" ? 1 : column / prevColumn;
+          const move = layout === "move" || layout === "moveScale";
+          const scale = layout === "scale" || layout === "moveScale";
+          nodes.forEach((node) => {
+            node.x = column === 1 ? 0 : move ? Math.round(node.x * ratio) : Math.min(node.x, column - 1);
+            node.w = column === 1 || prevColumn === 1 ? 1 : scale ? Math.round(node.w * ratio) || 1 : Math.min(node.w, column);
+            newNodes.push(node);
+          });
+          nodes = [];
+        }
+      }
+      newNodes = Utils.sort(newNodes, -1);
+      this._inColumnResize = true;
+      this.nodes = [];
+      newNodes.forEach((node) => {
+        this.addNode(node, false);
+        delete node._orig;
+      });
+    }
+    this.nodes.forEach((n) => delete n._orig);
+    this.batchUpdate(false, !doCompact);
+    delete this._inColumnResize;
+    return this;
+  }
+  /**
+   * call to cache the given layout internally to the given location so we can restore back when column changes size
+   * @param nodes list of nodes
+   * @param column corresponding column index to save it under
+   * @param clear if true, will force other caches to be removed (default false)
+   */
+  cacheLayout(nodes, column, clear = false) {
+    const copy = [];
+    nodes.forEach((n, i) => {
+      if (n._id === void 0) {
+        const existing = n.id ? this.nodes.find((n2) => n2.id === n.id) : void 0;
+        n._id = existing?._id ?? _GridStackEngine._idSeq++;
+      }
+      copy[i] = { x: n.x, y: n.y, w: n.w, _id: n._id };
+    });
+    this._layouts = clear ? [] : this._layouts || [];
+    this._layouts[column] = copy;
+    return this;
+  }
+  /**
+   * call to cache the given node layout internally to the given location so we can restore back when column changes size
+   * @param node single node to cache
+   * @param column corresponding column index to save it under
+   */
+  cacheOneLayout(n, column) {
+    n._id = n._id ?? _GridStackEngine._idSeq++;
+    const l = { x: n.x, y: n.y, w: n.w, _id: n._id };
+    if (n.autoPosition || n.x === void 0) {
+      delete l.x;
+      delete l.y;
+      if (n.autoPosition)
+        l.autoPosition = true;
+    }
+    this._layouts = this._layouts || [];
+    this._layouts[column] = this._layouts[column] || [];
+    const index = this.findCacheLayout(n, column);
+    if (index === -1)
+      this._layouts[column].push(l);
+    else
+      this._layouts[column][index] = l;
+    return this;
+  }
+  findCacheLayout(n, column) {
+    return this._layouts?.[column]?.findIndex((l) => l._id === n._id) ?? -1;
+  }
+  removeNodeFromLayoutCache(n) {
+    if (!this._layouts) {
+      return;
+    }
+    for (let i = 0; i < this._layouts.length; i++) {
+      const index = this.findCacheLayout(n, i);
+      if (index !== -1) {
+        this._layouts[i].splice(index, 1);
+      }
+    }
+  }
+  /** called to remove all internal values but the _id */
+  cleanupNode(node) {
+    for (const prop in node) {
+      if (prop[0] === "_" && prop !== "_id")
+        delete node[prop];
+    }
+    return this;
+  }
+};
+GridStackEngine._idSeq = 0;
+
+// node_modules/gridstack/dist/types.js
+var gridDefaults = {
+  alwaysShowResizeHandle: "mobile",
+  animate: true,
+  auto: true,
+  cellHeight: "auto",
+  cellHeightThrottle: 100,
+  cellHeightUnit: "px",
+  column: 12,
+  draggable: { handle: ".grid-stack-item-content", appendTo: "body", scroll: true },
+  handle: ".grid-stack-item-content",
+  itemClass: "grid-stack-item",
+  margin: 10,
+  marginUnit: "px",
+  maxRow: 0,
+  minRow: 0,
+  placeholderClass: "grid-stack-placeholder",
+  placeholderText: "",
+  removableOptions: { accept: "grid-stack-item", decline: "grid-stack-non-removable" },
+  resizable: { handles: "se" },
+  rtl: "auto"
+  // **** same as not being set ****
+  // disableDrag: false,
+  // disableResize: false,
+  // float: false,
+  // handleClass: null,
+  // removable: false,
+  // staticGrid: false,
+  //removable
+};
+
+// node_modules/gridstack/dist/dd-manager.js
+var DDManager = class {
+};
+
+// node_modules/gridstack/dist/dd-touch.js
+var isTouch = typeof window !== "undefined" && typeof document !== "undefined" && ("ontouchstart" in document || "ontouchstart" in window || window.DocumentTouch && document instanceof window.DocumentTouch || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0);
+var DDTouch = class {
+};
+function simulateMouseEvent(e, simulatedType) {
+  if (e.touches.length > 1)
+    return;
+  if (e.cancelable)
+    e.preventDefault();
+  Utils.simulateMouseEvent(e.changedTouches[0], simulatedType);
+}
+function simulatePointerMouseEvent(e, simulatedType) {
+  if (e.cancelable)
+    e.preventDefault();
+  Utils.simulateMouseEvent(e, simulatedType);
+}
+function touchstart(e) {
+  if (DDTouch.touchHandled)
+    return;
+  DDTouch.touchHandled = true;
+  simulateMouseEvent(e, "mousedown");
+}
+function touchmove(e) {
+  if (!DDTouch.touchHandled)
+    return;
+  simulateMouseEvent(e, "mousemove");
+}
+function touchend(e) {
+  if (!DDTouch.touchHandled)
+    return;
+  if (DDTouch.pointerLeaveTimeout) {
+    window.clearTimeout(DDTouch.pointerLeaveTimeout);
+    delete DDTouch.pointerLeaveTimeout;
+  }
+  const wasDragging = !!DDManager.dragElement;
+  simulateMouseEvent(e, "mouseup");
+  if (!wasDragging) {
+    simulateMouseEvent(e, "click");
+  }
+  DDTouch.touchHandled = false;
+}
+function pointerdown(e) {
+  if (e.pointerType === "mouse")
+    return;
+  e.target.releasePointerCapture(e.pointerId);
+}
+function pointerenter(e) {
+  if (!DDManager.dragElement) {
+    return;
+  }
+  if (e.pointerType === "mouse")
+    return;
+  simulatePointerMouseEvent(e, "mouseenter");
+}
+function pointerleave(e) {
+  if (!DDManager.dragElement) {
+    return;
+  }
+  if (e.pointerType === "mouse")
+    return;
+  DDTouch.pointerLeaveTimeout = window.setTimeout(() => {
+    delete DDTouch.pointerLeaveTimeout;
+    simulatePointerMouseEvent(e, "mouseleave");
+  }, 10);
+}
+
+// node_modules/gridstack/dist/dd-resizable-handle.js
+var DDResizableHandle = class _DDResizableHandle {
+  constructor(host, dir, option) {
+    this.host = host;
+    this.dir = dir;
+    this.option = option;
+    this.moving = false;
+    this._mouseDown = this._mouseDown.bind(this);
+    this._mouseMove = this._mouseMove.bind(this);
+    this._mouseUp = this._mouseUp.bind(this);
+    this._keyEvent = this._keyEvent.bind(this);
+    this._init();
+  }
+  /** @internal */
+  _init() {
+    if (this.option.element) {
+      try {
+        this.el = this.option.element instanceof HTMLElement ? this.option.element : this.host.querySelector(this.option.element);
+      } catch (error) {
+        this.option.element = void 0;
+        console.error("Query for resizeable handle failed, falling back", error);
+      }
+    }
+    if (!this.el) {
+      this.el = document.createElement("div");
+      this.host.appendChild(this.el);
+    }
+    this.el.classList.add("ui-resizable-handle");
+    this.el.classList.add(`${_DDResizableHandle.prefix}${this.dir}`);
+    this.el.style.zIndex = "100";
+    this.el.style.userSelect = "none";
+    this.el.addEventListener("mousedown", this._mouseDown);
+    if (isTouch) {
+      this.el.addEventListener("touchstart", touchstart);
+      this.el.addEventListener("pointerdown", pointerdown);
+    }
+    return this;
+  }
+  /** call this when resize handle needs to be removed and cleaned up */
+  destroy() {
+    if (this.moving)
+      this._mouseUp(this.mouseDownEvent);
+    this.el.removeEventListener("mousedown", this._mouseDown);
+    if (isTouch) {
+      this.el.removeEventListener("touchstart", touchstart);
+      this.el.removeEventListener("pointerdown", pointerdown);
+    }
+    if (!this.option.element) {
+      this.host.removeChild(this.el);
+    }
+    delete this.el;
+    delete this.host;
+    return this;
+  }
+  /** @internal called on mouse down on us: capture move on the entire document (mouse might not stay on us) until we release the mouse */
+  _mouseDown(e) {
+    this.mouseDownEvent = e;
+    document.addEventListener("mousemove", this._mouseMove, { capture: true, passive: true });
+    document.addEventListener("mouseup", this._mouseUp, true);
+    if (isTouch) {
+      this.el.addEventListener("touchmove", touchmove);
+      this.el.addEventListener("touchend", touchend);
+    }
+    e.stopPropagation();
+    e.preventDefault();
+  }
+  /** @internal */
+  _mouseMove(e) {
+    const s = this.mouseDownEvent;
+    if (this.moving) {
+      this._triggerEvent("move", e);
+    } else if (Math.abs(e.x - s.x) + Math.abs(e.y - s.y) > 2) {
+      this.moving = true;
+      this._triggerEvent("start", this.mouseDownEvent);
+      this._triggerEvent("move", e);
+      document.addEventListener("keydown", this._keyEvent);
+    }
+    e.stopPropagation();
+  }
+  /** @internal */
+  _mouseUp(e) {
+    if (this.moving) {
+      this._triggerEvent("stop", e);
+      document.removeEventListener("keydown", this._keyEvent);
+    }
+    document.removeEventListener("mousemove", this._mouseMove, true);
+    document.removeEventListener("mouseup", this._mouseUp, true);
+    if (isTouch) {
+      this.el.removeEventListener("touchmove", touchmove);
+      this.el.removeEventListener("touchend", touchend);
+    }
+    delete this.moving;
+    delete this.mouseDownEvent;
+    e.stopPropagation();
+    e.preventDefault();
+  }
+  /** @internal call when keys are being pressed - use Esc to cancel */
+  _keyEvent(e) {
+    if (e.key === "Escape") {
+      this.host.gridstackNode?.grid?.engine.restoreInitial();
+      this._mouseUp(this.mouseDownEvent);
+    }
+  }
+  /** @internal */
+  _triggerEvent(name, event) {
+    if (this.option[name])
+      this.option[name](event);
+    return this;
+  }
+};
+DDResizableHandle.prefix = "ui-resizable-";
+
+// node_modules/gridstack/dist/dd-base-impl.js
+var DDBaseImplement = class {
+  constructor() {
+    this._eventRegister = {};
+  }
+  /**
+   * Returns the current disabled state.
+   * Note: Use enable()/disable() methods to change state as other operations need to happen.
+   */
+  get disabled() {
+    return this._disabled;
+  }
+  /**
+   * Register an event callback for the specified event.
+   *
+   * @param event - Event name to listen for
+   * @param callback - Function to call when event occurs
+   */
+  on(event, callback) {
+    this._eventRegister[event] = callback;
+  }
+  /**
+   * Unregister an event callback for the specified event.
+   *
+   * @param event - Event name to stop listening for
+   */
+  off(event) {
+    delete this._eventRegister[event];
+  }
+  /**
+   * Enable this drag & drop implementation.
+   * Subclasses should override to perform additional setup.
+   */
+  enable() {
+    this._disabled = false;
+  }
+  /**
+   * Disable this drag & drop implementation.
+   * Subclasses should override to perform additional cleanup.
+   */
+  disable() {
+    this._disabled = true;
+  }
+  /**
+   * Destroy this drag & drop implementation and clean up resources.
+   * Removes all event handlers and clears internal state.
+   */
+  destroy() {
+    delete this._eventRegister;
+  }
+  /**
+   * Trigger a registered event callback if one exists and the implementation is enabled.
+   *
+   * @param eventName - Name of the event to trigger
+   * @param event - DOM event object to pass to the callback
+   * @returns Result from the callback function, if any
+   */
+  triggerEvent(eventName, event) {
+    if (!this.disabled && this._eventRegister && this._eventRegister[eventName])
+      return this._eventRegister[eventName](event);
+  }
+};
+
+// node_modules/gridstack/dist/dd-resizable.js
+var DDResizable = class _DDResizable extends DDBaseImplement {
+  // have to be public else complains for HTMLElementExtendOpt ?
+  constructor(el, option = {}) {
+    super();
+    this.el = el;
+    this.option = option;
+    this.rectScale = { x: 1, y: 1 };
+    this._ui = () => {
+      const containmentEl = this.el.parentElement;
+      const containmentRect = containmentEl.getBoundingClientRect();
+      const newRect = {
+        width: this.originalRect.width,
+        height: this.originalRect.height + this.scrolled,
+        left: this.originalRect.left,
+        top: this.originalRect.top - this.scrolled
+      };
+      const rect = this.temporalRect || newRect;
+      return {
+        position: {
+          left: (rect.left - containmentRect.left) * this.rectScale.x,
+          top: (rect.top - containmentRect.top) * this.rectScale.y
+        },
+        size: {
+          width: rect.width * this.rectScale.x,
+          height: rect.height * this.rectScale.y
+        }
+        /* Gridstack ONLY needs position set above... keep around in case.
+        element: [this.el], // The object representing the element to be resized
+        helper: [], // TODO: not support yet - The object representing the helper that's being resized
+        originalElement: [this.el],// we don't wrap here, so simplify as this.el //The object representing the original element before it is wrapped
+        originalPosition: { // The position represented as { left, top } before the resizable is resized
+          left: this.originalRect.left - containmentRect.left,
+          top: this.originalRect.top - containmentRect.top
+        },
+        originalSize: { // The size represented as { width, height } before the resizable is resized
+          width: this.originalRect.width,
+          height: this.originalRect.height
+        }
+        */
+      };
+    };
+    this._mouseOver = this._mouseOver.bind(this);
+    this._mouseOut = this._mouseOut.bind(this);
+    this.enable();
+    this._setupAutoHide(this.option.autoHide);
+    this._setupHandlers();
+  }
+  on(event, callback) {
+    super.on(event, callback);
+  }
+  off(event) {
+    super.off(event);
+  }
+  enable() {
+    super.enable();
+    this.el.classList.remove("ui-resizable-disabled");
+    this._setupAutoHide(this.option.autoHide);
+  }
+  disable() {
+    super.disable();
+    this.el.classList.add("ui-resizable-disabled");
+    this._setupAutoHide(false);
+  }
+  destroy() {
+    this._removeHandlers();
+    this._setupAutoHide(false);
+    delete this.el;
+    super.destroy();
+  }
+  updateOption(opts) {
+    const updateHandles = opts.handles && opts.handles !== this.option.handles;
+    const updateAutoHide = opts.autoHide && opts.autoHide !== this.option.autoHide;
+    Object.keys(opts).forEach((key) => this.option[key] = opts[key]);
+    if (updateHandles) {
+      this._removeHandlers();
+      this._setupHandlers();
+    }
+    if (updateAutoHide) {
+      this._setupAutoHide(this.option.autoHide);
+    }
+    return this;
+  }
+  /** @internal turns auto hide on/off */
+  _setupAutoHide(auto) {
+    if (auto) {
+      this.el.classList.add("ui-resizable-autohide");
+      this.el.addEventListener("mouseover", this._mouseOver);
+      this.el.addEventListener("mouseout", this._mouseOut);
+    } else {
+      this.el.classList.remove("ui-resizable-autohide");
+      this.el.removeEventListener("mouseover", this._mouseOver);
+      this.el.removeEventListener("mouseout", this._mouseOut);
+      if (DDManager.overResizeElement === this) {
+        delete DDManager.overResizeElement;
+      }
+    }
+    return this;
+  }
+  /** @internal */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _mouseOver(e) {
+    if (DDManager.overResizeElement || DDManager.dragElement)
+      return;
+    DDManager.overResizeElement = this;
+    this.el.classList.remove("ui-resizable-autohide");
+  }
+  /** @internal */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _mouseOut(e) {
+    if (DDManager.overResizeElement !== this)
+      return;
+    delete DDManager.overResizeElement;
+    this.el.classList.add("ui-resizable-autohide");
+  }
+  /** @internal */
+  _setupHandlers() {
+    this.handlers = this.option.handles.split(",").map((dir) => dir.trim()).map((dir) => new DDResizableHandle(this.el, dir, {
+      element: this.option.element,
+      start: (event) => this._resizeStart(event),
+      stop: (event) => this._resizeStop(event),
+      move: (event) => this._resizing(event, dir)
+    }));
+    return this;
+  }
+  /** @internal */
+  _resizeStart(event) {
+    this.sizeToContent = Utils.shouldSizeToContent(this.el.gridstackNode, true);
+    this.originalRect = this.el.getBoundingClientRect();
+    this.scrollEl = Utils.getScrollElement(this.el);
+    this.scrollY = this.scrollEl.scrollTop;
+    this.scrolled = 0;
+    this.startEvent = event;
+    this._setupHelper();
+    this._applyChange();
+    const ev = Utils.initEvent(event, { type: "resizestart", target: this.el });
+    if (this.option.start) {
+      this.option.start(ev, this._ui());
+    }
+    this.el.classList.add("ui-resizable-resizing");
+    this.triggerEvent("resizestart", ev);
+    return this;
+  }
+  /** @internal */
+  _resizing(event, dir) {
+    this.scrolled = this.scrollEl.scrollTop - this.scrollY;
+    this.temporalRect = this._getChange(event, dir);
+    this._applyChange();
+    const ev = Utils.initEvent(event, { type: "resize", target: this.el });
+    if (this.option.resize) {
+      this.option.resize(ev, this._ui());
+    }
+    this.triggerEvent("resize", ev);
+    return this;
+  }
+  /** @internal */
+  _resizeStop(event) {
+    const ev = Utils.initEvent(event, { type: "resizestop", target: this.el });
+    this._cleanHelper();
+    if (this.option.stop) {
+      this.option.stop(ev);
+    }
+    this.el.classList.remove("ui-resizable-resizing");
+    this.triggerEvent("resizestop", ev);
+    delete this.startEvent;
+    delete this.originalRect;
+    delete this.temporalRect;
+    delete this.scrollY;
+    delete this.scrolled;
+    return this;
+  }
+  /** @internal */
+  _setupHelper() {
+    this.elOriginStyleVal = _DDResizable._originStyleProp.map((prop) => this.el.style[prop]);
+    this.parentOriginStylePosition = this.el.parentElement.style.position;
+    const parent = this.el.parentElement;
+    const dragTransform = Utils.getValuesFromTransformedElement(parent);
+    this.rectScale = {
+      x: dragTransform.xScale,
+      y: dragTransform.yScale
+    };
+    if (getComputedStyle(this.el.parentElement).position.match(/static/)) {
+      this.el.parentElement.style.position = "relative";
+    }
+    this.el.style.position = "absolute";
+    this.el.style.opacity = "0.8";
+    return this;
+  }
+  /** @internal */
+  _cleanHelper() {
+    _DDResizable._originStyleProp.forEach((prop, i) => {
+      this.el.style[prop] = this.elOriginStyleVal[i] || null;
+    });
+    this.el.parentElement.style.position = this.parentOriginStylePosition || null;
+    return this;
+  }
+  /** @internal */
+  _getChange(event, dir) {
+    const oEvent = this.startEvent;
+    const newRect = {
+      width: this.originalRect.width,
+      height: this.originalRect.height + this.scrolled,
+      left: this.originalRect.left,
+      top: this.originalRect.top - this.scrolled
+    };
+    const offsetX = event.clientX - oEvent.clientX;
+    const offsetY = this.sizeToContent ? 0 : event.clientY - oEvent.clientY;
+    let moveLeft;
+    let moveUp;
+    if (dir.indexOf("e") > -1) {
+      newRect.width += offsetX;
+    } else if (dir.indexOf("w") > -1) {
+      newRect.width -= offsetX;
+      newRect.left += offsetX;
+      moveLeft = true;
+    }
+    if (dir.indexOf("s") > -1) {
+      newRect.height += offsetY;
+    } else if (dir.indexOf("n") > -1) {
+      newRect.height -= offsetY;
+      newRect.top += offsetY;
+      moveUp = true;
+    }
+    const constrain = this._constrainSize(newRect.width, newRect.height, moveLeft, moveUp);
+    if (Math.round(newRect.width) !== Math.round(constrain.width)) {
+      if (dir.indexOf("w") > -1) {
+        newRect.left += newRect.width - constrain.width;
+      }
+      newRect.width = constrain.width;
+    }
+    if (Math.round(newRect.height) !== Math.round(constrain.height)) {
+      if (dir.indexOf("n") > -1) {
+        newRect.top += newRect.height - constrain.height;
+      }
+      newRect.height = constrain.height;
+    }
+    return newRect;
+  }
+  /** @internal constrain the size to the set min/max values */
+  _constrainSize(oWidth, oHeight, moveLeft, moveUp) {
+    const o = this.option;
+    const maxWidth = (moveLeft ? o.maxWidthMoveLeft : o.maxWidth) || Number.MAX_SAFE_INTEGER;
+    const minWidth = o.minWidth / this.rectScale.x || oWidth;
+    const maxHeight = (moveUp ? o.maxHeightMoveUp : o.maxHeight) || Number.MAX_SAFE_INTEGER;
+    const minHeight = o.minHeight / this.rectScale.y || oHeight;
+    const width = Math.min(maxWidth, Math.max(minWidth, oWidth));
+    const height = Math.min(maxHeight, Math.max(minHeight, oHeight));
+    return { width, height };
+  }
+  /** @internal */
+  _applyChange() {
+    let containmentRect = { left: 0, top: 0, width: 0, height: 0 };
+    if (this.el.style.position === "absolute") {
+      const containmentEl = this.el.parentElement;
+      const { left, top } = containmentEl.getBoundingClientRect();
+      containmentRect = { left, top, width: 0, height: 0 };
+    }
+    if (!this.temporalRect)
+      return this;
+    Object.keys(this.temporalRect).forEach((key) => {
+      const value = this.temporalRect[key];
+      const scaleReciprocal = key === "width" || key === "left" ? this.rectScale.x : key === "height" || key === "top" ? this.rectScale.y : 1;
+      this.el.style[key] = (value - containmentRect[key]) * scaleReciprocal + "px";
+    });
+    return this;
+  }
+  /** @internal */
+  _removeHandlers() {
+    this.handlers.forEach((handle) => handle.destroy());
+    delete this.handlers;
+    return this;
+  }
+};
+DDResizable._originStyleProp = ["width", "height", "position", "left", "top", "opacity", "zIndex"];
+
+// node_modules/gridstack/dist/dd-draggable.js
+var skipMouseDown = 'input,textarea,button,select,option,[contenteditable="true"],.ui-resizable-handle';
+var DDDraggable = class _DDDraggable extends DDBaseImplement {
+  constructor(el, option = {}) {
+    super();
+    this.el = el;
+    this.option = option;
+    this.dragTransform = {
+      xScale: 1,
+      yScale: 1,
+      xOffset: 0,
+      yOffset: 0
+    };
+    const handleName = option?.handle?.substring(1);
+    const n = el.gridstackNode;
+    this.dragEls = !handleName || el.classList.contains(handleName) ? [el] : n?.subGrid ? [el.querySelector(option.handle) || el] : Array.from(el.querySelectorAll(option.handle));
+    if (this.dragEls.length === 0) {
+      this.dragEls = [el];
+    }
+    this._mouseDown = this._mouseDown.bind(this);
+    this._mouseMove = this._mouseMove.bind(this);
+    this._mouseUp = this._mouseUp.bind(this);
+    this._keyEvent = this._keyEvent.bind(this);
+    this.enable();
+  }
+  on(event, callback) {
+    super.on(event, callback);
+  }
+  off(event) {
+    super.off(event);
+  }
+  enable() {
+    if (this.disabled === false)
+      return;
+    super.enable();
+    this.dragEls.forEach((dragEl) => {
+      dragEl.addEventListener("mousedown", this._mouseDown);
+      if (isTouch) {
+        dragEl.addEventListener("touchstart", touchstart);
+        dragEl.addEventListener("pointerdown", pointerdown);
+      }
+    });
+    this.el.classList.remove("ui-draggable-disabled");
+  }
+  disable(forDestroy = false) {
+    if (this.disabled === true)
+      return;
+    super.disable();
+    this.dragEls.forEach((dragEl) => {
+      dragEl.removeEventListener("mousedown", this._mouseDown);
+      if (isTouch) {
+        dragEl.removeEventListener("touchstart", touchstart);
+        dragEl.removeEventListener("pointerdown", pointerdown);
+      }
+    });
+    if (!forDestroy)
+      this.el.classList.add("ui-draggable-disabled");
+  }
+  destroy() {
+    if (this.dragTimeout)
+      window.clearTimeout(this.dragTimeout);
+    delete this.dragTimeout;
+    if (this.mouseDownEvent)
+      this._mouseUp(this.mouseDownEvent);
+    this.disable(true);
+    delete this.el;
+    delete this.helper;
+    delete this.option;
+    super.destroy();
+  }
+  updateOption(opts) {
+    Object.keys(opts).forEach((key) => this.option[key] = opts[key]);
+    return this;
+  }
+  /** @internal call when mouse goes down before a dragstart happens */
+  _mouseDown(e) {
+    if (DDTouch.touchHandled && e.isTrusted)
+      DDTouch.touchHandled = false;
+    if (DDManager.mouseHandled)
+      return;
+    if (e.button !== 0)
+      return true;
+    if (!this.dragEls.find((el) => el === e.target) && e.target.closest(skipMouseDown))
+      return true;
+    if (this.option.cancel) {
+      if (e.target.closest(this.option.cancel))
+        return true;
+    }
+    this.mouseDownEvent = e;
+    delete this.dragging;
+    delete DDManager.dragElement;
+    delete DDManager.dropElement;
+    document.addEventListener("mousemove", this._mouseMove, { capture: true, passive: true });
+    document.addEventListener("mouseup", this._mouseUp, true);
+    if (isTouch) {
+      e.currentTarget.addEventListener("touchmove", touchmove);
+      e.currentTarget.addEventListener("touchend", touchend);
+    }
+    e.preventDefault();
+    if (document.activeElement)
+      document.activeElement.blur();
+    DDManager.mouseHandled = true;
+    return true;
+  }
+  /** @internal method to call actual drag event */
+  _callDrag(e) {
+    if (!this.dragging)
+      return;
+    const ev = Utils.initEvent(e, { target: this.el, type: "drag" });
+    if (this.option.drag) {
+      this.option.drag(ev, this.ui());
+    }
+    this.triggerEvent("drag", ev);
+  }
+  /** @internal called when the main page (after successful mousedown) receives a move event to drag the item around the screen */
+  _mouseMove(e) {
+    const s = this.mouseDownEvent;
+    this.lastDrag = e;
+    if (this.dragging) {
+      this._dragFollow(e);
+      if (DDManager.pauseDrag) {
+        const pause = Number.isInteger(DDManager.pauseDrag) ? DDManager.pauseDrag : 100;
+        if (this.dragTimeout)
+          window.clearTimeout(this.dragTimeout);
+        this.dragTimeout = window.setTimeout(() => this._callDrag(e), pause);
+      } else {
+        this._callDrag(e);
+      }
+    } else if (Math.abs(e.x - s.x) + Math.abs(e.y - s.y) > 3) {
+      this.dragging = true;
+      DDManager.dragElement = this;
+      const grid = this.el.gridstackNode?.grid;
+      if (grid) {
+        DDManager.dropElement = grid.el.ddElement.ddDroppable;
+      } else {
+        delete DDManager.dropElement;
+      }
+      this.helper = this._createHelper();
+      this._setupHelperContainmentStyle();
+      this.dragTransform = Utils.getValuesFromTransformedElement(this.helperContainment);
+      this.dragOffset = this._getDragOffset(e, this.el, this.helperContainment);
+      this._setupHelperStyle(e);
+      const ev = Utils.initEvent(e, { target: this.el, type: "dragstart" });
+      if (this.option.start) {
+        this.option.start(ev, this.ui());
+      }
+      this.triggerEvent("dragstart", ev);
+      document.addEventListener("keydown", this._keyEvent);
+    }
+    return true;
+  }
+  /** @internal call when the mouse gets released to drop the item at current location */
+  _mouseUp(e) {
+    document.removeEventListener("mousemove", this._mouseMove, true);
+    document.removeEventListener("mouseup", this._mouseUp, true);
+    if (isTouch && e.currentTarget) {
+      e.currentTarget.removeEventListener("touchmove", touchmove, true);
+      e.currentTarget.removeEventListener("touchend", touchend, true);
+    }
+    if (this.dragging) {
+      delete this.dragging;
+      delete this.el.gridstackNode?._origRotate;
+      document.removeEventListener("keydown", this._keyEvent);
+      if (DDManager.dropElement?.el === this.el.parentElement) {
+        delete DDManager.dropElement;
+      }
+      this.helperContainment.style.position = this.parentOriginStylePosition || null;
+      if (this.helper !== this.el)
+        this.helper.remove();
+      this._removeHelperStyle();
+      const ev = Utils.initEvent(e, { target: this.el, type: "dragstop" });
+      if (this.option.stop) {
+        this.option.stop(ev);
+      }
+      this.triggerEvent("dragstop", ev);
+      if (DDManager.dropElement) {
+        DDManager.dropElement.drop(e);
+      }
+    }
+    delete this.helper;
+    delete this.mouseDownEvent;
+    delete DDManager.dragElement;
+    delete DDManager.dropElement;
+    delete DDManager.mouseHandled;
+    e.preventDefault();
+  }
+  /** @internal call when keys are being pressed - use Esc to cancel, R to rotate */
+  _keyEvent(e) {
+    const n = this.el.gridstackNode;
+    const grid = n?.grid || DDManager.dropElement?.el?.gridstack;
+    if (e.key === "Escape") {
+      if (n && n._origRotate) {
+        n._orig = n._origRotate;
+        delete n._origRotate;
+      }
+      grid?.cancelDrag();
+      this._mouseUp(this.mouseDownEvent);
+    } else if (n && grid && (e.key === "r" || e.key === "R")) {
+      if (!Utils.canBeRotated(n))
+        return;
+      n._origRotate = n._origRotate || { ...n._orig };
+      delete n._moving;
+      grid.setAnimation(false).rotate(n.el, { top: -this.dragOffset.offsetTop, left: -this.dragOffset.offsetLeft }).setAnimation();
+      n._moving = true;
+      this.dragOffset = this._getDragOffset(this.lastDrag, n.el, this.helperContainment);
+      this.helper.style.width = this.dragOffset.width + "px";
+      this.helper.style.height = this.dragOffset.height + "px";
+      Utils.swap(n._orig, "w", "h");
+      delete n._rect;
+      this._mouseMove(this.lastDrag);
+    }
+  }
+  /** @internal create a clone copy (or user defined method) of the original drag item if set */
+  _createHelper() {
+    let helper = this.el;
+    if (typeof this.option.helper === "function") {
+      helper = this.option.helper(this.el);
+    } else if (this.option.helper === "clone") {
+      helper = Utils.cloneNode(this.el);
+    }
+    if (!helper.parentElement) {
+      Utils.appendTo(helper, this.option.appendTo === "parent" ? this.el.parentElement : this.option.appendTo);
+    }
+    this.dragElementOriginStyle = _DDDraggable.originStyleProp.map((prop) => this.el.style[prop]);
+    return helper;
+  }
+  /** @internal set the fix position of the dragged item */
+  _setupHelperStyle(e) {
+    this.helper.classList.add("ui-draggable-dragging");
+    this.el.gridstackNode?.grid?.el.classList.add("grid-stack-dragging");
+    const style = this.helper.style;
+    style.pointerEvents = "none";
+    style.width = this.dragOffset.width + "px";
+    style.height = this.dragOffset.height + "px";
+    style.willChange = "left, top";
+    style.position = "fixed";
+    this._dragFollow(e);
+    style.transition = "none";
+    setTimeout(() => {
+      if (this.helper) {
+        style.transition = null;
+      }
+    }, 0);
+    return this;
+  }
+  /** @internal restore back the original style before dragging */
+  _removeHelperStyle() {
+    this.helper.classList.remove("ui-draggable-dragging");
+    this.el.gridstackNode?.grid?.el.classList.remove("grid-stack-dragging");
+    const node = this.helper?.gridstackNode;
+    if (!node?._isAboutToRemove && this.dragElementOriginStyle) {
+      const helper = this.helper;
+      const transition = this.dragElementOriginStyle["transition"] || null;
+      helper.style.transition = this.dragElementOriginStyle["transition"] = "none";
+      _DDDraggable.originStyleProp.forEach((prop) => helper.style[prop] = this.dragElementOriginStyle[prop] || null);
+      setTimeout(() => helper.style.transition = transition, 50);
+    }
+    delete this.dragElementOriginStyle;
+    return this;
+  }
+  /** @internal updates the top/left position to follow the mouse */
+  _dragFollow(e) {
+    const containmentRect = { left: 0, top: 0 };
+    const style = this.helper.style;
+    const offset = this.dragOffset;
+    style.left = (e.clientX + offset.offsetLeft - containmentRect.left) * this.dragTransform.xScale + "px";
+    style.top = (e.clientY + offset.offsetTop - containmentRect.top) * this.dragTransform.yScale + "px";
+  }
+  /** @internal */
+  _setupHelperContainmentStyle() {
+    this.helperContainment = this.helper.parentElement;
+    if (this.helper.style.position !== "fixed") {
+      this.parentOriginStylePosition = this.helperContainment.style.position;
+      if (getComputedStyle(this.helperContainment).position.match(/static/)) {
+        this.helperContainment.style.position = "relative";
+      }
+    }
+    return this;
+  }
+  /** @internal */
+  _getDragOffset(event, el, parent) {
+    let xformOffsetX = 0;
+    let xformOffsetY = 0;
+    if (parent) {
+      xformOffsetX = this.dragTransform.xOffset;
+      xformOffsetY = this.dragTransform.yOffset;
+    }
+    const targetOffset = el.getBoundingClientRect();
+    return {
+      left: targetOffset.left,
+      top: targetOffset.top,
+      offsetLeft: -event.clientX + targetOffset.left - xformOffsetX,
+      offsetTop: -event.clientY + targetOffset.top - xformOffsetY,
+      width: targetOffset.width * this.dragTransform.xScale,
+      height: targetOffset.height * this.dragTransform.yScale
+    };
+  }
+  /** @internal TODO: set to public as called by DDDroppable! */
+  ui() {
+    const containmentEl = this.el.parentElement;
+    const containmentRect = containmentEl.getBoundingClientRect();
+    const offset = this.helper.getBoundingClientRect();
+    return {
+      position: {
+        top: (offset.top - containmentRect.top) * this.dragTransform.yScale,
+        left: (offset.left - containmentRect.left) * this.dragTransform.xScale
+      }
+      /* not used by GridStack for now...
+      helper: [this.helper], //The object arr representing the helper that's being dragged.
+      offset: { top: offset.top, left: offset.left } // Current offset position of the helper as { top, left } object.
+      */
+    };
+  }
+};
+DDDraggable.originStyleProp = ["width", "height", "transform", "transform-origin", "transition", "pointerEvents", "position", "left", "top", "minWidth", "willChange"];
+
+// node_modules/gridstack/dist/dd-droppable.js
+var DDDroppable = class extends DDBaseImplement {
+  constructor(el, option = {}) {
+    super();
+    this.el = el;
+    this.option = option;
+    this._mouseEnter = this._mouseEnter.bind(this);
+    this._mouseLeave = this._mouseLeave.bind(this);
+    this.enable();
+    this._setupAccept();
+  }
+  on(event, callback) {
+    super.on(event, callback);
+  }
+  off(event) {
+    super.off(event);
+  }
+  enable() {
+    if (this.disabled === false)
+      return;
+    super.enable();
+    this.el.classList.add("ui-droppable");
+    this.el.classList.remove("ui-droppable-disabled");
+    this.el.addEventListener("mouseenter", this._mouseEnter);
+    this.el.addEventListener("mouseleave", this._mouseLeave);
+    if (isTouch) {
+      this.el.addEventListener("pointerenter", pointerenter);
+      this.el.addEventListener("pointerleave", pointerleave);
+    }
+  }
+  disable(forDestroy = false) {
+    if (this.disabled === true)
+      return;
+    super.disable();
+    this.el.classList.remove("ui-droppable");
+    if (!forDestroy)
+      this.el.classList.add("ui-droppable-disabled");
+    this.el.removeEventListener("mouseenter", this._mouseEnter);
+    this.el.removeEventListener("mouseleave", this._mouseLeave);
+    if (isTouch) {
+      this.el.removeEventListener("pointerenter", pointerenter);
+      this.el.removeEventListener("pointerleave", pointerleave);
+    }
+  }
+  destroy() {
+    this.disable(true);
+    this.el.classList.remove("ui-droppable");
+    this.el.classList.remove("ui-droppable-disabled");
+    super.destroy();
+  }
+  updateOption(opts) {
+    Object.keys(opts).forEach((key) => this.option[key] = opts[key]);
+    this._setupAccept();
+    return this;
+  }
+  /** @internal called when the cursor enters our area - prepare for a possible drop and track leaving */
+  _mouseEnter(e) {
+    if (!DDManager.dragElement)
+      return;
+    if (DDTouch.touchHandled && e.isTrusted)
+      return;
+    if (!this._canDrop(DDManager.dragElement.el))
+      return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (DDManager.dropElement && DDManager.dropElement !== this) {
+      DDManager.dropElement._mouseLeave(e, true);
+    }
+    DDManager.dropElement = this;
+    const ev = Utils.initEvent(e, { target: this.el, type: "dropover" });
+    if (this.option.over) {
+      this.option.over(ev, this._ui(DDManager.dragElement));
+    }
+    this.triggerEvent("dropover", ev);
+    this.el.classList.add("ui-droppable-over");
+  }
+  /** @internal called when the item is leaving our area, stop tracking if we had moving item */
+  _mouseLeave(e, calledByEnter = false) {
+    if (!DDManager.dragElement || DDManager.dropElement !== this)
+      return;
+    e.preventDefault();
+    e.stopPropagation();
+    const ev = Utils.initEvent(e, { target: this.el, type: "dropout" });
+    if (this.option.out) {
+      this.option.out(ev, this._ui(DDManager.dragElement));
+    }
+    this.triggerEvent("dropout", ev);
+    if (DDManager.dropElement === this) {
+      delete DDManager.dropElement;
+      if (!calledByEnter) {
+        let parentDrop;
+        let parent = this.el.parentElement;
+        while (!parentDrop && parent) {
+          parentDrop = parent.ddElement?.ddDroppable;
+          parent = parent.parentElement;
+        }
+        if (parentDrop) {
+          parentDrop._mouseEnter(e);
+        }
+      }
+    }
+  }
+  /** item is being dropped on us - called by the drag mouseup handler - this calls the client drop event */
+  drop(e) {
+    e.preventDefault();
+    const ev = Utils.initEvent(e, { target: this.el, type: "drop" });
+    if (this.option.drop) {
+      this.option.drop(ev, this._ui(DDManager.dragElement));
+    }
+    this.triggerEvent("drop", ev);
+  }
+  /** @internal true if element matches the string/method accept option */
+  _canDrop(el) {
+    return el && (!this.accept || this.accept(el));
+  }
+  /** @internal */
+  _setupAccept() {
+    if (!this.option.accept)
+      return this;
+    if (typeof this.option.accept === "string") {
+      this.accept = (el) => el.classList.contains(this.option.accept) || el.matches(this.option.accept);
+    } else {
+      this.accept = this.option.accept;
+    }
+    return this;
+  }
+  /** @internal */
+  _ui(drag) {
+    return {
+      draggable: drag.el,
+      ...drag.ui()
+    };
+  }
+};
+
+// node_modules/gridstack/dist/dd-element.js
+var DDElement = class _DDElement {
+  static init(el) {
+    if (!el.ddElement) {
+      el.ddElement = new _DDElement(el);
+    }
+    return el.ddElement;
+  }
+  constructor(el) {
+    this.el = el;
+  }
+  on(eventName, callback) {
+    if (this.ddDraggable && ["drag", "dragstart", "dragstop"].indexOf(eventName) > -1) {
+      this.ddDraggable.on(eventName, callback);
+    } else if (this.ddDroppable && ["drop", "dropover", "dropout"].indexOf(eventName) > -1) {
+      this.ddDroppable.on(eventName, callback);
+    } else if (this.ddResizable && ["resizestart", "resize", "resizestop"].indexOf(eventName) > -1) {
+      this.ddResizable.on(eventName, callback);
+    }
+    return this;
+  }
+  off(eventName) {
+    if (this.ddDraggable && ["drag", "dragstart", "dragstop"].indexOf(eventName) > -1) {
+      this.ddDraggable.off(eventName);
+    } else if (this.ddDroppable && ["drop", "dropover", "dropout"].indexOf(eventName) > -1) {
+      this.ddDroppable.off(eventName);
+    } else if (this.ddResizable && ["resizestart", "resize", "resizestop"].indexOf(eventName) > -1) {
+      this.ddResizable.off(eventName);
+    }
+    return this;
+  }
+  setupDraggable(opts) {
+    if (!this.ddDraggable) {
+      this.ddDraggable = new DDDraggable(this.el, opts);
+    } else {
+      this.ddDraggable.updateOption(opts);
+    }
+    return this;
+  }
+  cleanDraggable() {
+    if (this.ddDraggable) {
+      this.ddDraggable.destroy();
+      delete this.ddDraggable;
+    }
+    return this;
+  }
+  setupResizable(opts) {
+    if (!this.ddResizable) {
+      this.ddResizable = new DDResizable(this.el, opts);
+    } else {
+      this.ddResizable.updateOption(opts);
+    }
+    return this;
+  }
+  cleanResizable() {
+    if (this.ddResizable) {
+      this.ddResizable.destroy();
+      delete this.ddResizable;
+    }
+    return this;
+  }
+  setupDroppable(opts) {
+    if (!this.ddDroppable) {
+      this.ddDroppable = new DDDroppable(this.el, opts);
+    } else {
+      this.ddDroppable.updateOption(opts);
+    }
+    return this;
+  }
+  cleanDroppable() {
+    if (this.ddDroppable) {
+      this.ddDroppable.destroy();
+      delete this.ddDroppable;
+    }
+    return this;
+  }
+};
+
+// node_modules/gridstack/dist/dd-gridstack.js
+var DDGridStack = class {
+  /**
+   * Enable/disable/configure resizing for grid elements.
+   *
+   * @param el - Grid item element(s) to configure
+   * @param opts - Resize options or command ('enable', 'disable', 'destroy', 'option', or config object)
+   * @param key - Option key when using 'option' command
+   * @param value - Option value when using 'option' command
+   * @returns this instance for chaining
+   *
+   * @example
+   * dd.resizable(element, 'enable');  // Enable resizing
+   * dd.resizable(element, 'option', 'minWidth', 100);  // Set minimum width
+   */
+  resizable(el, opts, key, value) {
+    this._getDDElements(el, opts).forEach((dEl) => {
+      if (opts === "disable" || opts === "enable") {
+        dEl.ddResizable && dEl.ddResizable[opts]();
+      } else if (opts === "destroy") {
+        dEl.ddResizable && dEl.cleanResizable();
+      } else if (opts === "option") {
+        dEl.setupResizable({ [key]: value });
+      } else {
+        const n = dEl.el.gridstackNode;
+        const grid = n.grid;
+        let handles = dEl.el.getAttribute("gs-resize-handles") || grid.opts.resizable.handles || "e,s,se";
+        if (handles === "all")
+          handles = "n,e,s,w,se,sw,ne,nw";
+        const autoHide = !grid.opts.alwaysShowResizeHandle;
+        dEl.setupResizable({
+          ...grid.opts.resizable,
+          ...{ handles, autoHide },
+          ...{
+            start: opts.start,
+            stop: opts.stop,
+            resize: opts.resize
+          }
+        });
+      }
+    });
+    return this;
+  }
+  /**
+   * Enable/disable/configure dragging for grid elements.
+   *
+   * @param el - Grid item element(s) to configure
+   * @param opts - Drag options or command ('enable', 'disable', 'destroy', 'option', or config object)
+   * @param key - Option key when using 'option' command
+   * @param value - Option value when using 'option' command
+   * @returns this instance for chaining
+   *
+   * @example
+   * dd.draggable(element, 'enable');  // Enable dragging
+   * dd.draggable(element, {handle: '.drag-handle'});  // Configure drag handle
+   */
+  draggable(el, opts, key, value) {
+    this._getDDElements(el, opts).forEach((dEl) => {
+      if (opts === "disable" || opts === "enable") {
+        dEl.ddDraggable && dEl.ddDraggable[opts]();
+      } else if (opts === "destroy") {
+        dEl.ddDraggable && dEl.cleanDraggable();
+      } else if (opts === "option") {
+        dEl.setupDraggable({ [key]: value });
+      } else {
+        const grid = dEl.el.gridstackNode.grid;
+        dEl.setupDraggable({
+          ...grid.opts.draggable,
+          ...{
+            // containment: (grid.parentGridNode && grid.opts.dragOut === false) ? grid.el.parentElement : (grid.opts.draggable.containment || null),
+            start: opts.start,
+            stop: opts.stop,
+            drag: opts.drag
+          }
+        });
+      }
+    });
+    return this;
+  }
+  dragIn(el, opts) {
+    this._getDDElements(el).forEach((dEl) => dEl.setupDraggable(opts));
+    return this;
+  }
+  droppable(el, opts, key, value) {
+    if (typeof opts.accept === "function" && !opts._accept) {
+      opts._accept = opts.accept;
+      opts.accept = (el2) => opts._accept(el2);
+    }
+    this._getDDElements(el, opts).forEach((dEl) => {
+      if (opts === "disable" || opts === "enable") {
+        dEl.ddDroppable && dEl.ddDroppable[opts]();
+      } else if (opts === "destroy") {
+        dEl.ddDroppable && dEl.cleanDroppable();
+      } else if (opts === "option") {
+        dEl.setupDroppable({ [key]: value });
+      } else {
+        dEl.setupDroppable(opts);
+      }
+    });
+    return this;
+  }
+  /** true if element is droppable */
+  isDroppable(el) {
+    return !!(el?.ddElement?.ddDroppable && !el.ddElement.ddDroppable.disabled);
+  }
+  /** true if element is draggable */
+  isDraggable(el) {
+    return !!(el?.ddElement?.ddDraggable && !el.ddElement.ddDraggable.disabled);
+  }
+  /** true if element is draggable */
+  isResizable(el) {
+    return !!(el?.ddElement?.ddResizable && !el.ddElement.ddResizable.disabled);
+  }
+  on(el, name, callback) {
+    this._getDDElements(el).forEach((dEl) => dEl.on(name, (event) => {
+      callback(event, DDManager.dragElement ? DDManager.dragElement.el : event.target, DDManager.dragElement ? DDManager.dragElement.helper : null);
+    }));
+    return this;
+  }
+  off(el, name) {
+    this._getDDElements(el).forEach((dEl) => dEl.off(name));
+    return this;
+  }
+  /** @internal returns a list of DD elements, creating them on the fly by default unless option is to destroy or disable */
+  _getDDElements(els, opts) {
+    const create = els.gridstack || opts !== "destroy" && opts !== "disable";
+    const hosts = Utils.getElements(els);
+    if (!hosts.length)
+      return [];
+    const list = hosts.map((e) => e.ddElement || (create ? DDElement.init(e) : null)).filter((d) => d);
+    return list;
+  }
+};
+
+// node_modules/gridstack/dist/gridstack.js
+var dd = new DDGridStack();
+var GridStack = class _GridStack {
+  /**
+   * initializing the HTML element, or selector string, into a grid will return the grid. Calling it again will
+   * simply return the existing instance (ignore any passed options). There is also an initAll() version that support
+   * multiple grids initialization at once. Or you can use addGrid() to create the entire grid from JSON.
+   * @param options grid options (optional)
+   * @param elOrString element or CSS selector (first one used) to convert to a grid (default to '.grid-stack' class selector)
+   *
+   * @example
+   * const grid = GridStack.init();
+   *
+   * Note: the HTMLElement (of type GridHTMLElement) will store a `gridstack: GridStack` value that can be retrieve later
+   * const grid = document.querySelector('.grid-stack').gridstack;
+   */
+  static init(options = {}, elOrString = ".grid-stack") {
+    if (typeof document === "undefined")
+      return null;
+    const el = _GridStack.getGridElement(elOrString);
+    if (!el) {
+      if (typeof elOrString === "string") {
+        console.error('GridStack.initAll() no grid was found with selector "' + elOrString + '" - element missing or wrong selector ?\nNote: ".grid-stack" is required for proper CSS styling and drag/drop, and is the default selector.');
+      } else {
+        console.error("GridStack.init() no grid element was passed.");
+      }
+      return null;
+    }
+    if (!el.gridstack) {
+      el.gridstack = new _GridStack(el, Utils.cloneDeep(options));
+    }
+    return el.gridstack;
+  }
+  /**
+   * Will initialize a list of elements (given a selector) and return an array of grids.
+   * @param options grid options (optional)
+   * @param selector elements selector to convert to grids (default to '.grid-stack' class selector)
+   *
+   * @example
+   * const grids = GridStack.initAll();
+   * grids.forEach(...)
+   */
+  static initAll(options = {}, selector = ".grid-stack") {
+    const grids = [];
+    if (typeof document === "undefined")
+      return grids;
+    _GridStack.getGridElements(selector).forEach((el) => {
+      if (!el.gridstack) {
+        el.gridstack = new _GridStack(el, Utils.cloneDeep(options));
+      }
+      grids.push(el.gridstack);
+    });
+    if (grids.length === 0) {
+      console.error('GridStack.initAll() no grid was found with selector "' + selector + '" - element missing or wrong selector ?\nNote: ".grid-stack" is required for proper CSS styling and drag/drop, and is the default selector.');
+    }
+    return grids;
+  }
+  /**
+   * call to create a grid with the given options, including loading any children from JSON structure. This will call GridStack.init(), then
+   * grid.load() on any passed children (recursively). Great alternative to calling init() if you want entire grid to come from
+   * JSON serialized data, including options.
+   * @param parent HTML element parent to the grid
+   * @param opt grids options used to initialize the grid, and list of children
+   */
+  static addGrid(parent, opt = {}) {
+    if (!parent)
+      return null;
+    let el = parent;
+    if (el.gridstack) {
+      const grid2 = el.gridstack;
+      if (opt)
+        grid2.opts = { ...grid2.opts, ...opt };
+      if (opt.children !== void 0)
+        grid2.load(opt.children);
+      return grid2;
+    }
+    const parentIsGrid = parent.classList.contains("grid-stack");
+    if (!parentIsGrid || _GridStack.addRemoveCB) {
+      if (_GridStack.addRemoveCB) {
+        el = _GridStack.addRemoveCB(parent, opt, true, true);
+      } else {
+        el = Utils.createDiv(["grid-stack", opt.class], parent);
+      }
+    }
+    const grid = _GridStack.init(opt, el);
+    return grid;
+  }
+  /** call this method to register your engine instead of the default one.
+   * See instead `GridStackOptions.engineClass` if you only need to
+   * replace just one instance.
+   */
+  static registerEngine(engineClass) {
+    _GridStack.engineClass = engineClass;
+  }
+  /**
+   * @internal create placeholder DIV as needed
+   * @returns the placeholder element for indicating drop zones during drag operations
+   */
+  get placeholder() {
+    if (!this._placeholder) {
+      this._placeholder = Utils.createDiv([this.opts.placeholderClass, gridDefaults.itemClass, this.opts.itemClass]);
+      const placeholderChild = Utils.createDiv(["placeholder-content"], this._placeholder);
+      if (this.opts.placeholderText) {
+        placeholderChild.textContent = this.opts.placeholderText;
+      }
+    }
+    return this._placeholder;
+  }
+  /**
+   * Construct a grid item from the given element and options
+   * @param el the HTML element tied to this grid after it's been initialized
+   * @param opts grid options - public for classes to access, but use methods to modify!
+   */
+  constructor(el, opts = {}) {
+    this.el = el;
+    this.opts = opts;
+    this.animationDelay = 300 + 10;
+    this._gsEventHandler = {};
+    this._extraDragRow = 0;
+    this.dragTransform = { xScale: 1, yScale: 1, xOffset: 0, yOffset: 0 };
+    el.gridstack = this;
+    this.opts = opts = opts || {};
+    if (!el.classList.contains("grid-stack")) {
+      this.el.classList.add("grid-stack");
+    }
+    if (opts.row) {
+      opts.minRow = opts.maxRow = opts.row;
+      delete opts.row;
+    }
+    const rowAttr = Utils.toNumber(el.getAttribute("gs-row"));
+    if (opts.column === "auto") {
+      delete opts.column;
+    }
+    if (opts.alwaysShowResizeHandle !== void 0) {
+      opts._alwaysShowResizeHandle = opts.alwaysShowResizeHandle;
+    }
+    const resp = opts.columnOpts;
+    if (resp) {
+      const bk = resp.breakpoints;
+      if (!resp.columnWidth && !bk?.length) {
+        delete opts.columnOpts;
+      } else {
+        resp.columnMax = resp.columnMax || 12;
+        if (bk?.length > 1)
+          bk.sort((a, b) => (b.w || 0) - (a.w || 0));
+      }
+    }
+    const defaults = {
+      ...Utils.cloneDeep(gridDefaults),
+      column: Utils.toNumber(el.getAttribute("gs-column")) || gridDefaults.column,
+      minRow: rowAttr ? rowAttr : Utils.toNumber(el.getAttribute("gs-min-row")) || gridDefaults.minRow,
+      maxRow: rowAttr ? rowAttr : Utils.toNumber(el.getAttribute("gs-max-row")) || gridDefaults.maxRow,
+      staticGrid: Utils.toBool(el.getAttribute("gs-static")) || gridDefaults.staticGrid,
+      sizeToContent: Utils.toBool(el.getAttribute("gs-size-to-content")) || void 0,
+      draggable: {
+        handle: (opts.handleClass ? "." + opts.handleClass : opts.handle ? opts.handle : "") || gridDefaults.draggable.handle
+      },
+      removableOptions: {
+        accept: opts.itemClass || gridDefaults.removableOptions.accept,
+        decline: gridDefaults.removableOptions.decline
+      }
+    };
+    if (el.getAttribute("gs-animate")) {
+      defaults.animate = Utils.toBool(el.getAttribute("gs-animate"));
+    }
+    opts = Utils.defaults(opts, defaults);
+    this._initMargin();
+    this.checkDynamicColumn();
+    this._updateColumnVar(opts);
+    if (opts.rtl === "auto") {
+      opts.rtl = el.style.direction === "rtl";
+    }
+    if (opts.rtl) {
+      this.el.classList.add("grid-stack-rtl");
+    }
+    const parentGridItem = this.el.closest("." + gridDefaults.itemClass);
+    const parentNode = parentGridItem?.gridstackNode;
+    if (parentNode) {
+      parentNode.subGrid = this;
+      this.parentGridNode = parentNode;
+      this.el.classList.add("grid-stack-nested");
+      parentNode.el.classList.add("grid-stack-sub-grid");
+    }
+    this._isAutoCellHeight = opts.cellHeight === "auto";
+    if (this._isAutoCellHeight || opts.cellHeight === "initial") {
+      this.cellHeight(void 0);
+    } else {
+      if (typeof opts.cellHeight == "number" && opts.cellHeightUnit && opts.cellHeightUnit !== gridDefaults.cellHeightUnit) {
+        opts.cellHeight = opts.cellHeight + opts.cellHeightUnit;
+        delete opts.cellHeightUnit;
+      }
+      const val = opts.cellHeight;
+      delete opts.cellHeight;
+      this.cellHeight(val);
+    }
+    if (opts.alwaysShowResizeHandle === "mobile") {
+      opts.alwaysShowResizeHandle = isTouch;
+    }
+    this._setStaticClass();
+    const engineClass = opts.engineClass || _GridStack.engineClass || GridStackEngine;
+    this.engine = new engineClass({
+      column: this.getColumn(),
+      float: opts.float,
+      maxRow: opts.maxRow,
+      onChange: (cbNodes) => {
+        cbNodes.forEach((n) => {
+          const el2 = n.el;
+          if (!el2)
+            return;
+          if (n._removeDOM) {
+            if (el2)
+              el2.remove();
+            delete n._removeDOM;
+          } else {
+            this._writePosAttr(el2, n);
+          }
+        });
+        this._updateContainerHeight();
+      }
+    });
+    if (opts.auto) {
+      this.batchUpdate();
+      this.engine._loading = true;
+      this.getGridItems().forEach((el2) => this._prepareElement(el2));
+      delete this.engine._loading;
+      this.batchUpdate(false);
+    }
+    if (opts.children) {
+      const children = opts.children;
+      delete opts.children;
+      if (children.length)
+        this.load(children);
+    }
+    this.setAnimation();
+    if (opts.subGridDynamic && !DDManager.pauseDrag)
+      DDManager.pauseDrag = true;
+    if (opts.draggable?.pause !== void 0)
+      DDManager.pauseDrag = opts.draggable.pause;
+    this._setupRemoveDrop();
+    this._setupAcceptWidget();
+    this._updateResizeEvent();
+  }
+  _updateColumnVar(opts = this.opts) {
+    this.el.classList.add("gs-" + opts.column);
+    if (typeof opts.column === "number")
+      this.el.style.setProperty("--gs-column-width", `${100 / opts.column}%`);
+  }
+  /**
+   * add a new widget and returns it.
+   *
+   * Widget will be always placed even if result height is more than actual grid height.
+   * You need to use `willItFit()` before calling addWidget for additional check.
+   * See also `makeWidget(el)` for DOM element.
+   *
+   * @example
+   * const grid = GridStack.init();
+   * grid.addWidget({w: 3, content: 'hello'});
+   *
+   * @param w GridStackWidget definition. used MakeWidget(el) if you have dom element instead.
+   */
+  addWidget(w) {
+    if (!w)
+      return;
+    if (typeof w === "string") {
+      console.error("V11: GridStack.addWidget() does not support string anymore. see #2736");
+      return;
+    }
+    if (w.ELEMENT_NODE) {
+      console.error("V11: GridStack.addWidget() does not support HTMLElement anymore. use makeWidget()");
+      return this.makeWidget(w);
+    }
+    let el;
+    let node = w;
+    node.grid = this;
+    if (node.el) {
+      el = node.el;
+    } else if (_GridStack.addRemoveCB) {
+      el = _GridStack.addRemoveCB(this.el, w, true, false);
+    } else {
+      el = this.createWidgetDivs(node);
+    }
+    if (!el)
+      return;
+    node = el.gridstackNode;
+    if (node && el.parentElement === this.el && this.engine.nodes.find((n) => n._id === node._id))
+      return el;
+    const domAttr = this._readAttr(el);
+    Utils.defaults(w, domAttr);
+    this.engine.prepareNode(w);
+    this.el.appendChild(el);
+    this.makeWidget(el, w);
+    return el;
+  }
+  /**
+   * Create the default grid item divs and content (possibly lazy loaded) by using GridStack.renderCB().
+   *
+   * @param n GridStackNode definition containing widget configuration
+   * @returns the created HTML element with proper grid item structure
+   *
+   * @example
+   * const element = grid.createWidgetDivs({ w: 2, h: 1, content: 'Hello World' });
+   */
+  createWidgetDivs(n) {
+    const el = Utils.createDiv(["grid-stack-item", this.opts.itemClass]);
+    const cont = Utils.createDiv(["grid-stack-item-content"], el);
+    if (Utils.lazyLoad(n)) {
+      if (!n.visibleObservable) {
+        n.visibleObservable = new IntersectionObserver(([entry]) => {
+          if (entry.isIntersecting) {
+            n.visibleObservable?.disconnect();
+            delete n.visibleObservable;
+            _GridStack.renderCB(cont, n);
+            n.grid?.prepareDragDrop(n.el);
+          }
+        });
+        window.setTimeout(() => n.visibleObservable?.observe(el));
+      }
+    } else
+      _GridStack.renderCB(cont, n);
+    return el;
+  }
+  /**
+   * Convert an existing gridItem element into a sub-grid with the given (optional) options, else inherit them
+   * from the parent's subGrid options.
+   * @param el gridItem element to convert
+   * @param ops (optional) sub-grid options, else default to node, then parent settings, else defaults
+   * @param nodeToAdd (optional) node to add to the newly created sub grid (used when dragging over existing regular item)
+   * @param saveContent if true (default) the html inside .grid-stack-content will be saved to child widget
+   * @returns newly created grid
+   */
+  makeSubGrid(el, ops, nodeToAdd, saveContent = true) {
+    let node = el.gridstackNode;
+    if (!node) {
+      node = this.makeWidget(el).gridstackNode;
+    }
+    if (node.subGrid?.el)
+      return node.subGrid;
+    let subGridTemplate;
+    let grid = this;
+    while (grid && !subGridTemplate) {
+      subGridTemplate = grid.opts?.subGridOpts;
+      grid = grid.parentGridNode?.grid;
+    }
+    ops = Utils.cloneDeep({
+      // by default sub-grid inherit from us | parent, other than id, children, etc...
+      ...this.opts,
+      id: void 0,
+      children: void 0,
+      column: "auto",
+      columnOpts: void 0,
+      layout: "list",
+      subGridOpts: void 0,
+      ...subGridTemplate || {},
+      ...ops || node.subGridOpts || {}
+    });
+    node.subGridOpts = ops;
+    let autoColumn;
+    if (ops.column === "auto") {
+      autoColumn = true;
+      ops.column = Math.max(node.w || 1, nodeToAdd?.w || 1);
+      delete ops.columnOpts;
+    }
+    let content = node.el.querySelector(".grid-stack-item-content");
+    let newItem;
+    let newItemOpt;
+    if (saveContent) {
+      this._removeDD(node.el);
+      newItemOpt = { ...node, x: 0, y: 0 };
+      Utils.removeInternalForSave(newItemOpt);
+      delete newItemOpt.subGridOpts;
+      if (node.content) {
+        newItemOpt.content = node.content;
+        delete node.content;
+      }
+      if (_GridStack.addRemoveCB) {
+        newItem = _GridStack.addRemoveCB(this.el, newItemOpt, true, false);
+      } else {
+        newItem = Utils.createDiv(["grid-stack-item"]);
+        newItem.appendChild(content);
+        content = Utils.createDiv(["grid-stack-item-content"], node.el);
+      }
+      this.prepareDragDrop(node.el);
+    }
+    if (nodeToAdd) {
+      const w = autoColumn ? ops.column : node.w;
+      const h = node.h + nodeToAdd.h;
+      const style = node.el.style;
+      style.transition = "none";
+      this.update(node.el, { w, h });
+      setTimeout(() => style.transition = null);
+    }
+    const subGrid = node.subGrid = _GridStack.addGrid(content, ops);
+    if (nodeToAdd?._moving)
+      subGrid._isTemp = true;
+    if (autoColumn)
+      subGrid._autoColumn = true;
+    if (saveContent) {
+      subGrid.makeWidget(newItem, newItemOpt);
+    }
+    if (nodeToAdd) {
+      if (nodeToAdd._moving) {
+        window.setTimeout(() => Utils.simulateMouseEvent(nodeToAdd._event, "mouseenter", subGrid.el), 0);
+      } else {
+        subGrid.makeWidget(node.el, node);
+      }
+    }
+    this.resizeToContentCheck(false, node);
+    return subGrid;
+  }
+  /**
+   * called when an item was converted into a nested grid to accommodate a dragged over item, but then item leaves - return back
+   * to the original grid-item. Also called to remove empty sub-grids when last item is dragged out (since re-creating is simple)
+   */
+  removeAsSubGrid(nodeThatRemoved) {
+    const pGrid = this.parentGridNode?.grid;
+    if (!pGrid)
+      return;
+    pGrid.batchUpdate();
+    pGrid.removeWidget(this.parentGridNode.el, true, true);
+    this.engine.nodes.forEach((n) => {
+      n.x += this.parentGridNode.x;
+      n.y += this.parentGridNode.y;
+      pGrid.makeWidget(n.el, n);
+    });
+    pGrid.batchUpdate(false);
+    if (this.parentGridNode)
+      delete this.parentGridNode.subGrid;
+    delete this.parentGridNode;
+    if (nodeThatRemoved) {
+      window.setTimeout(() => Utils.simulateMouseEvent(nodeThatRemoved._event, "mouseenter", pGrid.el), 0);
+    }
+  }
+  /**
+   * saves the current layout returning a list of widgets for serialization which might include any nested grids.
+   * @param saveContent if true (default) the latest html inside .grid-stack-content will be saved to GridStackWidget.content field, else it will
+   * be removed.
+   * @param saveGridOpt if true (default false), save the grid options itself, so you can call the new GridStack.addGrid()
+   * to recreate everything from scratch. GridStackOptions.children would then contain the widget list instead.
+   * @param saveCB callback for each node -> widget, so application can insert additional data to be saved into the widget data structure.
+   * @param column if provided, the grid will be saved for the given column size (IFF we have matching internal saved layout, or current layout).
+   * Otherwise it will use the largest possible layout (say 12 even if rendering at 1 column) so we can restore to all layouts.
+   * NOTE: if you want to save to currently display layout, pass this.getColumn() as column.
+   * NOTE2: nested grids will ALWAYS save to the container size to be in sync with parent.
+   * @returns list of widgets or full grid option, including .children list of widgets
+   */
+  save(saveContent = true, saveGridOpt = false, saveCB = _GridStack.saveCB, column) {
+    const list = this.engine.save(saveContent, saveCB, column);
+    list.forEach((n) => {
+      if (saveContent && n.el && !n.subGrid && !saveCB) {
+        const itemContent = n.el.querySelector(".grid-stack-item-content");
+        n.content = itemContent?.innerHTML;
+        if (!n.content)
+          delete n.content;
+      } else {
+        if (!saveContent && !saveCB) {
+          delete n.content;
+        }
+        if (n.subGrid?.el) {
+          const column2 = n.w || n.subGrid.getColumn();
+          const listOrOpt = n.subGrid.save(saveContent, saveGridOpt, saveCB, column2);
+          n.subGridOpts = saveGridOpt ? listOrOpt : { children: listOrOpt };
+          delete n.subGrid;
+        }
+      }
+      delete n.el;
+    });
+    if (saveGridOpt) {
+      const o = Utils.cloneDeep(this.opts);
+      if (o.marginBottom === o.marginTop && o.marginRight === o.marginLeft && o.marginTop === o.marginRight) {
+        o.margin = o.marginTop;
+        delete o.marginTop;
+        delete o.marginRight;
+        delete o.marginBottom;
+        delete o.marginLeft;
+      }
+      if (o.rtl === (this.el.style.direction === "rtl")) {
+        o.rtl = "auto";
+      }
+      if (this._isAutoCellHeight) {
+        o.cellHeight = "auto";
+      }
+      if (this._autoColumn) {
+        o.column = "auto";
+      }
+      const origShow = o._alwaysShowResizeHandle;
+      delete o._alwaysShowResizeHandle;
+      if (origShow !== void 0) {
+        o.alwaysShowResizeHandle = origShow;
+      } else {
+        delete o.alwaysShowResizeHandle;
+      }
+      Utils.removeInternalAndSame(o, gridDefaults);
+      o.children = list;
+      return o;
+    }
+    return list;
+  }
+  /**
+   * Load widgets from a list. This will call update() on each (matching by id) or add/remove widgets that are not there.
+   * Used to restore a grid layout for a saved layout list (see `save()`).
+   *
+   * @param items list of widgets definition to update/create
+   * @param addRemove boolean (default true) or callback method can be passed to control if and how missing widgets can be added/removed, giving
+   * the user control of insertion.
+   * @returns the grid instance for chaining
+   *
+   * @example
+   * // Basic usage with saved layout
+   * const savedLayout = grid.save(); // Save current layout
+   * // ... later restore it
+   * grid.load(savedLayout);
+   *
+   * // Load with custom add/remove callback
+   * grid.load(layout, (items, grid, add) => {
+   *   if (add) {
+   *     // Custom logic for adding new widgets
+   *     items.forEach(item => {
+   *       const el = document.createElement('div');
+   *       el.innerHTML = item.content || '';
+   *       grid.addWidget(el, item);
+   *     });
+   *   } else {
+   *     // Custom logic for removing widgets
+   *     items.forEach(item => grid.removeWidget(item.el));
+   *   }
+   * });
+   *
+   * // Load without adding/removing missing widgets
+   * grid.load(layout, false);
+   *
+   * @see {@link http://gridstackjs.com/demo/serialization.html} for complete example
+   */
+  load(items, addRemove = _GridStack.addRemoveCB || true) {
+    items = Utils.cloneDeep(items);
+    const column = this.getColumn();
+    items.forEach((n) => {
+      n.w = n.w || n.minW || 1;
+      n.h = n.h || n.minH || 1;
+    });
+    items = Utils.sort(items);
+    this.engine.skipCacheUpdate = this._ignoreLayoutsNodeChange = true;
+    let maxColumn = 0;
+    items.forEach((n) => {
+      maxColumn = Math.max(maxColumn, (n.x || 0) + n.w);
+    });
+    if (maxColumn > this.engine.defaultColumn)
+      this.engine.defaultColumn = maxColumn;
+    if (maxColumn > column) {
+      if (this.engine.nodes.length === 0 && this.responseLayout) {
+        this.engine.nodes = items;
+        this.engine.columnChanged(maxColumn, column, this.responseLayout);
+        items = this.engine.nodes;
+        this.engine.nodes = [];
+        delete this.responseLayout;
+      } else
+        this.engine.cacheLayout(items, maxColumn, true);
+    }
+    const prevCB = _GridStack.addRemoveCB;
+    if (typeof addRemove === "function")
+      _GridStack.addRemoveCB = addRemove;
+    const removed = [];
+    this.batchUpdate();
+    const blank = !this.engine.nodes.length;
+    const noAnim = blank && this.opts.animate;
+    if (noAnim)
+      this.setAnimation(false);
+    if (!blank && addRemove) {
+      const copyNodes = [...this.engine.nodes];
+      copyNodes.forEach((n) => {
+        if (!n.id)
+          return;
+        const item = Utils.find(items, n.id);
+        if (!item) {
+          if (_GridStack.addRemoveCB)
+            _GridStack.addRemoveCB(this.el, n, false, false);
+          removed.push(n);
+          this.removeWidget(n.el, true, false);
+        }
+      });
+    }
+    this.engine._loading = true;
+    const updateNodes = [];
+    this.engine.nodes = this.engine.nodes.filter((n) => {
+      if (Utils.find(items, n.id)) {
+        updateNodes.push(n);
+        return false;
+      }
+      return true;
+    });
+    items.forEach((w) => {
+      const item = Utils.find(updateNodes, w.id);
+      if (item) {
+        if (Utils.shouldSizeToContent(item))
+          w.h = item.h;
+        this.engine.nodeBoundFix(w);
+        if (w.autoPosition || w.x === void 0 || w.y === void 0) {
+          w.w = w.w || item.w;
+          w.h = w.h || item.h;
+          this.engine.findEmptyPosition(w);
+        }
+        this.engine.nodes.push(item);
+        if (Utils.samePos(item, w) && this.engine.nodes.length > 1) {
+          this.moveNode(item, { ...w, forceCollide: true });
+          Utils.copyPos(w, item);
+        }
+        this.update(item.el, w);
+        if (w.subGridOpts?.children) {
+          const sub = item.el.querySelector(".grid-stack");
+          if (sub && sub.gridstack) {
+            sub.gridstack.load(w.subGridOpts.children);
+          }
+        }
+      } else if (addRemove) {
+        this.addWidget(w);
+      }
+    });
+    delete this.engine._loading;
+    this.engine.removedNodes = removed;
+    this.batchUpdate(false);
+    delete this._ignoreLayoutsNodeChange;
+    delete this.engine.skipCacheUpdate;
+    prevCB ? _GridStack.addRemoveCB = prevCB : delete _GridStack.addRemoveCB;
+    if (noAnim)
+      this.setAnimation(true, true);
+    return this;
+  }
+  /**
+   * use before calling a bunch of `addWidget()` to prevent un-necessary relayouts in between (more efficient)
+   * and get a single event callback. You will see no changes until `batchUpdate(false)` is called.
+   */
+  batchUpdate(flag = true) {
+    this.engine.batchUpdate(flag);
+    if (!flag) {
+      this._updateContainerHeight();
+      this._triggerRemoveEvent();
+      this._triggerAddEvent();
+      this._triggerChangeEvent();
+    }
+    return this;
+  }
+  /**
+   * Gets the current cell height in pixels. This takes into account the unit type and converts to pixels if necessary.
+   *
+   * @param forcePixel if true, forces conversion to pixels even when cellHeight is specified in other units
+   * @returns the cell height in pixels
+   *
+   * @example
+   * const height = grid.getCellHeight();
+   * console.log('Cell height:', height, 'px');
+   *
+   * // Force pixel conversion
+   * const pixelHeight = grid.getCellHeight(true);
+   */
+  getCellHeight(forcePixel = false) {
+    if (this.opts.cellHeight && this.opts.cellHeight !== "auto" && (!forcePixel || !this.opts.cellHeightUnit || this.opts.cellHeightUnit === "px")) {
+      return this.opts.cellHeight;
+    }
+    if (this.opts.cellHeightUnit === "rem") {
+      return this.opts.cellHeight * parseFloat(getComputedStyle(document.documentElement).fontSize);
+    }
+    if (this.opts.cellHeightUnit === "em") {
+      return this.opts.cellHeight * parseFloat(getComputedStyle(this.el).fontSize);
+    }
+    if (this.opts.cellHeightUnit === "cm") {
+      return this.opts.cellHeight * (96 / 2.54);
+    }
+    if (this.opts.cellHeightUnit === "mm") {
+      return this.opts.cellHeight * (96 / 2.54) / 10;
+    }
+    const el = this.el.querySelector("." + this.opts.itemClass);
+    if (el) {
+      const h = Utils.toNumber(el.getAttribute("gs-h")) || 1;
+      return Math.round(el.offsetHeight / h);
+    }
+    const rows = parseInt(this.el.getAttribute("gs-current-row"));
+    return rows ? Math.round(this.el.getBoundingClientRect().height / rows) : this.opts.cellHeight;
+  }
+  /**
+   * Update current cell height - see `GridStackOptions.cellHeight` for format by updating eh Browser CSS variable.
+   *
+   * @param val the cell height. Options:
+   *   - `undefined`: cells content will be made square (match width minus margin)
+   *   - `0`: the CSS will be generated by the application instead
+   *   - number: height in pixels
+   *   - string: height with units (e.g., '70px', '5rem', '2em')
+   * @returns the grid instance for chaining
+   *
+   * @example
+   * grid.cellHeight(100);     // 100px height
+   * grid.cellHeight('70px');  // explicit pixel height
+   * grid.cellHeight('5rem');  // relative to root font size
+   * grid.cellHeight(grid.cellWidth() * 1.2); // aspect ratio
+   * grid.cellHeight('auto');  // auto-size based on content
+   */
+  cellHeight(val) {
+    if (val !== void 0) {
+      if (this._isAutoCellHeight !== (val === "auto")) {
+        this._isAutoCellHeight = val === "auto";
+        this._updateResizeEvent();
+      }
+    }
+    if (val === "initial" || val === "auto") {
+      val = void 0;
+    }
+    if (val === void 0) {
+      const marginDiff = -this.opts.marginRight - this.opts.marginLeft + this.opts.marginTop + this.opts.marginBottom;
+      val = this.cellWidth() + marginDiff;
+    }
+    const data = Utils.parseHeight(val);
+    if (this.opts.cellHeightUnit === data.unit && this.opts.cellHeight === data.h) {
+      return this;
+    }
+    this.opts.cellHeightUnit = data.unit;
+    this.opts.cellHeight = data.h;
+    this.el.style.setProperty("--gs-cell-height", `${this.opts.cellHeight}${this.opts.cellHeightUnit}`);
+    this._updateContainerHeight();
+    this.resizeToContentCheck();
+    return this;
+  }
+  /** Gets current cell width. */
+  /**
+   * Gets the current cell width in pixels. This is calculated based on the grid container width divided by the number of columns.
+   *
+   * @returns the cell width in pixels
+   *
+   * @example
+   * const width = grid.cellWidth();
+   * console.log('Cell width:', width, 'px');
+   *
+   * // Use cell width to calculate widget dimensions
+   * const widgetWidth = width * 3; // For a 3-column wide widget
+   */
+  cellWidth() {
+    return this._widthOrContainer() / this.getColumn();
+  }
+  /** return our expected width (or parent) , and optionally of window for dynamic column check */
+  _widthOrContainer(forBreakpoint = false) {
+    return forBreakpoint && this.opts.columnOpts?.breakpointForWindow ? window.innerWidth : this.el.clientWidth || this.el.parentElement.clientWidth || window.innerWidth;
+  }
+  /** checks for dynamic column count for our current size, returning true if changed */
+  checkDynamicColumn() {
+    const resp = this.opts.columnOpts;
+    if (!resp || !resp.columnWidth && !resp.breakpoints?.length)
+      return false;
+    const column = this.getColumn();
+    let newColumn = column;
+    const w = this._widthOrContainer(true);
+    if (resp.columnWidth) {
+      newColumn = Math.min(Math.round(w / resp.columnWidth) || 1, resp.columnMax);
+    } else {
+      newColumn = resp.columnMax;
+      let i = 0;
+      while (i < resp.breakpoints.length && w <= resp.breakpoints[i].w) {
+        newColumn = resp.breakpoints[i++].c || column;
+      }
+    }
+    if (newColumn !== column) {
+      const bk = resp.breakpoints?.find((b) => b.c === newColumn);
+      this.column(newColumn, bk?.layout || resp.layout);
+      return true;
+    }
+    return false;
+  }
+  /**
+   * Re-layout grid items to reclaim any empty space. This is useful after removing widgets
+   * or when you want to optimize the layout.
+   *
+   * @param layout layout type. Options:
+   *   - 'compact' (default): might re-order items to fill any empty space
+   *   - 'list': keep the widget left->right order the same, even if that means leaving an empty slot if things don't fit
+   * @param doSort re-sort items first based on x,y position. Set to false to do your own sorting ahead (default: true)
+   * @returns the grid instance for chaining
+   *
+   * @example
+   * // Compact layout after removing widgets
+   * grid.removeWidget('.widget-to-remove');
+   * grid.compact();
+   *
+   * // Use list layout (preserve order)
+   * grid.compact('list');
+   *
+   * // Compact without sorting first
+   * grid.compact('compact', false);
+   */
+  compact(layout = "compact", doSort = true) {
+    this.engine.compact(layout, doSort);
+    this._triggerChangeEvent();
+    return this;
+  }
+  /**
+   * Set the number of columns in the grid. Will update existing widgets to conform to new number of columns,
+   * as well as cache the original layout so you can revert back to previous positions without loss.
+   *
+   * Requires `gridstack-extra.css` or `gridstack-extra.min.css` for [2-11] columns,
+   * else you will need to generate correct CSS.
+   * See: https://github.com/gridstack/gridstack.js#change-grid-columns
+   *
+   * @param column Integer > 0 (default 12)
+   * @param layout specify the type of re-layout that will happen. Options:
+   *   - 'moveScale' (default): scale widget positions and sizes
+   *   - 'move': keep widget sizes, only move positions
+   *   - 'scale': keep widget positions, only scale sizes
+   *   - 'none': don't change widget positions or sizes
+   *   Note: items will never be outside of the current column boundaries.
+   *   Ignored for `column=1` as we always want to vertically stack.
+   * @returns the grid instance for chaining
+   *
+   * @example
+   * // Change to 6 columns with default scaling
+   * grid.column(6);
+   *
+   * // Change to 4 columns, only move positions
+   * grid.column(4, 'move');
+   *
+   * // Single column layout (vertical stack)
+   * grid.column(1);
+   */
+  column(column, layout = "moveScale") {
+    if (!column || column < 1 || this.opts.column === column)
+      return this;
+    const oldColumn = this.getColumn();
+    this.opts.column = column;
+    if (!this.engine) {
+      this.responseLayout = layout;
+      return this;
+    }
+    this.engine.column = column;
+    this.el.classList.remove("gs-" + oldColumn);
+    this._updateColumnVar();
+    this.engine.columnChanged(oldColumn, column, layout);
+    if (this._isAutoCellHeight)
+      this.cellHeight();
+    this.resizeToContentCheck(true);
+    this._ignoreLayoutsNodeChange = true;
+    this._triggerChangeEvent();
+    delete this._ignoreLayoutsNodeChange;
+    return this;
+  }
+  /**
+   * Get the number of columns in the grid (default 12).
+   *
+   * @returns the current number of columns in the grid
+   *
+   * @example
+   * const columnCount = grid.getColumn(); // returns 12 by default
+   */
+  getColumn() {
+    return this.opts.column;
+  }
+  /**
+   * Returns an array of grid HTML elements (no placeholder) - used to iterate through our children in DOM order.
+   * This method excludes placeholder elements and returns only actual grid items.
+   *
+   * @returns array of GridItemHTMLElement instances representing all grid items
+   *
+   * @example
+   * const items = grid.getGridItems();
+   * items.forEach(item => {
+   *   console.log('Item ID:', item.gridstackNode.id);
+   * });
+   */
+  getGridItems() {
+    return Array.from(this.el.children).filter((el) => el.matches("." + this.opts.itemClass) && !el.matches("." + this.opts.placeholderClass));
+  }
+  /**
+   * Returns true if change callbacks should be ignored due to column change, sizeToContent, loading, etc.
+   * This is useful for callers who want to implement dirty flag functionality.
+   *
+   * @returns true if change callbacks are currently being ignored
+   *
+   * @example
+   * if (!grid.isIgnoreChangeCB()) {
+   *   // Process the change event
+   *   console.log('Grid layout changed');
+   * }
+   */
+  isIgnoreChangeCB() {
+    return this._ignoreLayoutsNodeChange;
+  }
+  /**
+   * Destroys a grid instance. DO NOT CALL any methods or access any vars after this as it will free up members.
+   * @param removeDOM if `false` grid and items HTML elements will not be removed from the DOM (Optional. Default `true`).
+   */
+  destroy(removeDOM = true) {
+    if (!this.el)
+      return;
+    this.offAll();
+    this._updateResizeEvent(true);
+    this.setStatic(true, false);
+    this.setAnimation(false);
+    if (!removeDOM) {
+      this.removeAll(removeDOM);
+      this.el.removeAttribute("gs-current-row");
+    } else {
+      this.el.parentNode.removeChild(this.el);
+    }
+    if (this.parentGridNode)
+      delete this.parentGridNode.subGrid;
+    delete this.parentGridNode;
+    delete this.opts;
+    delete this._placeholder?.gridstackNode;
+    delete this._placeholder;
+    delete this.engine;
+    delete this.el.gridstack;
+    delete this.el;
+    return this;
+  }
+  /**
+   * Enable/disable floating widgets (default: `false`). When enabled, widgets can float up to fill empty spaces.
+   * See [example](http://gridstackjs.com/demo/float.html)
+   *
+   * @param val true to enable floating, false to disable
+   * @returns the grid instance for chaining
+   *
+   * @example
+   * grid.float(true);  // Enable floating
+   * grid.float(false); // Disable floating (default)
+   */
+  float(val) {
+    if (this.opts.float !== val) {
+      this.opts.float = this.engine.float = val;
+      this._triggerChangeEvent();
+    }
+    return this;
+  }
+  /**
+   * Get the current float mode setting.
+   *
+   * @returns true if floating is enabled, false otherwise
+   *
+   * @example
+   * const isFloating = grid.getFloat();
+   * console.log('Floating enabled:', isFloating);
+   */
+  getFloat() {
+    return this.engine.float;
+  }
+  /**
+   * Get the position of the cell under a pixel on screen.
+   * @param position the position of the pixel to resolve in
+   * absolute coordinates, as an object with top and left properties
+   * @param useDocRelative if true, value will be based on document position vs parent position (Optional. Default false).
+   * Useful when grid is within `position: relative` element
+   *
+   * Returns an object with properties `x` and `y` i.e. the column and row in the grid.
+   */
+  getCellFromPixel(position, useDocRelative = false) {
+    const box = this.el.getBoundingClientRect();
+    let containerPos;
+    if (useDocRelative) {
+      containerPos = { top: box.top + document.documentElement.scrollTop, left: box.left };
+    } else {
+      containerPos = { top: this.el.offsetTop, left: this.el.offsetLeft };
+    }
+    const relativeLeft = position.left - containerPos.left;
+    const relativeTop = position.top - containerPos.top;
+    const columnWidth = box.width / this.getColumn();
+    const rowHeight = box.height / parseInt(this.el.getAttribute("gs-current-row"));
+    return { x: Math.floor(relativeLeft / columnWidth), y: Math.floor(relativeTop / rowHeight) };
+  }
+  /**
+   * Returns the current number of rows, which will be at least `minRow` if set.
+   * The row count is based on the highest positioned widget in the grid.
+   *
+   * @returns the current number of rows in the grid
+   *
+   * @example
+   * const rowCount = grid.getRow();
+   * console.log('Grid has', rowCount, 'rows');
+   */
+  getRow() {
+    return Math.max(this.engine.getRow(), this.opts.minRow || 0);
+  }
+  /**
+   * Checks if the specified rectangular area is empty (no widgets occupy any part of it).
+   *
+   * @param x the x coordinate (column) of the area to check
+   * @param y the y coordinate (row) of the area to check
+   * @param w the width in columns of the area to check
+   * @param h the height in rows of the area to check
+   * @returns true if the area is completely empty, false if any widget overlaps
+   *
+   * @example
+   * // Check if a 2x2 area at position (1,1) is empty
+   * if (grid.isAreaEmpty(1, 1, 2, 2)) {
+   *   console.log('Area is available for placement');
+   * }
+   */
+  isAreaEmpty(x, y, w, h) {
+    return this.engine.isAreaEmpty(x, y, w, h);
+  }
+  /**
+   * If you add elements to your grid by hand (or have some framework creating DOM), you have to tell gridstack afterwards to make them widgets.
+   * If you want gridstack to add the elements for you, use `addWidget()` instead.
+   * Makes the given element a widget and returns it.
+   *
+   * @param els widget or single selector to convert.
+   * @param options widget definition to use instead of reading attributes or using default sizing values
+   * @returns the converted GridItemHTMLElement
+   *
+   * @example
+   * const grid = GridStack.init();
+   *
+   * // Create HTML content manually, possibly looking like:
+   * // <div id="item-1" gs-x="0" gs-y="0" gs-w="3" gs-h="2"></div>
+   * grid.el.innerHTML = '<div id="item-1" gs-w="3"></div><div id="item-2"></div>';
+   *
+   * // Convert existing elements to widgets
+   * grid.makeWidget('#item-1'); // Uses gs-* attributes from DOM
+   * grid.makeWidget('#item-2', {w: 2, h: 1, content: 'Hello World'});
+   *
+   * // Or pass DOM element directly
+   * const element = document.getElementById('item-3');
+   * grid.makeWidget(element, {x: 0, y: 1, w: 4, h: 2});
+   */
+  makeWidget(els, options) {
+    const el = _GridStack.getElement(els);
+    if (!el || el.gridstackNode)
+      return el;
+    if (!el.parentElement)
+      this.el.appendChild(el);
+    this._prepareElement(el, true, options);
+    const node = el.gridstackNode;
+    this._updateContainerHeight();
+    if (node.subGridOpts) {
+      this.makeSubGrid(el, node.subGridOpts, void 0, false);
+    }
+    let resetIgnoreLayoutsNodeChange;
+    if (this.opts.column === 1 && !this._ignoreLayoutsNodeChange) {
+      resetIgnoreLayoutsNodeChange = this._ignoreLayoutsNodeChange = true;
+    }
+    this._triggerAddEvent();
+    this._triggerChangeEvent();
+    if (resetIgnoreLayoutsNodeChange)
+      delete this._ignoreLayoutsNodeChange;
+    return el;
+  }
+  on(name, callback) {
+    if (name.indexOf(" ") !== -1) {
+      const names = name.split(" ");
+      names.forEach((name2) => this.on(name2, callback));
+      return this;
+    }
+    if (name === "change" || name === "added" || name === "removed" || name === "enable" || name === "disable") {
+      const noData = name === "enable" || name === "disable";
+      if (noData) {
+        this._gsEventHandler[name] = (event) => callback(event);
+      } else {
+        this._gsEventHandler[name] = (event) => {
+          if (event.detail)
+            callback(event, event.detail);
+        };
+      }
+      this.el.addEventListener(name, this._gsEventHandler[name]);
+    } else if (name === "drag" || name === "dragstart" || name === "dragstop" || name === "resizestart" || name === "resize" || name === "resizestop" || name === "dropped" || name === "resizecontent") {
+      this._gsEventHandler[name] = callback;
+    } else {
+      console.error("GridStack.on(" + name + ") event not supported");
+    }
+    return this;
+  }
+  /**
+   * unsubscribe from the 'on' event GridStackEvent
+   * @param name of the event (see possible values) or list of names space separated
+   */
+  off(name) {
+    if (name.indexOf(" ") !== -1) {
+      const names = name.split(" ");
+      names.forEach((name2) => this.off(name2));
+      return this;
+    }
+    if (name === "change" || name === "added" || name === "removed" || name === "enable" || name === "disable") {
+      if (this._gsEventHandler[name]) {
+        this.el.removeEventListener(name, this._gsEventHandler[name]);
+      }
+    }
+    delete this._gsEventHandler[name];
+    return this;
+  }
+  /**
+   * Remove all event handlers from the grid. This is useful for cleanup when destroying a grid.
+   *
+   * @returns the grid instance for chaining
+   *
+   * @example
+   * grid.offAll(); // Remove all event listeners
+   */
+  offAll() {
+    Object.keys(this._gsEventHandler).forEach((key) => this.off(key));
+    return this;
+  }
+  /**
+   * Removes widget from the grid.
+   * @param el  widget or selector to modify
+   * @param removeDOM if `false` DOM element won't be removed from the tree (Default? true).
+   * @param triggerEvent if `false` (quiet mode) element will not be added to removed list and no 'removed' callbacks will be called (Default? true).
+   */
+  removeWidget(els, removeDOM = true, triggerEvent = true) {
+    if (!els) {
+      console.error("Error: GridStack.removeWidget(undefined) called");
+      return this;
+    }
+    _GridStack.getElements(els).forEach((el) => {
+      if (el.parentElement && el.parentElement !== this.el)
+        return;
+      let node = el.gridstackNode;
+      if (!node) {
+        node = this.engine.nodes.find((n) => el === n.el);
+      }
+      if (!node)
+        return;
+      if (removeDOM && _GridStack.addRemoveCB) {
+        _GridStack.addRemoveCB(this.el, node, false, false);
+      }
+      delete el.gridstackNode;
+      this._removeDD(el);
+      this.engine.removeNode(node, removeDOM, triggerEvent);
+      if (removeDOM && el.parentElement) {
+        el.remove();
+      }
+    });
+    if (triggerEvent) {
+      this._triggerRemoveEvent();
+      this._triggerChangeEvent();
+    }
+    return this;
+  }
+  /**
+   * Removes all widgets from the grid.
+   * @param removeDOM if `false` DOM elements won't be removed from the tree (Default? `true`).
+   * @param triggerEvent if `false` (quiet mode) element will not be added to removed list and no 'removed' callbacks will be called (Default? true).
+   */
+  removeAll(removeDOM = true, triggerEvent = true) {
+    this.engine.nodes.forEach((n) => {
+      if (removeDOM && _GridStack.addRemoveCB) {
+        _GridStack.addRemoveCB(this.el, n, false, false);
+      }
+      delete n.el.gridstackNode;
+      if (!this.opts.staticGrid)
+        this._removeDD(n.el);
+    });
+    this.engine.removeAll(removeDOM, triggerEvent);
+    if (triggerEvent)
+      this._triggerRemoveEvent();
+    return this;
+  }
+  /**
+   * Toggle the grid animation state.  Toggles the `grid-stack-animate` class.
+   * @param doAnimate if true the grid will animate.
+   * @param delay if true setting will be set on next event loop.
+   */
+  setAnimation(doAnimate = this.opts.animate, delay) {
+    if (delay) {
+      setTimeout(() => {
+        if (this.opts)
+          this.setAnimation(doAnimate);
+      });
+    } else if (doAnimate) {
+      this.el.classList.add("grid-stack-animate");
+    } else {
+      this.el.classList.remove("grid-stack-animate");
+    }
+    this.opts.animate = doAnimate;
+    return this;
+  }
+  /** @internal */
+  hasAnimationCSS() {
+    return this.el.classList.contains("grid-stack-animate");
+  }
+  /**
+   * Toggle the grid static state, which permanently removes/add Drag&Drop support, unlike disable()/enable() that just turns it off/on.
+   * Also toggle the grid-stack-static class.
+   * @param val if true the grid become static.
+   * @param updateClass true (default) if css class gets updated
+   * @param recurse true (default) if sub-grids also get updated
+   */
+  setStatic(val, updateClass = true, recurse = true) {
+    if (!!this.opts.staticGrid === val)
+      return this;
+    val ? this.opts.staticGrid = true : delete this.opts.staticGrid;
+    this._setupRemoveDrop();
+    this._setupAcceptWidget();
+    this.engine.nodes.forEach((n) => {
+      this.prepareDragDrop(n.el);
+      if (n.subGrid && recurse)
+        n.subGrid.setStatic(val, updateClass, recurse);
+    });
+    if (updateClass) {
+      this._setStaticClass();
+    }
+    return this;
+  }
+  /**
+   * Updates the passed in options on the grid (similar to update(widget) for for the grid options).
+   * @param options PARTIAL grid options to update - only items specified will be updated.
+   * NOTE: not all options updating are currently supported (lot of code, unlikely to change)
+   */
+  updateOptions(o) {
+    const opts = this.opts;
+    if (o === opts)
+      return this;
+    if (o.acceptWidgets !== void 0) {
+      opts.acceptWidgets = o.acceptWidgets;
+      this._setupAcceptWidget();
+    }
+    if (o.animate !== void 0)
+      this.setAnimation(o.animate);
+    if (o.cellHeight)
+      this.cellHeight(o.cellHeight);
+    if (o.class !== void 0 && o.class !== opts.class) {
+      if (opts.class)
+        this.el.classList.remove(opts.class);
+      if (o.class)
+        this.el.classList.add(o.class);
+    }
+    if (o.columnOpts) {
+      this.opts.columnOpts = o.columnOpts;
+      this.checkDynamicColumn();
+    } else if (o.columnOpts === null && this.opts.columnOpts) {
+      delete this.opts.columnOpts;
+      this._updateResizeEvent();
+    } else if (typeof o.column === "number")
+      this.column(o.column);
+    if (o.margin !== void 0)
+      this.margin(o.margin);
+    if (o.staticGrid !== void 0)
+      this.setStatic(o.staticGrid);
+    if (o.disableDrag !== void 0 && !o.staticGrid)
+      this.enableMove(!o.disableDrag);
+    if (o.disableResize !== void 0 && !o.staticGrid)
+      this.enableResize(!o.disableResize);
+    if (o.float !== void 0)
+      this.float(o.float);
+    if (o.row !== void 0) {
+      opts.minRow = opts.maxRow = opts.row = o.row;
+      this._updateContainerHeight();
+    } else {
+      if (o.minRow !== void 0) {
+        opts.minRow = o.minRow;
+        this._updateContainerHeight();
+      }
+      if (o.maxRow !== void 0)
+        opts.maxRow = o.maxRow;
+    }
+    if (o.lazyLoad !== void 0)
+      opts.lazyLoad = o.lazyLoad;
+    if (o.children?.length)
+      this.load(o.children);
+    return this;
+  }
+  /**
+   * Updates widget position/size and other info. This is used to change widget properties after creation.
+   * Can update position, size, content, and other widget properties.
+   *
+   * Note: If you need to call this on all nodes, use load() instead which will update what changed.
+   * Setting the same x,y for multiple items will be indeterministic and likely unwanted.
+   *
+   * @param els widget element(s) or selector to modify
+   * @param opt new widget options (x,y,w,h, etc.). Only those set will be updated.
+   * @returns the grid instance for chaining
+   *
+   * @example
+   * // Update widget size and position
+   * grid.update('.my-widget', { x: 2, y: 1, w: 3, h: 2 });
+   *
+   * // Update widget content
+   * grid.update(widget, { content: '<p>New content</p>' });
+   *
+   * // Update multiple properties
+   * grid.update('#my-widget', {
+   *   w: 4,
+   *   h: 3,
+   *   noResize: true,
+   *   locked: true
+   * });
+   */
+  update(els, opt) {
+    _GridStack.getElements(els).forEach((el) => {
+      const n = el?.gridstackNode;
+      if (!n)
+        return;
+      const w = { ...Utils.copyPos({}, n), ...Utils.cloneDeep(opt) };
+      this.engine.nodeBoundFix(w);
+      delete w.autoPosition;
+      const keys = ["x", "y", "w", "h"];
+      let m;
+      if (keys.some((k) => w[k] !== void 0 && w[k] !== n[k])) {
+        m = {};
+        keys.forEach((k) => {
+          m[k] = w[k] !== void 0 ? w[k] : n[k];
+          delete w[k];
+        });
+      }
+      if (!m && (w.minW || w.minH || w.maxW || w.maxH)) {
+        m = {};
+      }
+      if (w.content !== void 0) {
+        const itemContent = el.querySelector(".grid-stack-item-content");
+        if (itemContent && itemContent.textContent !== w.content) {
+          n.content = w.content;
+          _GridStack.renderCB(itemContent, w);
+          if (n.subGrid?.el) {
+            itemContent.appendChild(n.subGrid.el);
+            n.subGrid._updateContainerHeight();
+          }
+        }
+        delete w.content;
+      }
+      let changed = false;
+      let ddChanged = false;
+      for (const key in w) {
+        if (key[0] !== "_" && n[key] !== w[key]) {
+          n[key] = w[key];
+          changed = true;
+          ddChanged = ddChanged || !this.opts.staticGrid && (key === "noResize" || key === "noMove" || key === "locked");
+        }
+      }
+      Utils.sanitizeMinMax(n);
+      if (m) {
+        const widthChanged = m.w !== void 0 && m.w !== n.w;
+        this.moveNode(n, m);
+        if (widthChanged && n.subGrid) {
+          n.subGrid.onResize(this.hasAnimationCSS() ? n.w : void 0);
+        } else {
+          this.resizeToContentCheck(widthChanged, n);
+        }
+        delete n._orig;
+      }
+      if (m || changed) {
+        this._writeAttr(el, n);
+      }
+      if (ddChanged) {
+        this.prepareDragDrop(n.el);
+      }
+      if (_GridStack.updateCB)
+        _GridStack.updateCB(n);
+    });
+    return this;
+  }
+  moveNode(n, m) {
+    const wasUpdating = n._updating;
+    if (!wasUpdating)
+      this.engine.cleanNodes().beginUpdate(n);
+    this.engine.moveNode(n, m);
+    this._updateContainerHeight();
+    if (!wasUpdating) {
+      this._triggerChangeEvent();
+      this.engine.endUpdate();
+    }
+  }
+  /**
+   * Updates widget height to match the content height to avoid vertical scrollbars or dead space.
+   * This automatically adjusts the widget height based on its content size.
+   *
+   * Note: This assumes only 1 child under resizeToContentParent='.grid-stack-item-content'
+   * (sized to gridItem minus padding) that represents the entire content size.
+   *
+   * @param el the grid item element to resize
+   *
+   * @example
+   * // Resize a widget to fit its content
+   * const widget = document.querySelector('.grid-stack-item');
+   * grid.resizeToContent(widget);
+   *
+   * // This is commonly used with dynamic content:
+   * widget.querySelector('.content').innerHTML = 'New longer content...';
+   * grid.resizeToContent(widget);
+   */
+  resizeToContent(el) {
+    if (!el)
+      return;
+    el.classList.remove("size-to-content-max");
+    if (!el.clientHeight)
+      return;
+    const n = el.gridstackNode;
+    if (!n)
+      return;
+    const grid = n.grid;
+    if (!grid || el.parentElement !== grid.el)
+      return;
+    const cell = grid.getCellHeight(true);
+    if (!cell)
+      return;
+    let height = n.h ? n.h * cell : el.clientHeight;
+    let item;
+    if (n.resizeToContentParent)
+      item = el.querySelector(n.resizeToContentParent);
+    if (!item)
+      item = el.querySelector(_GridStack.resizeToContentParent);
+    if (!item)
+      return;
+    const padding = el.clientHeight - item.clientHeight;
+    const itemH = n.h ? n.h * cell - padding : item.clientHeight;
+    let wantedH;
+    if (n.subGrid) {
+      wantedH = n.subGrid.getRow() * n.subGrid.getCellHeight(true);
+      const subRec = n.subGrid.el.getBoundingClientRect();
+      const parentRec = el.getBoundingClientRect();
+      wantedH += subRec.top - parentRec.top;
+    } else if (n.subGridOpts?.children?.length) {
+      return;
+    } else {
+      const child = item.firstElementChild;
+      if (!child) {
+        console.error(`Error: GridStack.resizeToContent() widget id:${n.id} '${_GridStack.resizeToContentParent}'.firstElementChild is null, make sure to have a div like container. Skipping sizing.`);
+        return;
+      }
+      wantedH = child.getBoundingClientRect().height || itemH;
+    }
+    if (itemH === wantedH)
+      return;
+    height += wantedH - itemH;
+    let h = Math.ceil(height / cell);
+    const softMax = Number.isInteger(n.sizeToContent) ? n.sizeToContent : 0;
+    if (softMax && h > softMax) {
+      h = softMax;
+      el.classList.add("size-to-content-max");
+    }
+    if (n.minH && h < n.minH)
+      h = n.minH;
+    else if (n.maxH && h > n.maxH)
+      h = n.maxH;
+    if (h !== n.h) {
+      grid._ignoreLayoutsNodeChange = true;
+      grid.moveNode(n, { h });
+      delete grid._ignoreLayoutsNodeChange;
+    }
+  }
+  /** call the user resize (so they can do extra work) else our build in version */
+  resizeToContentCBCheck(el) {
+    if (_GridStack.resizeToContentCB)
+      _GridStack.resizeToContentCB(el);
+    else
+      this.resizeToContent(el);
+  }
+  /**
+   * Rotate widgets by swapping their width and height. This is typically called when the user presses 'r' during dragging.
+   * The rotation swaps the w/h dimensions and adjusts min/max constraints accordingly.
+   *
+   * @param els widget element(s) or selector to rotate
+   * @param relative optional pixel coordinate relative to upper/left corner to rotate around (keeps that cell under cursor)
+   * @returns the grid instance for chaining
+   *
+   * @example
+   * // Rotate a specific widget
+   * grid.rotate('.my-widget');
+   *
+   * // Rotate with relative positioning during drag
+   * grid.rotate(widget, { left: 50, top: 30 });
+   */
+  rotate(els, relative) {
+    _GridStack.getElements(els).forEach((el) => {
+      const n = el.gridstackNode;
+      if (!Utils.canBeRotated(n))
+        return;
+      const rot = { w: n.h, h: n.w, minH: n.minW, minW: n.minH, maxH: n.maxW, maxW: n.maxH };
+      if (relative) {
+        const pivotX = relative.left > 0 ? Math.floor(relative.left / this.cellWidth()) : 0;
+        const pivotY = relative.top > 0 ? Math.floor(relative.top / this.opts.cellHeight) : 0;
+        rot.x = n.x + pivotX - (n.h - (pivotY + 1));
+        rot.y = n.y + pivotY - pivotX;
+      }
+      Object.keys(rot).forEach((k) => {
+        if (rot[k] === void 0)
+          delete rot[k];
+      });
+      const _orig = n._orig;
+      this.update(el, rot);
+      n._orig = _orig;
+    });
+    return this;
+  }
+  /**
+   * Updates the margins which will set all 4 sides at once - see `GridStackOptions.margin` for format options.
+   * Supports CSS string format of 1, 2, or 4 values or a single number.
+   *
+   * @param value margin value - can be:
+   *   - Single number: `10` (applies to all sides)
+   *   - Two values: `'10px 20px'` (top/bottom, left/right)
+   *   - Four values: `'10px 20px 5px 15px'` (top, right, bottom, left)
+   * @returns the grid instance for chaining
+   *
+   * @example
+   * grid.margin(10);           // 10px all sides
+   * grid.margin('10px 20px');  // 10px top/bottom, 20px left/right
+   * grid.margin('5px 10px 15px 20px'); // Different for each side
+   */
+  margin(value) {
+    const isMultiValue = typeof value === "string" && value.split(" ").length > 1;
+    if (!isMultiValue) {
+      const data = Utils.parseHeight(value);
+      if (this.opts.marginUnit === data.unit && this.opts.margin === data.h)
+        return;
+    }
+    this.opts.margin = value;
+    this.opts.marginTop = this.opts.marginBottom = this.opts.marginLeft = this.opts.marginRight = void 0;
+    this._initMargin();
+    return this;
+  }
+  /**
+   * Returns the current margin value as a number (undefined if the 4 sides don't match).
+   * This only returns a number if all sides have the same margin value.
+   *
+   * @returns the margin value in pixels, or undefined if sides have different values
+   *
+   * @example
+   * const margin = grid.getMargin();
+   * if (margin !== undefined) {
+   *   console.log('Uniform margin:', margin, 'px');
+   * } else {
+   *   console.log('Margins are different on different sides');
+   * }
+   */
+  getMargin() {
+    return this.opts.margin;
+  }
+  /**
+   * Returns true if the height of the grid will be less than the vertical
+   * constraint. Always returns true if grid doesn't have height constraint.
+   * @param node contains x,y,w,h,auto-position options
+   *
+   * @example
+   * if (grid.willItFit(newWidget)) {
+   *   grid.addWidget(newWidget);
+   * } else {
+   *   alert('Not enough free space to place the widget');
+   * }
+   */
+  willItFit(node) {
+    return this.engine.willItFit(node);
+  }
+  /** @internal */
+  _triggerChangeEvent() {
+    if (this.engine.batchMode)
+      return this;
+    const elements = this.engine.getDirtyNodes(true);
+    if (elements && elements.length) {
+      if (!this._ignoreLayoutsNodeChange) {
+        this.engine.layoutsNodesChange(elements);
+      }
+      this._triggerEvent("change", elements);
+    }
+    this.engine.saveInitial();
+    return this;
+  }
+  /** @internal */
+  _triggerAddEvent() {
+    if (this.engine.batchMode)
+      return this;
+    if (this.engine.addedNodes?.length) {
+      if (!this._ignoreLayoutsNodeChange) {
+        this.engine.layoutsNodesChange(this.engine.addedNodes);
+      }
+      this.engine.addedNodes.forEach((n) => {
+        delete n._dirty;
+      });
+      const addedNodes = [...this.engine.addedNodes];
+      this.engine.addedNodes = [];
+      this._triggerEvent("added", addedNodes);
+    }
+    return this;
+  }
+  /** @internal */
+  _triggerRemoveEvent() {
+    if (this.engine.batchMode)
+      return this;
+    if (this.engine.removedNodes?.length) {
+      const removedNodes = [...this.engine.removedNodes];
+      this.engine.removedNodes = [];
+      this._triggerEvent("removed", removedNodes);
+    }
+    return this;
+  }
+  /** @internal */
+  _triggerEvent(type, data) {
+    const event = data ? new CustomEvent(type, { bubbles: false, detail: data }) : new Event(type);
+    let grid = this;
+    while (grid.parentGridNode)
+      grid = grid.parentGridNode.grid;
+    grid.el.dispatchEvent(event);
+    return this;
+  }
+  /** @internal */
+  _updateContainerHeight() {
+    if (!this.engine || this.engine.batchMode)
+      return this;
+    const parent = this.parentGridNode;
+    let row = this.getRow() + this._extraDragRow;
+    const cellHeight = this.opts.cellHeight;
+    const unit = this.opts.cellHeightUnit;
+    if (!cellHeight)
+      return this;
+    if (!parent && !this.opts.minRow) {
+      const cssMinHeight = Utils.parseHeight(getComputedStyle(this.el)["minHeight"]);
+      if (cssMinHeight.h > 0 && cssMinHeight.unit === unit) {
+        const minRow = Math.floor(cssMinHeight.h / cellHeight);
+        if (row < minRow) {
+          row = minRow;
+        }
+      }
+    }
+    this.el.setAttribute("gs-current-row", String(row));
+    this.el.style.removeProperty("min-height");
+    this.el.style.removeProperty("height");
+    if (row) {
+      this.el.style[parent ? "minHeight" : "height"] = row * cellHeight + unit;
+    }
+    if (parent && Utils.shouldSizeToContent(parent)) {
+      parent.grid.resizeToContentCBCheck(parent.el);
+    }
+    return this;
+  }
+  /** @internal */
+  _prepareElement(el, triggerAddEvent = false, node) {
+    node = node || this._readAttr(el);
+    el.gridstackNode = node;
+    node.el = el;
+    node.grid = this;
+    node = this.engine.addNode(node, triggerAddEvent);
+    this._writeAttr(el, node);
+    el.classList.add(gridDefaults.itemClass, this.opts.itemClass);
+    const sizeToContent = Utils.shouldSizeToContent(node);
+    sizeToContent ? el.classList.add("size-to-content") : el.classList.remove("size-to-content");
+    if (sizeToContent)
+      this.resizeToContentCheck(false, node);
+    if (!Utils.lazyLoad(node))
+      this.prepareDragDrop(node.el);
+    return this;
+  }
+  /** @internal write position CSS vars and x,y,w,h attributes (not used for CSS but by users) back to element */
+  _writePosAttr(el, n) {
+    if (!n._moving && !n._resizing || this._placeholder === el) {
+      el.style.top = n.y ? n.y === 1 ? `var(--gs-cell-height)` : `calc(${n.y} * var(--gs-cell-height))` : null;
+      el.style.left = n.x ? n.x === 1 ? `var(--gs-column-width)` : `calc(${n.x} * var(--gs-column-width))` : null;
+      el.style.width = n.w > 1 ? `calc(${n.w} * var(--gs-column-width))` : null;
+      el.style.height = n.h > 1 ? `calc(${n.h} * var(--gs-cell-height))` : null;
+    }
+    el.setAttribute("gs-x", String(n.x));
+    el.setAttribute("gs-y", String(n.y));
+    n.w > 1 ? el.setAttribute("gs-w", String(n.w)) : el.removeAttribute("gs-w");
+    n.h > 1 ? el.setAttribute("gs-h", String(n.h)) : el.removeAttribute("gs-h");
+    return this;
+  }
+  /** @internal call to write any default attributes back to element */
+  _writeAttr(el, node) {
+    if (!node)
+      return this;
+    this._writePosAttr(el, node);
+    const attrs = {
+      // autoPosition: 'gs-auto-position', // no need to write out as already in node and doesn't affect CSS
+      noResize: "gs-no-resize",
+      noMove: "gs-no-move",
+      locked: "gs-locked",
+      id: "gs-id",
+      sizeToContent: "gs-size-to-content"
+    };
+    for (const key in attrs) {
+      if (node[key]) {
+        el.setAttribute(attrs[key], String(node[key]));
+      } else {
+        el.removeAttribute(attrs[key]);
+      }
+    }
+    return this;
+  }
+  /** @internal call to read any default attributes from element */
+  _readAttr(el, clearDefaultAttr = true) {
+    const n = {};
+    n.x = Utils.toNumber(el.getAttribute("gs-x"));
+    n.y = Utils.toNumber(el.getAttribute("gs-y"));
+    n.w = Utils.toNumber(el.getAttribute("gs-w"));
+    n.h = Utils.toNumber(el.getAttribute("gs-h"));
+    n.autoPosition = Utils.toBool(el.getAttribute("gs-auto-position"));
+    n.noResize = Utils.toBool(el.getAttribute("gs-no-resize"));
+    n.noMove = Utils.toBool(el.getAttribute("gs-no-move"));
+    n.locked = Utils.toBool(el.getAttribute("gs-locked"));
+    const attr = el.getAttribute("gs-size-to-content");
+    if (attr) {
+      if (attr === "true" || attr === "false")
+        n.sizeToContent = Utils.toBool(attr);
+      else
+        n.sizeToContent = parseInt(attr, 10);
+    }
+    n.id = el.getAttribute("gs-id");
+    n.maxW = Utils.toNumber(el.getAttribute("gs-max-w"));
+    n.minW = Utils.toNumber(el.getAttribute("gs-min-w"));
+    n.maxH = Utils.toNumber(el.getAttribute("gs-max-h"));
+    n.minH = Utils.toNumber(el.getAttribute("gs-min-h"));
+    if (clearDefaultAttr) {
+      if (n.w === 1)
+        el.removeAttribute("gs-w");
+      if (n.h === 1)
+        el.removeAttribute("gs-h");
+      if (n.maxW)
+        el.removeAttribute("gs-max-w");
+      if (n.minW)
+        el.removeAttribute("gs-min-w");
+      if (n.maxH)
+        el.removeAttribute("gs-max-h");
+      if (n.minH)
+        el.removeAttribute("gs-min-h");
+    }
+    for (const key in n) {
+      if (!n.hasOwnProperty(key))
+        return;
+      if (!n[key] && n[key] !== 0 && key !== "sizeToContent") {
+        delete n[key];
+      }
+    }
+    return n;
+  }
+  /** @internal */
+  _setStaticClass() {
+    const classes = ["grid-stack-static"];
+    if (this.opts.staticGrid) {
+      this.el.classList.add(...classes);
+      this.el.setAttribute("gs-static", "true");
+    } else {
+      this.el.classList.remove(...classes);
+      this.el.removeAttribute("gs-static");
+    }
+    return this;
+  }
+  /**
+   * called when we are being resized - check if the one Column Mode needs to be turned on/off
+   * and remember the prev columns we used, or get our count from parent, as well as check for cellHeight==='auto' (square)
+   * or `sizeToContent` gridItem options.
+   */
+  onResize(clientWidth = this.el?.clientWidth) {
+    if (!clientWidth)
+      return;
+    if (this.prevWidth === clientWidth)
+      return;
+    this.prevWidth = clientWidth;
+    this.batchUpdate();
+    let columnChanged = false;
+    if (this._autoColumn && this.parentGridNode) {
+      if (this.opts.column !== this.parentGridNode.w) {
+        this.column(this.parentGridNode.w, this.opts.layout || "list");
+        columnChanged = true;
+      }
+    } else {
+      columnChanged = this.checkDynamicColumn();
+    }
+    if (this._isAutoCellHeight)
+      this.cellHeight();
+    this.engine.nodes.forEach((n) => {
+      if (n.subGrid)
+        n.subGrid.onResize();
+    });
+    if (!this._skipInitialResize)
+      this.resizeToContentCheck(columnChanged);
+    delete this._skipInitialResize;
+    this.batchUpdate(false);
+    return this;
+  }
+  /** resizes content for given node (or all) if shouldSizeToContent() is true */
+  resizeToContentCheck(delay = false, n = void 0) {
+    if (!this.engine)
+      return;
+    if (delay && this.hasAnimationCSS())
+      return setTimeout(() => this.resizeToContentCheck(false, n), this.animationDelay);
+    if (n) {
+      if (Utils.shouldSizeToContent(n))
+        this.resizeToContentCBCheck(n.el);
+    } else if (this.engine.nodes.some((n2) => Utils.shouldSizeToContent(n2))) {
+      const nodes = [...this.engine.nodes];
+      this.batchUpdate();
+      nodes.forEach((n2) => {
+        if (Utils.shouldSizeToContent(n2))
+          this.resizeToContentCBCheck(n2.el);
+      });
+      this._ignoreLayoutsNodeChange = true;
+      this.batchUpdate(false);
+      this._ignoreLayoutsNodeChange = false;
+    }
+    if (this._gsEventHandler["resizecontent"])
+      this._gsEventHandler["resizecontent"](null, n ? [n] : this.engine.nodes);
+  }
+  /** add or remove the grid element size event handler */
+  _updateResizeEvent(forceRemove = false) {
+    const trackSize = !this.parentGridNode && (this._isAutoCellHeight || this.opts.sizeToContent || this.opts.columnOpts || this.engine.nodes.find((n) => n.sizeToContent));
+    if (!forceRemove && trackSize && !this.resizeObserver) {
+      this._sizeThrottle = Utils.throttle(() => this.onResize(), this.opts.cellHeightThrottle);
+      this.resizeObserver = new ResizeObserver(() => this._sizeThrottle());
+      this.resizeObserver.observe(this.el);
+      this._skipInitialResize = true;
+    } else if ((forceRemove || !trackSize) && this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      delete this.resizeObserver;
+      delete this._sizeThrottle;
+    }
+    return this;
+  }
+  /** @internal convert a potential selector into actual element */
+  static getElement(els = ".grid-stack-item") {
+    return Utils.getElement(els);
+  }
+  /** @internal */
+  static getElements(els = ".grid-stack-item") {
+    return Utils.getElements(els);
+  }
+  /** @internal */
+  static getGridElement(els) {
+    return _GridStack.getElement(els);
+  }
+  /** @internal */
+  static getGridElements(els) {
+    return Utils.getElements(els);
+  }
+  /** @internal initialize margin top/bottom/left/right and units */
+  _initMargin() {
+    let data;
+    let margin = 0;
+    let margins = [];
+    if (typeof this.opts.margin === "string") {
+      margins = this.opts.margin.split(" ");
+    }
+    if (margins.length === 2) {
+      this.opts.marginTop = this.opts.marginBottom = margins[0];
+      this.opts.marginLeft = this.opts.marginRight = margins[1];
+    } else if (margins.length === 4) {
+      this.opts.marginTop = margins[0];
+      this.opts.marginRight = margins[1];
+      this.opts.marginBottom = margins[2];
+      this.opts.marginLeft = margins[3];
+    } else {
+      data = Utils.parseHeight(this.opts.margin);
+      this.opts.marginUnit = data.unit;
+      margin = this.opts.margin = data.h;
+    }
+    const keys = ["marginTop", "marginRight", "marginBottom", "marginLeft"];
+    keys.forEach((k) => {
+      if (this.opts[k] === void 0) {
+        this.opts[k] = margin;
+      } else {
+        data = Utils.parseHeight(this.opts[k]);
+        this.opts[k] = data.h;
+        delete this.opts.margin;
+      }
+    });
+    this.opts.marginUnit = data.unit;
+    if (this.opts.marginTop === this.opts.marginBottom && this.opts.marginLeft === this.opts.marginRight && this.opts.marginTop === this.opts.marginRight) {
+      this.opts.margin = this.opts.marginTop;
+    }
+    const style = this.el.style;
+    style.setProperty("--gs-item-margin-top", `${this.opts.marginTop}${this.opts.marginUnit}`);
+    style.setProperty("--gs-item-margin-bottom", `${this.opts.marginBottom}${this.opts.marginUnit}`);
+    style.setProperty("--gs-item-margin-right", `${this.opts.marginRight}${this.opts.marginUnit}`);
+    style.setProperty("--gs-item-margin-left", `${this.opts.marginLeft}${this.opts.marginUnit}`);
+    return this;
+  }
+  /* ===========================================================================================
+   * drag&drop methods that used to be stubbed out and implemented in dd-gridstack.ts
+   * but caused loading issues in prod - see https://github.com/gridstack/gridstack.js/issues/2039
+   * ===========================================================================================
+   */
+  /**
+   * Get the global drag & drop implementation instance.
+   * This provides access to the underlying drag & drop functionality.
+   *
+   * @returns the DDGridStack instance used for drag & drop operations
+   *
+   * @example
+   * const dd = GridStack.getDD();
+   * // Access drag & drop functionality
+   */
+  static getDD() {
+    return dd;
+  }
+  /**
+   * call to setup dragging in from the outside (say toolbar), by specifying the class selection and options.
+   * Called during GridStack.init() as options, but can also be called directly (last param are used) in case the toolbar
+   * is dynamically create and needs to be set later.
+   * @param dragIn string selector (ex: '.sidebar-item') or list of dom elements
+   * @param dragInOptions options - see DDDragOpt. (default: {handle: '.grid-stack-item-content', appendTo: 'body'}
+   * @param widgets GridStackWidget def to assign to each element which defines what to create on drop
+   * @param root optional root which defaults to document (for shadow dom pass the parent HTMLDocument)
+   */
+  static setupDragIn(dragIn, dragInOptions, widgets, root = document) {
+    if (dragInOptions?.pause !== void 0) {
+      DDManager.pauseDrag = dragInOptions.pause;
+    }
+    dragInOptions = { appendTo: "body", helper: "clone", ...dragInOptions || {} };
+    const els = typeof dragIn === "string" ? Utils.getElements(dragIn, root) : dragIn;
+    els.forEach((el, i) => {
+      if (!dd.isDraggable(el))
+        dd.dragIn(el, dragInOptions);
+      if (widgets?.[i])
+        el.gridstackNode = widgets[i];
+    });
+  }
+  /**
+   * Enables/Disables dragging by the user for specific grid elements.
+   * For all items and future items, use enableMove() instead. No-op for static grids.
+   *
+   * Note: If you want to prevent an item from moving due to being pushed around by another
+   * during collision, use the 'locked' property instead.
+   *
+   * @param els widget element(s) or selector to modify
+   * @param val if true widget will be draggable, assuming the parent grid isn't noMove or static
+   * @returns the grid instance for chaining
+   *
+   * @example
+   * // Make specific widgets draggable
+   * grid.movable('.my-widget', true);
+   *
+   * // Disable dragging for specific widgets
+   * grid.movable('#fixed-widget', false);
+   */
+  movable(els, val) {
+    if (this.opts.staticGrid)
+      return this;
+    _GridStack.getElements(els).forEach((el) => {
+      const n = el.gridstackNode;
+      if (!n)
+        return;
+      val ? delete n.noMove : n.noMove = true;
+      this.prepareDragDrop(n.el);
+    });
+    return this;
+  }
+  /**
+   * Enables/Disables user resizing for specific grid elements.
+   * For all items and future items, use enableResize() instead. No-op for static grids.
+   *
+   * @param els widget element(s) or selector to modify
+   * @param val if true widget will be resizable, assuming the parent grid isn't noResize or static
+   * @returns the grid instance for chaining
+   *
+   * @example
+   * // Make specific widgets resizable
+   * grid.resizable('.my-widget', true);
+   *
+   * // Disable resizing for specific widgets
+   * grid.resizable('#fixed-size-widget', false);
+   */
+  resizable(els, val) {
+    if (this.opts.staticGrid)
+      return this;
+    _GridStack.getElements(els).forEach((el) => {
+      const n = el.gridstackNode;
+      if (!n)
+        return;
+      val ? delete n.noResize : n.noResize = true;
+      this.prepareDragDrop(n.el);
+    });
+    return this;
+  }
+  /**
+   * Temporarily disables widgets moving/resizing.
+   * If you want a more permanent way (which freezes up resources) use `setStatic(true)` instead.
+   *
+   * Note: This is a no-op for static grids.
+   *
+   * This is a shortcut for:
+   * ```typescript
+   * grid.enableMove(false);
+   * grid.enableResize(false);
+   * ```
+   *
+   * @param recurse if true (default), sub-grids also get updated
+   * @returns the grid instance for chaining
+   *
+   * @example
+   * // Disable all interactions
+   * grid.disable();
+   *
+   * // Disable only this grid, not sub-grids
+   * grid.disable(false);
+   */
+  disable(recurse = true) {
+    if (this.opts.staticGrid)
+      return;
+    this.enableMove(false, recurse);
+    this.enableResize(false, recurse);
+    this._triggerEvent("disable");
+    return this;
+  }
+  /**
+   * Re-enables widgets moving/resizing - see disable().
+   * Note: This is a no-op for static grids.
+   *
+   * This is a shortcut for:
+   * ```typescript
+   * grid.enableMove(true);
+   * grid.enableResize(true);
+   * ```
+   *
+   * @param recurse if true (default), sub-grids also get updated
+   * @returns the grid instance for chaining
+   *
+   * @example
+   * // Re-enable all interactions
+   * grid.enable();
+   *
+   * // Enable only this grid, not sub-grids
+   * grid.enable(false);
+   */
+  enable(recurse = true) {
+    if (this.opts.staticGrid)
+      return;
+    this.enableMove(true, recurse);
+    this.enableResize(true, recurse);
+    this._triggerEvent("enable");
+    return this;
+  }
+  /**
+   * Enables/disables widget moving for all widgets. No-op for static grids.
+   * Note: locally defined items (with noMove property) still override this setting.
+   *
+   * @param doEnable if true widgets will be movable, if false moving is disabled
+   * @param recurse if true (default), sub-grids also get updated
+   * @returns the grid instance for chaining
+   *
+   * @example
+   * // Enable moving for all widgets
+   * grid.enableMove(true);
+   *
+   * // Disable moving for all widgets
+   * grid.enableMove(false);
+   *
+   * // Enable only this grid, not sub-grids
+   * grid.enableMove(true, false);
+   */
+  enableMove(doEnable, recurse = true) {
+    if (this.opts.staticGrid)
+      return this;
+    doEnable ? delete this.opts.disableDrag : this.opts.disableDrag = true;
+    this.engine.nodes.forEach((n) => {
+      this.prepareDragDrop(n.el);
+      if (n.subGrid && recurse)
+        n.subGrid.enableMove(doEnable, recurse);
+    });
+    return this;
+  }
+  /**
+   * Enables/disables widget resizing for all widgets. No-op for static grids.
+   * Note: locally defined items (with noResize property) still override this setting.
+   *
+   * @param doEnable if true widgets will be resizable, if false resizing is disabled
+   * @param recurse if true (default), sub-grids also get updated
+   * @returns the grid instance for chaining
+   *
+   * @example
+   * // Enable resizing for all widgets
+   * grid.enableResize(true);
+   *
+   * // Disable resizing for all widgets
+   * grid.enableResize(false);
+   *
+   * // Enable only this grid, not sub-grids
+   * grid.enableResize(true, false);
+   */
+  enableResize(doEnable, recurse = true) {
+    if (this.opts.staticGrid)
+      return this;
+    doEnable ? delete this.opts.disableResize : this.opts.disableResize = true;
+    this.engine.nodes.forEach((n) => {
+      this.prepareDragDrop(n.el);
+      if (n.subGrid && recurse)
+        n.subGrid.enableResize(doEnable, recurse);
+    });
+    return this;
+  }
+  /** @internal call when drag (and drop) needs to be cancelled (Esc key) */
+  cancelDrag() {
+    const n = this._placeholder?.gridstackNode;
+    if (!n)
+      return;
+    if (n._isExternal) {
+      n._isAboutToRemove = true;
+      this.engine.removeNode(n);
+    } else if (n._isAboutToRemove) {
+      _GridStack._itemRemoving(n.el, false);
+    }
+    this.engine.restoreInitial();
+  }
+  /** @internal removes any drag&drop present (called during destroy) */
+  _removeDD(el) {
+    dd.draggable(el, "destroy").resizable(el, "destroy");
+    if (el.gridstackNode) {
+      delete el.gridstackNode._initDD;
+    }
+    delete el.ddElement;
+    return this;
+  }
+  /** @internal called to add drag over to support widgets being added externally */
+  _setupAcceptWidget() {
+    if (this.opts.staticGrid || !this.opts.acceptWidgets && !this.opts.removable) {
+      dd.droppable(this.el, "destroy");
+      return this;
+    }
+    let cellHeight, cellWidth;
+    const onDrag = (event, el, helper) => {
+      helper = helper || el;
+      const node = helper.gridstackNode;
+      if (!node)
+        return;
+      if (!node.grid?.el) {
+        helper.style.transform = `scale(${1 / this.dragTransform.xScale},${1 / this.dragTransform.yScale})`;
+        const helperRect = helper.getBoundingClientRect();
+        helper.style.left = helperRect.x + (this.dragTransform.xScale - 1) * (event.clientX - helperRect.x) / this.dragTransform.xScale + "px";
+        helper.style.top = helperRect.y + (this.dragTransform.yScale - 1) * (event.clientY - helperRect.y) / this.dragTransform.yScale + "px";
+        helper.style.transformOrigin = `0px 0px`;
+      }
+      let { top, left } = helper.getBoundingClientRect();
+      const rect = this.el.getBoundingClientRect();
+      left -= rect.left;
+      top -= rect.top;
+      const ui = {
+        position: {
+          top: top * this.dragTransform.xScale,
+          left: left * this.dragTransform.yScale
+        }
+      };
+      if (node._temporaryRemoved) {
+        node.x = Math.max(0, Math.round(left / cellWidth));
+        node.y = Math.max(0, Math.round(top / cellHeight));
+        delete node.autoPosition;
+        this.engine.nodeBoundFix(node);
+        if (!this.engine.willItFit(node)) {
+          node.autoPosition = true;
+          if (!this.engine.willItFit(node)) {
+            dd.off(el, "drag");
+            return;
+          }
+          if (node._willFitPos) {
+            Utils.copyPos(node, node._willFitPos);
+            delete node._willFitPos;
+          }
+        }
+        this._onStartMoving(helper, event, ui, node, cellWidth, cellHeight);
+      } else {
+        this._dragOrResize(helper, event, ui, node, cellWidth, cellHeight);
+      }
+    };
+    dd.droppable(this.el, {
+      accept: (el) => {
+        const node = el.gridstackNode || this._readAttr(el, false);
+        if (node?.grid === this)
+          return true;
+        if (!this.opts.acceptWidgets)
+          return false;
+        let canAccept = true;
+        if (typeof this.opts.acceptWidgets === "function") {
+          canAccept = this.opts.acceptWidgets(el);
+        } else {
+          const selector = this.opts.acceptWidgets === true ? ".grid-stack-item" : this.opts.acceptWidgets;
+          canAccept = el.matches(selector);
+        }
+        if (canAccept && node && this.opts.maxRow) {
+          const n = { w: node.w, h: node.h, minW: node.minW, minH: node.minH };
+          canAccept = this.engine.willItFit(n);
+        }
+        return canAccept;
+      }
+    }).on(this.el, "dropover", (event, el, helper) => {
+      let node = helper?.gridstackNode || el.gridstackNode;
+      if (node?.grid === this && !node._temporaryRemoved) {
+        return false;
+      }
+      if (node?._sidebarOrig) {
+        node.w = node._sidebarOrig.w;
+        node.h = node._sidebarOrig.h;
+      }
+      if (node?.grid && node.grid !== this && !node._temporaryRemoved) {
+        const otherGrid = node.grid;
+        otherGrid._leave(el, helper);
+      }
+      helper = helper || el;
+      cellWidth = this.cellWidth();
+      cellHeight = this.getCellHeight(true);
+      if (!node) {
+        const attr = helper.getAttribute("data-gs-widget") || helper.getAttribute("gridstacknode");
+        if (attr) {
+          try {
+            node = JSON.parse(attr);
+          } catch (error) {
+            console.error("Gridstack dropover: Bad JSON format: ", attr);
+          }
+          helper.removeAttribute("data-gs-widget");
+          helper.removeAttribute("gridstacknode");
+        }
+        if (!node)
+          node = this._readAttr(helper);
+        node._sidebarOrig = { w: node.w, h: node.h };
+      }
+      if (!node.grid) {
+        if (!node.el)
+          node = { ...node };
+        node._isExternal = true;
+        helper.gridstackNode = node;
+      }
+      const w = node.w || Math.round(helper.offsetWidth / cellWidth) || 1;
+      const h = node.h || Math.round(helper.offsetHeight / cellHeight) || 1;
+      if (node.grid && node.grid !== this) {
+        if (!el._gridstackNodeOrig)
+          el._gridstackNodeOrig = node;
+        el.gridstackNode = node = { ...node, w, h, grid: this };
+        delete node.x;
+        delete node.y;
+        this.engine.cleanupNode(node).nodeBoundFix(node);
+        node._initDD = node._isExternal = // DOM needs to be re-parented on a drop
+        node._temporaryRemoved = true;
+      } else {
+        node.w = w;
+        node.h = h;
+        node._temporaryRemoved = true;
+      }
+      _GridStack._itemRemoving(node.el, false);
+      dd.on(el, "drag", onDrag);
+      onDrag(event, el, helper);
+      return false;
+    }).on(this.el, "dropout", (event, el, helper) => {
+      const node = helper?.gridstackNode || el.gridstackNode;
+      if (!node)
+        return false;
+      if (!node.grid || node.grid === this) {
+        this._leave(el, helper);
+        if (this._isTemp) {
+          this.removeAsSubGrid(node);
+        }
+      }
+      return false;
+    }).on(this.el, "drop", (event, el, helper) => {
+      const node = helper?.gridstackNode || el.gridstackNode;
+      if (node?.grid === this && !node._isExternal)
+        return false;
+      const wasAdded = !!this.placeholder.parentElement;
+      const wasSidebar = el !== helper;
+      this.placeholder.remove();
+      delete this.placeholder.gridstackNode;
+      if (wasAdded && this.opts.animate) {
+        this.setAnimation(false);
+        this.setAnimation(true, true);
+      }
+      const origNode = el._gridstackNodeOrig;
+      delete el._gridstackNodeOrig;
+      if (wasAdded && origNode?.grid && origNode.grid !== this) {
+        const oGrid = origNode.grid;
+        oGrid.engine.removeNodeFromLayoutCache(origNode);
+        oGrid.engine.removedNodes.push(origNode);
+        oGrid._triggerRemoveEvent()._triggerChangeEvent();
+        if (oGrid.parentGridNode && !oGrid.engine.nodes.length && oGrid.opts.subGridDynamic) {
+          oGrid.removeAsSubGrid();
+        }
+      }
+      if (!node)
+        return false;
+      if (wasAdded) {
+        this.engine.cleanupNode(node);
+        node.grid = this;
+      }
+      delete node.grid?._isTemp;
+      dd.off(el, "drag");
+      if (helper !== el) {
+        helper.remove();
+        el = helper;
+      } else {
+        el.remove();
+      }
+      this._removeDD(el);
+      if (!wasAdded)
+        return false;
+      const subGrid = node.subGrid?.el?.gridstack;
+      Utils.copyPos(node, this._readAttr(this.placeholder));
+      Utils.removePositioningStyles(el);
+      if (wasSidebar && (node.content || node.subGridOpts || _GridStack.addRemoveCB)) {
+        delete node.el;
+        el = this.addWidget(node);
+      } else {
+        this._prepareElement(el, true, node);
+        this.el.appendChild(el);
+        this.resizeToContentCheck(false, node);
+        if (subGrid) {
+          subGrid.parentGridNode = node;
+        }
+        this._updateContainerHeight();
+      }
+      this.engine.addedNodes.push(node);
+      this._triggerAddEvent();
+      this._triggerChangeEvent();
+      this.engine.endUpdate();
+      if (this._gsEventHandler["dropped"]) {
+        this._gsEventHandler["dropped"]({ ...event, type: "dropped" }, origNode && origNode.grid ? origNode : void 0, node);
+      }
+      return false;
+    });
+    return this;
+  }
+  /** @internal mark item for removal */
+  static _itemRemoving(el, remove) {
+    if (!el)
+      return;
+    const node = el ? el.gridstackNode : void 0;
+    if (!node?.grid || el.classList.contains(node.grid.opts.removableOptions.decline))
+      return;
+    remove ? node._isAboutToRemove = true : delete node._isAboutToRemove;
+    remove ? el.classList.add("grid-stack-item-removing") : el.classList.remove("grid-stack-item-removing");
+  }
+  /** @internal called to setup a trash drop zone if the user specifies it */
+  _setupRemoveDrop() {
+    if (typeof this.opts.removable !== "string")
+      return this;
+    const trashEl = document.querySelector(this.opts.removable);
+    if (!trashEl)
+      return this;
+    if (!this.opts.staticGrid && !dd.isDroppable(trashEl)) {
+      dd.droppable(trashEl, this.opts.removableOptions).on(trashEl, "dropover", (event, el) => _GridStack._itemRemoving(el, true)).on(trashEl, "dropout", (event, el) => _GridStack._itemRemoving(el, false));
+    }
+    return this;
+  }
+  /**
+   * prepares the element for drag&drop - this is normally called by makeWidget() unless are are delay loading
+   * @param el GridItemHTMLElement of the widget
+   * @param [force=false]
+   * */
+  prepareDragDrop(el, force = false) {
+    const node = el?.gridstackNode;
+    if (!node)
+      return;
+    const noMove = node.noMove || this.opts.disableDrag;
+    const noResize = node.noResize || this.opts.disableResize;
+    const disable = this.opts.staticGrid || noMove && noResize;
+    if (force || disable) {
+      if (node._initDD) {
+        this._removeDD(el);
+        delete node._initDD;
+      }
+      if (disable)
+        el.classList.add("ui-draggable-disabled", "ui-resizable-disabled");
+      if (!force)
+        return this;
+    }
+    if (!node._initDD) {
+      let cellWidth;
+      let cellHeight;
+      const onStartMoving = (event, ui) => {
+        this.triggerEvent(event, event.target);
+        cellWidth = this.cellWidth();
+        cellHeight = this.getCellHeight(true);
+        this._onStartMoving(el, event, ui, node, cellWidth, cellHeight);
+      };
+      const dragOrResize = (event, ui) => {
+        this._dragOrResize(el, event, ui, node, cellWidth, cellHeight);
+      };
+      const onEndMoving = (event) => {
+        this.placeholder.remove();
+        delete this.placeholder.gridstackNode;
+        delete node._moving;
+        delete node._resizing;
+        delete node._event;
+        delete node._lastTried;
+        const widthChanged = node.w !== node._orig.w;
+        const target = event.target;
+        if (!target.gridstackNode || target.gridstackNode.grid !== this)
+          return;
+        node.el = target;
+        if (node._isAboutToRemove) {
+          const grid = el.gridstackNode.grid;
+          if (grid._gsEventHandler[event.type]) {
+            grid._gsEventHandler[event.type](event, target);
+          }
+          grid.engine.nodes.push(node);
+          grid.removeWidget(el, true, true);
+        } else {
+          Utils.removePositioningStyles(target);
+          if (node._temporaryRemoved) {
+            this._writePosAttr(target, node);
+            this.engine.addNode(node);
+          } else {
+            this._writePosAttr(target, node);
+          }
+          this.triggerEvent(event, target);
+        }
+        this._extraDragRow = 0;
+        this._updateContainerHeight();
+        this._triggerChangeEvent();
+        this.engine.endUpdate();
+        if (event.type === "resizestop") {
+          if (Number.isInteger(node.sizeToContent))
+            node.sizeToContent = node.h;
+          this.resizeToContentCheck(widthChanged, node);
+        }
+      };
+      dd.draggable(el, {
+        start: onStartMoving,
+        stop: onEndMoving,
+        drag: dragOrResize
+      }).resizable(el, {
+        start: onStartMoving,
+        stop: onEndMoving,
+        resize: dragOrResize
+      });
+      node._initDD = true;
+    }
+    dd.draggable(el, noMove ? "disable" : "enable").resizable(el, noResize ? "disable" : "enable");
+    return this;
+  }
+  /** @internal handles actual drag/resize start */
+  _onStartMoving(el, event, ui, node, cellWidth, cellHeight) {
+    this.engine.cleanNodes().beginUpdate(node);
+    this._writePosAttr(this.placeholder, node);
+    this.el.appendChild(this.placeholder);
+    this.placeholder.gridstackNode = node;
+    if (node.grid?.el) {
+      this.dragTransform = Utils.getValuesFromTransformedElement(el);
+    } else if (this.placeholder && this.placeholder.closest(".grid-stack")) {
+      const gridEl = this.placeholder.closest(".grid-stack");
+      this.dragTransform = Utils.getValuesFromTransformedElement(gridEl);
+    } else {
+      this.dragTransform = {
+        xScale: 1,
+        xOffset: 0,
+        yScale: 1,
+        yOffset: 0
+      };
+    }
+    node.el = this.placeholder;
+    node._lastUiPosition = ui.position;
+    node._prevYPix = ui.position.top;
+    node._moving = event.type === "dragstart";
+    node._resizing = event.type === "resizestart";
+    delete node._lastTried;
+    if (event.type === "dropover" && node._temporaryRemoved) {
+      this.engine.addNode(node);
+      node._moving = true;
+    }
+    this.engine.cacheRects(cellWidth, cellHeight, this.opts.marginTop, this.opts.marginRight, this.opts.marginBottom, this.opts.marginLeft);
+    if (event.type === "resizestart") {
+      const colLeft = this.getColumn() - node.x;
+      const rowLeft = (this.opts.maxRow || Number.MAX_SAFE_INTEGER) - node.y;
+      dd.resizable(el, "option", "minWidth", cellWidth * Math.min(node.minW || 1, colLeft)).resizable(el, "option", "minHeight", cellHeight * Math.min(node.minH || 1, rowLeft)).resizable(el, "option", "maxWidth", cellWidth * Math.min(node.maxW || Number.MAX_SAFE_INTEGER, colLeft)).resizable(el, "option", "maxWidthMoveLeft", cellWidth * Math.min(node.maxW || Number.MAX_SAFE_INTEGER, node.x + node.w)).resizable(el, "option", "maxHeight", cellHeight * Math.min(node.maxH || Number.MAX_SAFE_INTEGER, rowLeft)).resizable(el, "option", "maxHeightMoveUp", cellHeight * Math.min(node.maxH || Number.MAX_SAFE_INTEGER, node.y + node.h));
+    }
+  }
+  /** @internal handles actual drag/resize */
+  _dragOrResize(el, event, ui, node, cellWidth, cellHeight) {
+    const p = { ...node._orig };
+    let resizing;
+    let mLeft = this.opts.marginLeft, mRight = this.opts.marginRight, mTop = this.opts.marginTop, mBottom = this.opts.marginBottom;
+    const mHeight = Math.round(cellHeight * 0.1), mWidth = Math.round(cellWidth * 0.1);
+    mLeft = Math.min(mLeft, mWidth);
+    mRight = Math.min(mRight, mWidth);
+    mTop = Math.min(mTop, mHeight);
+    mBottom = Math.min(mBottom, mHeight);
+    if (event.type === "drag") {
+      if (node._temporaryRemoved)
+        return;
+      const distance = ui.position.top - node._prevYPix;
+      node._prevYPix = ui.position.top;
+      if (this.opts.draggable.scroll !== false) {
+        Utils.updateScrollPosition(el, ui.position, distance);
+      }
+      const left = ui.position.left + (ui.position.left > node._lastUiPosition.left ? -mRight : mLeft);
+      const top = ui.position.top + (ui.position.top > node._lastUiPosition.top ? -mBottom : mTop);
+      p.x = Math.round(left / cellWidth);
+      p.y = Math.round(top / cellHeight);
+      const prev = this._extraDragRow;
+      if (this.engine.collide(node, p)) {
+        const row = this.getRow();
+        let extra = Math.max(0, p.y + node.h - row);
+        if (this.opts.maxRow && row + extra > this.opts.maxRow) {
+          extra = Math.max(0, this.opts.maxRow - row);
+        }
+        this._extraDragRow = extra;
+      } else
+        this._extraDragRow = 0;
+      if (this._extraDragRow !== prev)
+        this._updateContainerHeight();
+      if (node.x === p.x && node.y === p.y)
+        return;
+    } else if (event.type === "resize") {
+      if (p.x < 0)
+        return;
+      Utils.updateScrollResize(event, el, cellHeight);
+      p.w = Math.round((ui.size.width - mLeft) / cellWidth);
+      p.h = Math.round((ui.size.height - mTop) / cellHeight);
+      if (node.w === p.w && node.h === p.h)
+        return;
+      if (node._lastTried && node._lastTried.w === p.w && node._lastTried.h === p.h)
+        return;
+      const left = ui.position.left + mLeft;
+      const top = ui.position.top + mTop;
+      p.x = Math.round(left / cellWidth);
+      p.y = Math.round(top / cellHeight);
+      resizing = true;
+    }
+    node._event = event;
+    node._lastTried = p;
+    const rect = {
+      x: ui.position.left + mLeft,
+      y: ui.position.top + mTop,
+      w: (ui.size ? ui.size.width : node.w * cellWidth) - mLeft - mRight,
+      h: (ui.size ? ui.size.height : node.h * cellHeight) - mTop - mBottom
+    };
+    if (this.engine.moveNodeCheck(node, { ...p, cellWidth, cellHeight, rect, resizing })) {
+      node._lastUiPosition = ui.position;
+      this.engine.cacheRects(cellWidth, cellHeight, mTop, mRight, mBottom, mLeft);
+      delete node._skipDown;
+      if (resizing && node.subGrid)
+        node.subGrid.onResize();
+      this._extraDragRow = 0;
+      this._updateContainerHeight();
+      const target = event.target;
+      if (!node._sidebarOrig) {
+        this._writePosAttr(target, node);
+      }
+      this.triggerEvent(event, target);
+    }
+  }
+  /** call given event callback on our main top-most grid (if we're nested) */
+  triggerEvent(event, target) {
+    let grid = this;
+    while (grid.parentGridNode)
+      grid = grid.parentGridNode.grid;
+    if (grid._gsEventHandler[event.type]) {
+      grid._gsEventHandler[event.type](event, target);
+    }
+  }
+  /** @internal called when item leaving our area by either cursor dropout event
+   * or shape is outside our boundaries. remove it from us, and mark temporary if this was
+   * our item to start with else restore prev node values from prev grid it came from.
+   */
+  _leave(el, helper) {
+    helper = helper || el;
+    const node = helper.gridstackNode;
+    if (!node)
+      return;
+    helper.style.transform = helper.style.transformOrigin = null;
+    dd.off(el, "drag");
+    if (node._temporaryRemoved)
+      return;
+    node._temporaryRemoved = true;
+    this.engine.removeNode(node);
+    node.el = node._isExternal && helper ? helper : el;
+    const sidebarOrig = node._sidebarOrig;
+    if (node._isExternal)
+      this.engine.cleanupNode(node);
+    node._sidebarOrig = sidebarOrig;
+    if (this.opts.removable === true) {
+      _GridStack._itemRemoving(el, true);
+    }
+    if (el._gridstackNodeOrig) {
+      el.gridstackNode = el._gridstackNodeOrig;
+      delete el._gridstackNodeOrig;
+    } else if (node._isExternal) {
+      this.engine.restoreInitial();
+    }
+  }
+};
+GridStack.renderCB = (el, w) => {
+  if (el && w?.content)
+    el.textContent = w.content;
+};
+GridStack.resizeToContentParent = ".grid-stack-item-content";
+GridStack.Utils = Utils;
+GridStack.Engine = GridStackEngine;
+GridStack.GDRev = "12.4.2";
+
+// src/BlockRegistry.ts
+var BlockRegistryClass = class {
+  factories = /* @__PURE__ */ new Map();
+  register(factory) {
+    this.factories.set(factory.type, factory);
+  }
+  get(type) {
+    return this.factories.get(type);
+  }
+  getAll() {
+    return Array.from(this.factories.values());
+  }
+  clear() {
+    this.factories.clear();
+  }
+};
+var BlockRegistry = new BlockRegistryClass();
+
+// src/utils/Scheduler.ts
+var Scheduler = class {
+  timers = /* @__PURE__ */ new Map();
+  rafs = /* @__PURE__ */ new Map();
+  timeout(name, ms, fn) {
+    this.cancelTimeout(name);
+    this.timers.set(name, window.setTimeout(() => {
+      this.timers.delete(name);
+      fn();
+    }, ms));
+  }
+  raf(name, fn) {
+    this.cancelRaf(name);
+    const id = window.requestAnimationFrame(() => {
+      this.rafs.delete(name);
+      fn();
+    });
+    this.rafs.set(name, id);
+  }
+  cancelTimeout(name) {
+    const id = this.timers.get(name);
+    if (id !== void 0) {
+      window.clearTimeout(id);
+      this.timers.delete(name);
+    }
+  }
+  hasTimeout(name) {
+    return this.timers.has(name);
+  }
+  cancelRaf(name) {
+    const id = this.rafs.get(name);
+    if (id !== void 0) {
+      window.cancelAnimationFrame(id);
+      this.rafs.delete(name);
+    }
+  }
+  cancelAll() {
+    for (const id of this.timers.values()) window.clearTimeout(id);
+    this.timers.clear();
+    for (const id of this.rafs.values()) window.cancelAnimationFrame(id);
+    this.rafs.clear();
+  }
+};
+
+// src/grid/phase.ts
+var Phase = {
+  Destroyed: 0,
+  Initializing: 1,
+  Ready: 2
+};
+
+// src/grid/AutoHeight.ts
+var AUTO_HEIGHT_ATTR = "data-auto-height-content";
+var AutoHeightManager = class {
+  /**
+   * `host` is kept as a live reference — AutoHeightManager re-reads `phase`, `gridStack`
+   * and `effectiveColumns` every time the rAF fires so it sees current state, not the
+   * values at construction time.
+   */
+  constructor(host) {
+    this.host = host;
+  }
+  pending = /* @__PURE__ */ new Map();
+  /** Clear any queued measurements without scheduling a run. Called from teardown. */
+  clearPending() {
+    this.pending.clear();
+  }
+  /** Queue a block for measurement in the next animation frame. */
+  request(gsEl, instance) {
+    this.pending.set(instance.id, { gsEl, instance });
+    this.host.scheduler.raf("autoHeight", () => this.runBatch());
+  }
+  runBatch() {
+    const { phase, gridStack, effectiveColumns } = this.host;
+    if (phase === Phase.Destroyed || !gridStack) return;
+    if (effectiveColumns === 1) {
+      this.pending.clear();
+      return;
+    }
+    const batch = Array.from(this.pending.values());
+    this.pending.clear();
+    const isStatic = !!gridStack.opts.staticGrid;
+    if (isStatic) gridStack.setStatic(false);
+    try {
+      let anyResized = false;
+      for (const { gsEl, instance } of batch) {
+        if (this.measureAndResize(gsEl, instance)) anyResized = true;
+      }
+      if (anyResized) {
+        this.host.repackGridNodes();
+        this.host.persistLayoutDebounced();
+      }
+    } finally {
+      if (isStatic) gridStack.setStatic(true);
+    }
+  }
+  /**
+   * Measure a block's natural content height and update its GridStack row count.
+   * Returns true when the height actually changed.
+   */
+  measureAndResize(gsEl, instance) {
+    const { gridStack } = this.host;
+    if (!gridStack || !gsEl.isConnected) return false;
+    const wrapperEl = gsEl.querySelector(".homepage-block-wrapper");
+    if (wrapperEl?.classList.contains("block-collapsed")) return false;
+    const contentEl = gsEl.querySelector(`[${AUTO_HEIGHT_ATTR}]`);
+    const headerZone = gsEl.querySelector(".block-header-zone");
+    if (!contentEl || !headerZone) return false;
+    const blockContent = gsEl.querySelector(".block-content");
+    if (blockContent) {
+      blockContent.addClass("hp-no-transition");
+      blockContent.addClass("hp-auto-rows");
+    }
+    const contentH = contentEl.offsetHeight;
+    const headerH = headerZone.offsetHeight;
+    if (blockContent) {
+      blockContent.removeClass("hp-auto-rows");
+      void blockContent.offsetHeight;
+      blockContent.removeClass("hp-no-transition");
+    }
+    if (contentH <= 0) return false;
+    const wrapper = gsEl.querySelector(".homepage-block-wrapper");
+    const wrapperStyle = wrapper ? window.getComputedStyle(wrapper) : null;
+    const pad = wrapperStyle ? parseFloat(wrapperStyle.paddingTop) + parseFloat(wrapperStyle.paddingBottom) : 24;
+    const gap = wrapperStyle ? parseFloat(wrapperStyle.gap) || 0 : 0;
+    const divider = wrapper?.querySelector(".block-header-divider");
+    const gapCount = divider ? 2 : 1;
+    const margin = typeof gridStack.opts.margin === "number" ? gridStack.opts.margin : 8;
+    const SAFETY_BUFFER = 4;
+    const totalH = headerH + pad + contentH + gap * gapCount + margin * 2 + SAFETY_BUFFER;
+    const cell = gridStack.getCellHeight();
+    const rows = Math.max(1, Math.ceil(totalH / cell));
+    const node = gsEl.gridstackNode;
+    const currentH = node?.h ?? instance.h;
+    if (rows !== currentH) {
+      gridStack.update(gsEl, { h: rows });
+      return true;
+    }
+    return false;
+  }
+};
+
+// src/grid/ResponsiveColumns.ts
+var COLUMN_BREAKPOINTS = { single: 480, double: 768, triple: 1024 };
+function computeEffectiveColumns(width, canonical) {
+  if (width < COLUMN_BREAKPOINTS.single) return 1;
+  if (width < COLUMN_BREAKPOINTS.double) return Math.min(2, canonical);
+  if (width < COLUMN_BREAKPOINTS.triple) return Math.min(3, canonical);
+  return canonical;
+}
+var ResponsiveColumnsManager = class {
+  constructor(host) {
+    this.host = host;
+  }
+  resizeObserver = null;
+  /** Observe `viewEl` and set `canonicalColumns` to the user's saved value. */
+  setup(viewEl, userCols) {
+    this.host.canonicalColumns = userCols;
+    if (!viewEl) return;
+    if (!this.resizeObserver) {
+      this.resizeObserver = new ResizeObserver((entries) => {
+        if (this.host.phase === Phase.Destroyed || !this.host.gridStack) return;
+        if (this.host.editMode) return;
+        const entry = entries[0];
+        if (!entry) return;
+        const width = entry.contentBoxSize?.[0]?.inlineSize ?? entry.contentRect.width;
+        const next = computeEffectiveColumns(width, this.host.canonicalColumns);
+        if (next !== this.host.effectiveColumns) {
+          this.apply(next);
+        }
+      });
+      this.resizeObserver.observe(viewEl);
+    }
+    this.host.effectiveColumns = computeEffectiveColumns(viewEl.clientWidth, userCols);
+    if (this.host.effectiveColumns !== userCols && this.host.gridStack && !this.host.editMode) {
+      this.apply(this.host.effectiveColumns);
+    }
+  }
+  /** Disconnect the ResizeObserver. Called from GridLayout.teardown. */
+  destroy() {
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
+  }
+  /**
+   * Apply a new effective column count: clamp block widths, then either restore the
+   * canonical layout (when widening back) or repack for the narrow width (when shrinking).
+   */
+  apply(next) {
+    const { gridStack } = this.host;
+    if (!gridStack) return;
+    this.host.effectiveColumns = next;
+    this.host.scheduler.cancelRaf("autoHeight");
+    this.host.scheduler.cancelTimeout("sync");
+    this.host.clearPendingResizes();
+    this.host.gridEl.classList.toggle("hp-single-column", next === 1);
+    gridStack.column(next, "none");
+    if (next === this.host.canonicalColumns) {
+      this.restoreCanonicalLayout(gridStack, next);
+      return;
+    }
+    this.packForNarrowLayout(gridStack, next);
+  }
+  /**
+   * Returning to the user's canonical column count: restore saved x/y/w exactly.
+   * The responsive-narrowing transform is lossy (multiple source positions map to the
+   * same packed output), so we read from the persisted layout instead of inverting it.
+   */
+  restoreCanonicalLayout(gridStack, next) {
+    const saved = this.host.plugin.activeBlocks();
+    const lookup = new Map(saved.map((b) => [b.id, b]));
+    const autoHeightItems = [];
+    gridStack.batchUpdate();
+    for (const gsEl of gridStack.getGridItems()) {
+      const id = gsEl.getAttribute("gs-id");
+      const b = id ? lookup.get(id) : void 0;
+      if (!b) continue;
+      const isAuto = this.host.shouldAutoHeight(b);
+      gridStack.update(gsEl, {
+        x: b.x,
+        y: b.y,
+        w: Math.min(b.w, next),
+        ...isAuto ? {} : { h: b.h },
+        maxW: next
+      });
+      if (isAuto) autoHeightItems.push({ gsEl, b });
+    }
+    gridStack.batchUpdate(false);
+    for (const { gsEl, b } of autoHeightItems) this.host.requestAutoHeight(gsEl, b);
+  }
+  /** Narrowing: clamp widths, greedy-pack into the new column count, reorder DOM for flex mode. */
+  packForNarrowLayout(gridStack, next) {
+    const nodeItems = [];
+    for (const gsEl of gridStack.getGridItems()) {
+      const node = gsEl.gridstackNode;
+      if (!node) continue;
+      const w = Math.min(node.w ?? 1, next);
+      const x = Math.min(node.x ?? 0, Math.max(0, next - w));
+      nodeItems.push({ el: gsEl, x, y: node.y ?? 0, w, h: node.h ?? 1 });
+    }
+    this.host.packRows(nodeItems, next, this.host.plugin.activeLayoutPriority(), true);
+    gridStack.batchUpdate();
+    for (const item of nodeItems) {
+      gridStack.update(item.el, { w: item.w, x: item.x, y: item.y, maxW: next });
+    }
+    gridStack.batchUpdate(false);
+    if (next === 1) {
+      const sorted = nodeItems.slice().sort((a, b) => a.y - b.y || a.x - b.x);
+      for (const item of sorted) {
+        this.host.gridEl.appendChild(item.el);
+      }
+    }
+  }
+};
+
+// src/grid/LayoutPersister.ts
+var LayoutPersister = class {
+  constructor(host) {
+    this.host = host;
+  }
+  /** Read positions from GridStack, diff against the persisted layout, write if changed. */
+  persist() {
+    const { gridStack, phase, plugin, effectiveColumns, canonicalColumns } = this.host;
+    if (!gridStack || phase !== Phase.Ready) return;
+    const isResponsive = effectiveColumns !== canonicalColumns;
+    if (isResponsive && plugin.activeBlocks().every((b) => this.host.shouldAutoHeight(b))) {
+      return;
+    }
+    const nodes = gridStack.getGridItems();
+    const posMap = /* @__PURE__ */ new Map();
+    for (const el of nodes) {
+      const node = el.gridstackNode;
+      const id = el.getAttribute("gs-id");
+      if (id && node) {
+        const w = Math.min(node.w ?? 1, effectiveColumns);
+        posMap.set(id, {
+          x: Math.min(node.x ?? 0, Math.max(0, effectiveColumns - w)),
+          y: node.y ?? 0,
+          w,
+          h: node.h ?? 1
+        });
+      }
+    }
+    const changed = plugin.activeBlocks().some((b) => {
+      const pos = posMap.get(b.id);
+      if (!pos) return false;
+      const isAuto = this.host.shouldAutoHeight(b);
+      if (isResponsive) return !isAuto && b.h !== pos.h;
+      if (isAuto) return b.x !== pos.x || b.y !== pos.y || b.w !== pos.w;
+      return b.x !== pos.x || b.y !== pos.y || b.w !== pos.w || b.h !== pos.h;
+    });
+    if (!changed) return;
+    const newBlocks = plugin.activeBlocks().map((b) => {
+      const pos = posMap.get(b.id);
+      if (!pos) return b;
+      const isAuto = this.host.shouldAutoHeight(b);
+      if (isResponsive) {
+        return isAuto ? b : { ...b, h: pos.h };
+      }
+      const update = isAuto ? { x: pos.x, y: pos.y, w: pos.w } : pos;
+      return { ...b, ...update };
+    });
+    this.host.emitLayout(this.host.buildLayoutUpdate(newBlocks));
+  }
+  /**
+   * Debounced persist — coalesces rapid auto-height resize saves into one
+   * write. The 50ms window is short enough not to feel laggy on Save buttons,
+   * long enough to coalesce a 60fps ResizeObserver storm into a single save.
+   */
+  persistDebounced() {
+    this.host.scheduler.timeout("sync", 50, () => {
+      if (this.host.phase !== Phase.Destroyed) this.persist();
+    });
+  }
+  /** True when the grid is showing a responsive (narrowed) layout. */
+  isResponsive() {
+    return this.host.effectiveColumns !== this.host.canonicalColumns;
+  }
+  /**
+   * Repack all GridStack nodes so blocks shift up to fill vertical gaps left
+   * by auto-height shrinks. Called from AutoHeightManager.runBatch after any
+   * measurement changes a row count.
+   */
+  repackGridNodes(packRows2) {
+    const { gridStack, plugin, effectiveColumns } = this.host;
+    if (!gridStack) return;
+    const nodeItems = [];
+    for (const gsEl of gridStack.getGridItems()) {
+      const node = gsEl.gridstackNode;
+      if (!node) continue;
+      nodeItems.push({ el: gsEl, x: node.x ?? 0, y: node.y ?? 0, w: node.w ?? 1, h: node.h ?? 1 });
+    }
+    packRows2(nodeItems, effectiveColumns, plugin.activeLayoutPriority());
+    gridStack.batchUpdate();
+    for (const item of nodeItems) {
+      gridStack.update(item.el, { y: item.y });
+    }
+    gridStack.batchUpdate(false);
+  }
+};
+
+// src/grid/CollapseToggle.ts
+function attachCollapseToggle(host, gsEl, instance, headerZone) {
+  const wrapper = gsEl.querySelector(".homepage-block-wrapper");
+  const chevron = headerZone.querySelector(".block-collapse-chevron");
+  if (!wrapper) return;
+  const toggleCollapse = (e) => {
+    e.stopPropagation();
+    if (host.editMode) return;
+    const isNowCollapsed = !wrapper.hasClass("block-collapsed");
+    wrapper.toggleClass("block-collapsed", isNowCollapsed);
+    chevron?.toggleClass("is-collapsed", isNowCollapsed);
+    headerZone.setAttribute("aria-expanded", String(!isNowCollapsed));
+    const gsNode = gsEl.gridstackNode;
+    let newBlocks;
+    if (isNowCollapsed) {
+      const liveH = gsNode?.h ?? instance.h;
+      if (host.gridStack) host.gridStack.update(gsEl, { h: 1 });
+      newBlocks = host.plugin.activeBlocks().map(
+        (b) => b.id === instance.id ? { ...b, collapsed: true, _expandedH: liveH } : b
+      );
+    } else {
+      const currentBlock = host.plugin.activeBlocks().find((b) => b.id === instance.id);
+      const origH = currentBlock?._expandedH ?? instance.h;
+      if (host.gridStack) host.gridStack.update(gsEl, { h: origH });
+      newBlocks = host.plugin.activeBlocks().map(
+        (b) => b.id === instance.id ? { ...b, collapsed: false, h: origH } : b
+      );
+    }
+    void host.plugin.saveLayout(host.buildLayoutUpdate(newBlocks));
+  };
+  headerZone.addEventListener("click", toggleCollapse);
+  headerZone.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleCollapse(e);
+    }
+  });
+}
+
+// src/grid/EditHandleBar.ts
+var import_obsidian4 = require("obsidian");
+
+// src/utils/ids.ts
+function newId() {
+  const c = window.crypto;
+  if (c?.randomUUID) return c.randomUUID();
+  return "hp-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+// src/modals/BlockSettingsModal.ts
+var import_obsidian2 = require("obsidian");
+
+// src/blocks/BaseBlock.ts
+var import_obsidian = require("obsidian");
+var TITLE_SIZE_RE = /^h[1-6]$/;
+var BaseBlock = class extends import_obsidian.Component {
+  constructor(app, instance, plugin) {
+    super();
+    this.app = app;
+    this.instance = instance;
+    this.plugin = plugin;
+  }
+  _headerContainer = null;
+  _scheduleTimer = null;
+  _renderGen = 0;
+  _widthObserver = null;
+  _widthRafId = 0;
+  /** Set by subclasses in render() to enable scheduleRender(). */
+  containerEl = null;
+  // Override to render block-specific content settings directly into `body`.
+  // Mutate `draft` in place — the outer BlockSettingsModal owns commit/cancel.
+  // Default: no content settings.
+  renderContentSettings(_body, _draft) {
+  }
+  /**
+   * Subclasses can override to declare that the block currently holds unsaved
+   * UI state that a full rerender would destroy (e.g., StaticTextBlock's inline
+   * editor, VaultSearchBlock's typed query). GridLayout.rerender consults this
+   * and skips the rerender when any block returns true. Default: no unsaved state.
+   */
+  hasUnsavedInlineState() {
+    return false;
+  }
+  // Called by GridLayout to redirect renderHeader output outside block-content.
+  setHeaderContainer(el) {
+    this._headerContainer = el;
+  }
+  // Render the muted uppercase block header label.
+  // Respects _showTitle, _titleLabel, and _titleEmoji from instance.config.
+  // Renders into the header container set by GridLayout (if any), else falls back to el.
+  renderHeader(el, title) {
+    const cfg = this.instance.config;
+    const container = this._headerContainer ?? el;
+    const label = typeof cfg._titleLabel === "string" && cfg._titleLabel.trim() ? cfg._titleLabel.trim() : title;
+    const show = cfg._showTitle !== false && !!label;
+    container.querySelector(".block-header")?.remove();
+    container.toggleClass("hp-header-empty", !show);
+    if (!show) return;
+    const sizeClass = typeof cfg._titleSize === "string" && TITLE_SIZE_RE.test(cfg._titleSize) ? `block-header-${cfg._titleSize}` : "";
+    const header = container.createDiv({ cls: `block-header${sizeClass ? " " + sizeClass : ""}` });
+    if (typeof cfg._titleEmoji === "string" && cfg._titleEmoji) {
+      header.createSpan({ cls: "block-header-emoji", text: cfg._titleEmoji });
+    }
+    header.createSpan({ text: label });
+  }
+  /**
+   * Render a polished error state (same visual language as the empty-hint)
+   * instead of bare error text, so a failed render reads as intentional rather
+   * than broken. Clears `el` first; the header lives in a separate zone and is
+   * unaffected.
+   */
+  renderErrorHint(el, message) {
+    el.empty();
+    const hint = el.createDiv({ cls: "block-empty-hint block-error-hint" });
+    hint.createDiv({ cls: "block-empty-hint-icon", text: "\u26A0" });
+    hint.createDiv({ cls: "block-empty-hint-text", text: message });
+  }
+  // ── Shared debounced re-render infrastructure ──────────────────────────────
+  /**
+   * Schedule a debounced re-render. Guards against detached DOM nodes
+   * (checks `isConnected`) and catches async errors.
+   * After a successful re-render, dispatches a `request-auto-height` event
+   * so GridLayout can recalculate the block's row height.
+   */
+  scheduleRender(delayMs, fn) {
+    if (this._scheduleTimer !== null) window.clearTimeout(this._scheduleTimer);
+    this._scheduleTimer = window.setTimeout(() => {
+      this._scheduleTimer = null;
+      if (!this.containerEl?.isConnected) return;
+      const result = fn(this.containerEl);
+      if (result instanceof Promise) {
+        result.then(() => this.requestAutoHeight()).catch((e) => {
+          console.error(`[Homepage Blocks] ${this.constructor.name} re-render failed:`, e);
+        });
+      } else {
+        this.requestAutoHeight();
+      }
+    }, delayMs);
+  }
+  /** Dispatch an event so GridLayout recalculates auto-height for this block. */
+  requestAutoHeight() {
+    this.containerEl?.dispatchEvent(new CustomEvent("request-auto-height", { bubbles: true }));
+  }
+  /**
+   * Watch an element for width changes and dispatch request-auto-height when
+   * the width changes.  Useful for blocks whose content reflows (e.g. grid
+   * galleries, multi-column lists) when the container narrows/widens.
+   * Cleanup is registered automatically via `this.register()`.
+   */
+  observeWidthForAutoHeight(el) {
+    if (this._widthObserver) {
+      this._widthObserver.disconnect();
+      cancelAnimationFrame(this._widthRafId);
+    }
+    let prevWidth = 0;
+    this._widthObserver = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width ?? 0;
+      if (w > 0 && w !== prevWidth) {
+        prevWidth = w;
+        window.cancelAnimationFrame(this._widthRafId);
+        this._widthRafId = window.requestAnimationFrame(() => this.requestAutoHeight());
+      }
+    });
+    this._widthObserver.observe(el);
+  }
+  /** Increment and return a new render generation. Call at the start of async renders. */
+  nextGeneration() {
+    return ++this._renderGen;
+  }
+  /** Returns true if a newer render was started after the given generation. */
+  isStale(generation) {
+    return generation !== this._renderGen;
+  }
+  onunload() {
+    if (this._scheduleTimer !== null) {
+      window.clearTimeout(this._scheduleTimer);
+      this._scheduleTimer = null;
+    }
+    if (this._widthObserver) {
+      this._widthObserver.disconnect();
+      this._widthObserver = null;
+      cancelAnimationFrame(this._widthRafId);
+    }
+  }
+};
+
+// src/utils/blockStyling.ts
+var HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+function hexChannelToLinear(c) {
+  const s = c / 255;
+  return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+}
+function getRelativeLuminance(hex) {
+  const r = hexChannelToLinear(parseInt(hex.slice(1, 3), 16));
+  const g = hexChannelToLinear(parseInt(hex.slice(3, 5), 16));
+  const b = hexChannelToLinear(parseInt(hex.slice(5, 7), 16));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+var VALID_BORDER_STYLES = ["solid", "dashed", "dotted"];
+var HP_BTN_KEY_RE = /^--hp-btn-[a-z0-9-]+$/;
+var UNSAFE_VALUE_RE = /\b(?:url|image|image-set|cross-fade|element|paint)\s*\(/i;
+function parseAllowlistedCustomCss(input) {
+  const out = [];
+  const stripped = input.replace(/\/\*[\s\S]*?\*\//g, "");
+  for (const raw of stripped.split(";")) {
+    const idx = raw.indexOf(":");
+    if (idx < 0) continue;
+    const key = raw.slice(0, idx).trim();
+    const value = raw.slice(idx + 1).trim();
+    if (!key || !value) continue;
+    if (!HP_BTN_KEY_RE.test(key)) continue;
+    if (UNSAFE_VALUE_RE.test(value)) continue;
+    if (/\p{Cc}/u.test(value)) continue;
+    out.push([key, value]);
+  }
+  return out;
+}
+function applyBlockStyling(el, config) {
+  const prevKeys = el.getAttribute("data-hp-custom-css-keys");
+  if (prevKeys) {
+    for (const k of prevKeys.split(",")) {
+      if (k) el.style.removeProperty(k);
+    }
+  }
+  const rawCustomCss = typeof config.customCss === "string" ? config.customCss : "";
+  const safeDecls = parseAllowlistedCustomCss(rawCustomCss);
+  for (const [k, v] of safeDecls) el.style.setProperty(k, v);
+  if (safeDecls.length > 0) {
+    el.setAttribute("data-hp-custom-css-keys", safeDecls.map(([k]) => k).join(","));
+  } else {
+    el.removeAttribute("data-hp-custom-css-keys");
+  }
+  const accentColor = typeof config._accentColor === "string" && HEX_COLOR_RE.test(config._accentColor) ? config._accentColor : "";
+  el.toggleClass("block-accented", !!accentColor);
+  el.toggleClass("block-no-header-accent", config._showHeaderAccent === false);
+  if (accentColor) {
+    el.style.setProperty("--block-accent", accentColor);
+    const intensity = typeof config._accentIntensity === "number" ? Math.max(5, Math.min(100, config._accentIntensity)) : 0;
+    if (intensity && intensity !== 15) {
+      el.style.setProperty("--block-accent-pct", `${intensity}%`);
+    } else {
+      el.style.removeProperty("--block-accent-pct");
+    }
+    const DARK_BASE_LUM = 0.05;
+    const BRIGHT_ACCENT_THRESHOLD = 0.18;
+    const effectiveIntensity = intensity || 15;
+    const ratio = effectiveIntensity / 100;
+    const blendedLum = DARK_BASE_LUM * (1 - ratio) + getRelativeLuminance(accentColor) * ratio;
+    const needsDarkText = blendedLum >= BRIGHT_ACCENT_THRESHOLD;
+    el.toggleClass("block-bright-accent", needsDarkText);
+  } else {
+    el.style.removeProperty("--block-accent");
+    el.style.removeProperty("--block-accent-pct");
+    el.toggleClass("block-bright-accent", false);
+  }
+  el.toggleClass("block-no-border", config._showBorder === false);
+  el.toggleClass("block-no-background", config._showBackground === false);
+  const pad = typeof config._cardPadding === "number" ? Math.max(-48, Math.min(48, config._cardPadding)) : 0;
+  if (pad) el.style.setProperty("--hp-card-padding", `${pad}px`);
+  else el.style.removeProperty("--hp-card-padding");
+  const gap = typeof config._titleGap === "number" ? Math.max(0, Math.min(48, config._titleGap)) : 0;
+  if (gap) el.style.setProperty("--hp-title-gap", `${gap}px`);
+  else el.style.removeProperty("--hp-title-gap");
+  for (let i = 1; i <= 3; i++) el.removeClass(`block-elevation-${i}`);
+  const elevation = typeof config._elevation === "number" ? Math.max(0, Math.min(3, config._elevation)) : 0;
+  if (elevation) el.addClass(`block-elevation-${elevation}`);
+  const borderRadius = typeof config._borderRadius === "number" ? Math.max(0, Math.min(24, config._borderRadius)) : 0;
+  if (borderRadius) el.style.setProperty("--hp-border-radius", `${borderRadius}px`);
+  else el.style.removeProperty("--hp-border-radius");
+  const bgOpacity = typeof config._bgOpacity === "number" ? Math.max(0, Math.min(100, config._bgOpacity)) : 100;
+  el.toggleClass("block-custom-opacity", bgOpacity < 100);
+  if (bgOpacity < 100) el.style.setProperty("--hp-bg-opacity", `${bgOpacity}%`);
+  else el.style.removeProperty("--hp-bg-opacity");
+  const backdropBlur = typeof config._backdropBlur === "number" ? Math.max(0, Math.min(20, config._backdropBlur)) : 0;
+  if (backdropBlur > 0 && bgOpacity < 100) {
+    el.style.setProperty("--hp-backdrop-blur", `blur(${backdropBlur}px)`);
+  } else {
+    el.style.removeProperty("--hp-backdrop-blur");
+  }
+  const gradStart = typeof config._gradientStart === "string" && HEX_COLOR_RE.test(config._gradientStart) ? config._gradientStart : "";
+  const gradEnd = typeof config._gradientEnd === "string" && HEX_COLOR_RE.test(config._gradientEnd) ? config._gradientEnd : "";
+  const gradAngle = typeof config._gradientAngle === "number" ? Math.max(0, Math.min(360, config._gradientAngle)) : 135;
+  if (gradStart && gradEnd && config._showBackground !== false) {
+    el.style.setProperty("--hp-bg-gradient", `linear-gradient(${gradAngle}deg, ${gradStart}, ${gradEnd})`);
+    el.toggleClass("block-has-gradient", true);
+  } else {
+    el.style.removeProperty("--hp-bg-gradient");
+    el.toggleClass("block-has-gradient", false);
+  }
+  const borderWidth = typeof config._borderWidth === "number" ? Math.max(0, Math.min(4, config._borderWidth)) : 0;
+  if (borderWidth) el.style.setProperty("--hp-border-width", `${borderWidth}px`);
+  else el.style.removeProperty("--hp-border-width");
+  const borderStyle = typeof config._borderStyle === "string" && VALID_BORDER_STYLES.includes(config._borderStyle) ? config._borderStyle : "";
+  if (borderStyle) el.style.setProperty("--hp-border-style", borderStyle);
+  else el.style.removeProperty("--hp-border-style");
+}
+
+// src/utils/emojis.ts
+var EMOJI_PICKER_SET = [
+  // Smileys & emotion
+  ["\u{1F600}", "happy smile grin cheerful joy face glad positive mood friendly beam radiant sunny upbeat pleased delighted merry joyful welcome"],
+  ["\u{1F603}", "happy smile open mouth glad cheerful joy grin excited sunny bright delighted warm positive friendly enthusiastic pleased eager"],
+  ["\u{1F604}", "happy smile grin eyes closed cheerful laugh joy warm pleased beaming delighted sunny upbeat friendly positive merry blissful"],
+  ["\u{1F601}", "grin teeth smile happy beaming cheerful wide joy pleased thrilled ecstatic radiant elated merry upbeat bright glad cheeky"],
+  ["\u{1F606}", "laugh squint smile happy amused giggle funny joy grin tease hilarious crack-up tickled giddy silly gleeful playful snicker"],
+  ["\u{1F605}", "sweat nervous laugh awkward oops relief uncomfortable embarrassed tense uneasy sheepish cringe clumsy mistake blunder flustered phew"],
+  ["\u{1F923}", "rofl rolling floor laugh hilarious crying tears funny comedy hysterical cracking dying priceless ridiculous absurd witty belly-laugh"],
+  ["\u{1F602}", "laugh cry funny joy hilarious tears humor lol rofl comedy joke witty giggle hysterical amused cracking dying wheeze"],
+  ["\u{1F642}", "slight smile subtle calm neutral polite soft gentle okay fine friendly pleasant composed serene content steady mild"],
+  ["\u{1F643}", "upside down ironic sarcastic silly goofy playful quirky awkward passive-aggressive subtle dry humor weird odd strange twisted"],
+  ["\u{1F609}", "wink flirt playful hint nudge cheeky suggestive knowing sly tease clever fun secret inside-joke confident witty complicit"],
+  ["\u{1F60A}", "smile blush happy warm kind gentle pleased soft sweet content gracious tender heartfelt lovely appreciative humble grateful"],
+  ["\u{1F607}", "halo angel innocent pure good blessed holy kind sweet divine virtuous righteous saintly wholesome moral gracious benevolent"],
+  ["\u{1F970}", "love hearts face adore affection smitten warm sweet romantic tender caring cherish fond devoted hearts smile cuddly"],
+  ["\u{1F60D}", "heart eyes love adore crush smitten romance infatuated affection desire obsessed gorgeous beautiful attraction swoon stunning captivated"],
+  ["\u{1F929}", "star eyes excited amazed wow awesome thrilled dazzled impressed wonderful starstruck spectacular astonished admire fabulous blown-away"],
+  ["\u{1F618}", "kiss wink love blow-kiss flirt romantic affection smooch sweet cute adore heart tender caring fond darling xoxo"],
+  ["\u{1F60B}", "yum delicious tasty food tongue lick hungry savoring mmm scrumptious appetizing mouthwatering flavor treat enjoy eat crave"],
+  ["\u{1F61B}", "tongue out playful silly tease goofy childish cheeky fun naughty prankish impish mischievous taunt raspberry jest blep"],
+  ["\u{1F61C}", "wink tongue crazy silly goofy playful wild zany fun nutty wacky joking mischievous prankish impish tease goof"],
+  ["\u{1F92A}", "zany crazy wild goofy silly wacky bonkers loopy nutty eccentric weird bizarre chaotic unhinged hyper manic unhinged"],
+  ["\u{1F972}", "tear smile grateful bittersweet touched moved emotional proud nostalgia sentimental poignant wistful tender heartfelt relieved endearing"],
+  ["\u{1F60E}", "cool sunglasses chill confident swagger smooth boss relaxed suave laid-back casual stylish composed unfazed nonchalant slick"],
+  ["\u{1F914}", "thinking hmm wondering ponder curious consider question reflect contemplate uncertain puzzled deliberate evaluate analyze skeptical mull"],
+  ["\u{1F92D}", "hand over mouth giggle oops shy tee-hee secret whisper suppress blush coy embarrassed cover discreet quiet snicker"],
+  ["\u{1F60F}", "smirk sly sneaky mischievous cocky flirty knowing cheeky devious suggestive cunning wily crafty scheming playful insinuate"],
+  ["\u{1F612}", "unamused annoyed bored displeased unimpressed meh whatever sigh dissatisfied grumpy moody indifferent bland sulky flat uninterested"],
+  ["\u{1F644}", "eye roll annoyed exasperated whatever bored unimpressed dismissive sigh frustrated impatient skeptical sarcastic done tired fed-up"],
+  ["\u{1F62C}", "grimace awkward cringe nervous uncomfortable yikes tense forced-smile embarrassed wince teeth oops painful strained weird sorry"],
+  ["\u{1F622}", "cry sad tear upset weep sorrow grief heartbreak melancholy dejected mournful gloomy downcast depressed dismal lonely"],
+  ["\u{1F62D}", "bawl sobbing crying loudly wailing devastated heartbroken distraught miserable anguished crushed broken inconsolable tears streaming flood"],
+  ["\u{1F624}", "angry huff frustrated mad annoyed furious rage irritated steam vent livid pissed irate seething hostile fume"],
+  ["\u{1F621}", "rage angry red furious livid enraged irate seething hostile aggressive fierce wrathful incensed outraged infuriated mad"],
+  ["\u{1F631}", "scream shock horror terrified scared afraid panic frightened aghast appalled dread alarmed startled petrified gasp fear"],
+  ["\u{1F637}", "mask sick ill medical health cold flu virus disease protect germ bacteria infection quarantine hygiene face covid"],
+  ["\u{1F922}", "nausea sick disgusted gross vomit queasy ill unwell green revolted repulsed stomach yuck nauseated awful repelled"],
+  ["\u{1F92E}", "vomit sick puke throw-up nausea disgusted ill gross revolted repulsed horrible awful terrible stomach hurl retch"],
+  ["\u{1F973}", "party celebrate birthday confetti festive hooray cheers congratulations bash jubilant revelry toast fiesta gala carnival woohoo"],
+  ["\u{1F634}", "sleep tired zzz rest nap drowsy snore exhausted bedtime dream doze slumber fatigue weary drained snooze"],
+  ["\u{1F92F}", "mind blown explode shock amazed unbelievable crazy insane astonished stunned flabbergasted revelation epiphany incredible speechless wow"],
+  ["\u{1F976}", "cold freezing frozen ice chill winter arctic frigid frost shiver numb blue pale glacial hypothermia brr"],
+  ["\u{1F975}", "hot burning sweating overheated heatstroke fever warm summer fire boiling scorching sweltering flushed tropical steaming heat"],
+  ["\u{1F920}", "cowboy hat western rodeo country ranch yeehaw howdy sheriff outlaw frontier prairie wild-west southern rootin texas"],
+  ["\u{1F978}", "disguise incognito fake glasses nose mustache undercover hidden spy stealth anonymous covert secret identity camouflage sneaky"],
+  ["\u{1F913}", "nerd glasses geek smart studious bookworm intellectual brainy academic dorky scholarly learner tech savvy knowledge school"],
+  ["\u{1F608}", "devil horns mischief evil naughty wicked imp demon sly trouble sinister dark villain scheming devious purple"],
+  ["\u{1F480}", "skull dead death skeleton bones danger toxic fatal lethal deadly mortal doom rip grave cemetery spooky"],
+  ["\u{1F4A9}", "poop crap shit funny gross stinky joke silly brown turd feces waste humor ridiculous absurd pile"],
+  ["\u{1F47B}", "ghost boo spooky halloween spirit haunted phantom specter paranormal supernatural creepy eerie scary spectral soul casper"],
+  ["\u{1F47D}", "alien ufo extraterrestrial space martian outer-space sci-fi cosmic foreign strange unknown mysterious otherworldly invader green"],
+  ["\u{1F648}", "see no evil monkey shy embarrassed hide cover-eyes peek awkward blush ashamed facepalm cringe oops cannot-look"],
+  ["\u{1FAE1}", "salute respect honor duty serve acknowledge formal military tribute obey discipline officer rank attention report sir"],
+  ["\u{1FAE0}", "melting face relax dissolve hot overwhelmed sinking droopy fading soft warm liquid puddle embarrassed shy swooning"],
+  ["\u{1F917}", "hug open arms warm embrace friendly welcoming cuddle comfort caring affection squeeze support reassure tender hold"],
+  ["\u{1F97A}", "pleading puppy eyes cute beg adorable sad sweet hopeful tender vulnerable earnest innocent desperate longing please"],
+  // People & gestures
+  ["\u{1F44B}", "wave hello bye greet farewell welcome hand gesture hi howdy salute morning evening introduction meet ciao"],
+  ["\u{1F44D}", "thumbs up good ok approve agree yes like correct positive nice affirm endorse validate confirm great"],
+  ["\u{1F44E}", "thumbs down bad dislike disagree disapprove reject no wrong negative fail oppose deny veto decline boo"],
+  ["\u270C", "victory peace sign two win triumph freedom success hand gesture symbol harmony accord truce unity fingers"],
+  ["\u{1F91D}", "handshake deal agree partnership cooperation trust alliance meet business contract negotiate collaborate unite pact mutual welcome"],
+  ["\u{1F64F}", "pray thanks please beg hope grateful faith worship request mercy namaste appreciate blessing reverence devotion thankful"],
+  ["\u{1F4AA}", "muscle strong flex power strength gym workout fitness bicep tough mighty robust endurance athletic vigor motivation determination grit"],
+  ["\u{1F441}", "eye watch see look observe view gaze stare vision focus monitor witness scan survey inspect sight"],
+  ["\u{1F9E0}", "brain mind think smart intelligent idea genius memory knowledge wisdom logic reason cognitive mental intellect second-brain PKM obsidian clever"],
+  ["\u{1F48B}", "kiss lips love smooch romance affection peck mouth red lipstick passion desire intimate sweet tender xoxo"],
+  ["\u2764", "heart love red passion romance care affection warmth valentine devotion adore cherish bond emotion deep feeling"],
+  ["\u{1F9E1}", "orange heart warm autumn friendly creative energy enthusiasm vibrant playful bold spirited dynamic active lively fall"],
+  ["\u{1F49B}", "yellow heart bright sunshine happiness friendship optimism gold warm cheerful radiant glowing positive uplifting sunny"],
+  ["\u{1F49A}", "green heart nature growth health lucky harmony eco fresh organic renewal vitality balance wellness prosperity earth"],
+  ["\u{1F499}", "blue heart calm trust loyalty peace sky ocean serene cool steady reliable sincere depth tranquil true"],
+  ["\u{1F49C}", "purple heart royal creative mystic spiritual elegant luxury wisdom magic noble regal dreamy enchanting artistic cosmic"],
+  ["\u{1F5A4}", "black heart dark emo gothic strength power elegant solid formal edgy mysterious deep intense dramatic bold"],
+  ["\u{1F90D}", "white heart pure clean innocent simple minimal blank pale clarity transparent pristine fresh light serene snow"],
+  ["\u{1FA77}", "pink heart cute sweet soft blush feminine gentle tender lovely romantic charming adorable pastel warm pretty"],
+  ["\u{1F4AF}", "hundred perfect score full complete flawless excellent top maximum best ultimate absolute total agree facts legit"],
+  ["\u{1F4A5}", "boom explosion crash bang impact collision burst blast pow strike hit smash destroy powerful shatter kaboom"],
+  ["\u{1F440}", "eyes look watch stare peek curious observe glance spy attention gaze scan notice perceive scrutinize peep"],
+  ["\u{1FAF6}", "heart hands love care support appreciate cherish grateful adore affection embrace nurture compassion tenderness kindness"],
+  ["\u{1F44F}", "clap applause bravo congratulations well done praise celebrate cheer ovation encore standing recognition honor kudos"],
+  ["\u{1F91E}", "fingers crossed luck hope wish fortune faith prayer promise desire optimism chance gamble bet superstition please"],
+  ["\u270D", "writing hand author compose draft pen pencil scribe letter note journal diary manuscript essay creative note-taking daily write"],
+  ["\u{1F9BE}", "mechanical arm prosthetic robot strong bionic power tech future cyborg augmented enhanced titanium steel advanced upgrade"],
+  // Nature & animals
+  ["\u{1F331}", "seedling sprout grow plant garden green fresh new beginning growth nurture cultivate develop emerge start motivation habit progress"],
+  ["\u{1F33F}", "herb leaf green nature botanical plant garden organic fresh foliage verdant lush tropical fern frond branch herb"],
+  ["\u{1F340}", "clover luck lucky fortune shamrock irish four leaf charm green blessing chance auspicious favorable prosperity wish"],
+  ["\u{1F338}", "blossom flower pink cherry spring japan sakura bloom petal delicate fragile beauty grace renewal feminine soft"],
+  ["\u{1F339}", "rose flower red love romance valentine beautiful elegant garden fragrant classic thorns bouquet gift passion beauty"],
+  ["\u{1F33A}", "flower hibiscus tropical bloom garden colorful blossom hawaii red petal exotic warm paradise island vibrant lush"],
+  ["\u{1F33B}", "sunflower bright yellow sun summer garden happy cheerful bloom warm golden tall field radiant joyful cheerful"],
+  ["\u{1F33C}", "daisy flower blossom yellow white garden spring bloom petal field wildflower cheerful bright fresh innocent pure"],
+  ["\u{1F337}", "tulip flower spring garden bloom pink colorful petal elegant bulb dutch holland fragrant vase bouquet pretty"],
+  ["\u{1F490}", "bouquet flowers gift arrangement bunch present celebration congratulations wedding anniversary valentine romantic beautiful colorful floral bundle"],
+  ["\u{1F940}", "wilted flower dead dying sad drooping fading withered loss decay end goodbye farewell grief heartbreak wilt"],
+  ["\u{1F33E}", "rice grain wheat harvest crop farm agriculture field cereal stalk golden autumn ripe rural country paddy"],
+  ["\u{1F342}", "autumn fall leaf season brown orange harvest change dry maple deciduous crisp golden rustic nostalgic wind"],
+  ["\u{1F30A}", "wave ocean water sea surf tide beach coast marine splash current deep blue shore nautical swell"],
+  ["\u{1F525}", "fire flame hot burn heat lit trending popular blazing passion fierce intense energy wild warm motivation drive hustle"],
+  ["\u2744", "snowflake cold ice winter frozen frost chill freeze crystal snow unique delicate white pure arctic flurry"],
+  ["\u26A1", "lightning bolt energy power electric thunder fast speed charge shock voltage surge zap current intensity flash"],
+  ["\u{1F308}", "rainbow colors spectrum hope promise diversity pride arch weather sky after-rain bridge multicolor vivid bright beautiful"],
+  ["\u2600", "sun sunny bright day warm light summer morning golden clear radiant dawn daylight sunshine noon hot"],
+  ["\u{1F31E}", "sun face sunny bright warm cheerful happy smile golden radiant day morning summer glow beaming friendly"],
+  ["\u{1F305}", "sunrise morning dawn new-day horizon ocean beach golden light hope beginning fresh start early wake beautiful"],
+  ["\u{1F319}", "moon night crescent dark sky evening sleep lunar celestial twilight midnight dream nocturnal dusk starlit glow"],
+  ["\u2B50", "star favorite rated best top quality night sky shining bright golden award featured highlight bookmark motivation aspiration goal wish"],
+  ["\u{1F31F}", "glowing star shine brilliant sparkle twinkle radiant celestial bright excellent dazzling luminous stellar magnificent outstanding"],
+  ["\u2728", "sparkles shine magic glitter glamour special clean new fresh dazzle enchant fairy dust twinkling glowing premium"],
+  ["\u{1F30C}", "galaxy milky-way night sky stars space cosmos universe nebula celestial dark vast deep astral constellation cosmic"],
+  ["\u{1F320}", "shooting star wish meteor night sky falling space celestial dream hope luck comet trail streak magical"],
+  ["\u{1F3D4}", "mountain peak summit high adventure nature hike climb snow alpine majestic rugged wilderness terrain elevation"],
+  ["\u{1F30D}", "earth globe world planet geography international travel map continent environment global humanity civilization ecosystem terra"],
+  ["\u{1F310}", "globe internet web network worldwide connected online digital global browser domain website cyberspace virtual cloud"],
+  ["\u{1FAB4}", "potted plant house indoor green decor home garden succulent grow ceramic shelf desk room windowsill cozy"],
+  ["\u{1F332}", "evergreen tree pine forest nature wood christmas conifer green tall spruce fir woodland timber grove dense"],
+  ["\u{1F344}", "mushroom fungus forest nature wild toadstool organic earthy woodland magic mycelium cap stem spore fairy"],
+  ["\u{1F41D}", "bee honey buzz insect pollinate hive sting yellow worker busy queen colony flower nectar wax sweet"],
+  ["\u{1F98B}", "butterfly insect nature beautiful transform wings colorful metamorphosis garden flutter cocoon caterpillar chrysalis elegant change"],
+  ["\u{1F43E}", "paw prints animal pet footprint track dog cat walk trail path follow clue trace mark step"],
+  ["\u{1F431}", "cat kitten pet feline meow cute furry animal whiskers playful independent curious agile pounce purr neko"],
+  ["\u{1F436}", "dog puppy pet canine bark loyal cute furry animal friend faithful companion fetch walk tail woof"],
+  ["\u{1F426}", "bird tweet chirp fly wing feather animal nature sky perch nest song sparrow finch robin singing"],
+  ["\u{1F985}", "eagle bird raptor fly soar majestic predator wing sky freedom hunt prey powerful wild america"],
+  ["\u{1F427}", "penguin bird cold ice arctic antarctic animal cute waddle tuxedo swim fish emperor colony winter"],
+  ["\u{1F989}", "owl bird night wise nocturnal hoot wisdom animal forest eye feather silent hunt branch moon"],
+  ["\u{1F99C}", "parrot bird colorful tropical talk mimic pet feather fly beak wing exotic jungle rainforest macaw"],
+  ["\u{1F54A}\uFE0F", "dove bird peace white fly gentle wing olive branch freedom hope calm pure spirit symbol harmony"],
+  ["\u{1F438}", "frog toad green amphibian ribbit hop leap pond swamp lily-pad croak nature wet slimy cute kermit"],
+  ["\u{1F422}", "turtle tortoise slow shell reptile steady patient calm nature ocean sea wise old ancient zen relaxed"],
+  ["\u{1F40D}", "snake serpent reptile slither hiss venom coil danger wild nature python cobra viper scales sneaky"],
+  ["\u{1F98A}", "fox clever cunning sly orange animal cute wild forest smart trickster woodland brush tail red foxy"],
+  ["\u{1F43B}", "bear animal brown grizzly forest wild nature strong hibernate cub furry woodland powerful fierce honey"],
+  ["\u{1F43C}", "panda bear black white bamboo china cute animal endangered fluffy gentle adorable zoo peaceful calm cuddly"],
+  ["\u{1F981}", "lion king jungle cat wild animal brave fierce pride mane roar savanna powerful majestic royal leader"],
+  ["\u{1F42F}", "tiger cat stripes wild animal fierce powerful jungle predator orange strong bold ferocious beast prowl"],
+  ["\u{1F412}", "monkey primate ape animal playful jungle tree banana climbing funny curious mischievous wild swing silly"],
+  ["\u{1F419}", "octopus tentacle sea ocean marine animal squid deep underwater intelligent camouflage suction cephalopod eight"],
+  ["\u{1F41A}", "shell seashell beach ocean sea shore conch spiral sand marine nature coastal pearl collect tide souvenir"],
+  ["\u{1F420}", "tropical fish colorful ocean sea marine reef aquarium underwater coral nemo bright exotic animal swim"],
+  ["\u{1F42C}", "dolphin ocean sea marine mammal swim jump playful intelligent friendly coastal wave tropical aquatic smart"],
+  ["\u{1F433}", "whale ocean sea marine mammal huge deep water blowhole humpback blue giant majestic nature spout"],
+  // Food & drink
+  ["\u2615", "coffee tea hot drink cup morning cafe latte espresso brew cappuccino java bean roast aroma wake"],
+  ["\u{1F375}", "tea cup hot drink matcha green herbal warm sip beverage chamomile jasmine oolong steep kettle zen"],
+  ["\u{1F37A}", "beer drink pub bar cheers alcohol lager ale mug cold draft brew hops craft stout pint"],
+  ["\u{1F34E}", "apple fruit red healthy food snack organic teacher crisp fresh juicy sweet autumn harvest orchard natural"],
+  ["\u{1F34B}", "lemon yellow sour citrus fresh juice zest tart tangy squeeze vitamin acidic bright peel slice lime"],
+  ["\u{1F347}", "grapes fruit wine purple vine bunch cluster vineyard harvest juice raisin sweet dessert snack bunch"],
+  ["\u{1F349}", "watermelon fruit summer red green seeds juicy sweet refreshing slice picnic tropical melon cool hydrate"],
+  ["\u{1F34A}", "orange tangerine citrus fruit juice vitamin fresh sweet round peel segment tropical mandarin clementine zest"],
+  ["\u{1F34C}", "banana fruit yellow tropical peel sweet potassium healthy snack smoothie split monkey bunch ripe creamy"],
+  ["\u{1F353}", "strawberry fruit red berry sweet juicy dessert jam fresh garden summer shortcake smoothie organic pick"],
+  ["\u{1F351}", "peach fruit sweet fuzzy pit stone juicy soft pink summer ripe nectarine cobbler pie emoji"],
+  ["\u{1F96D}", "mango fruit tropical sweet juicy exotic orange yellow smoothie ripe fresh dessert summer asian lassi"],
+  ["\u{1F95D}", "kiwi fruit green fuzzy tropical vitamin fresh sweet tangy exotic healthy smoothie slice small tart"],
+  ["\u{1F352}", "cherry fruit red pair sweet dessert pie stem small round ripe tart berry summer twin"],
+  ["\u{1F951}", "avocado healthy green food guacamole fresh organic toast salad superfood nutrition fat creamy ripe spread"],
+  ["\u{1F330}", "chestnut nut seed brown autumn fall roast warm acorn walnut hazelnut harvest tree nature shell kernel"],
+  ["\u{1F35D}", "pasta spaghetti noodle italian food dinner sauce tomato meatball linguine fettuccine carbonara bolognese recipe cook meal carbs"],
+  ["\u{1F355}", "pizza food slice italian cheese pepperoni dinner lunch meal party takeout delivery crust topping margherita"],
+  ["\u{1F354}", "burger hamburger food fast-food beef bun patty cheese grill bbq lunch dinner meal american fries"],
+  ["\u{1F32E}", "taco mexican food shell beef chicken lettuce cheese salsa tortilla dinner lunch spicy tex-mex tuesday"],
+  ["\u{1F363}", "sushi japanese food rice fish salmon tuna roll maki nigiri raw seafood wasabi ginger chopsticks"],
+  ["\u{1F35C}", "noodle ramen soup bowl asian japanese pho broth hot steaming chopsticks warm comfort food slurp"],
+  ["\u{1F369}", "donut doughnut sweet dessert sprinkles icing glaze pastry breakfast treat bakery sugar frosted ring hole glazed"],
+  ["\u{1F36A}", "cookie biscuit sweet snack chocolate chip dessert bake treat crumble crispy buttery batch oven crunch"],
+  ["\u{1F36B}", "chocolate bar sweet candy cocoa dark milk dessert treat snack confection fudge ganache cacao brown"],
+  ["\u{1F36C}", "candy sweet wrapper treat sugar confection hard lollipop caramel toffee butterscotch bonbon taffy colorful"],
+  ["\u{1F382}", "cake birthday celebration dessert sweet party frosting candle treat slice chocolate vanilla cream layers wish"],
+  ["\u{1F370}", "shortcake slice dessert sweet cream berry strawberry cheesecake pastry treat piece portion bakery tiramisu"],
+  ["\u{1F9C1}", "cupcake sweet dessert treat frosting bake mini cake sprinkles sugar icing butter cream vanilla pretty"],
+  ["\u{1F366}", "ice cream cone dessert sweet frozen summer vanilla chocolate scoop treat cool soft-serve gelato waffle"],
+  ["\u{1F377}", "wine glass drink red white elegant dinner celebration grape toast vineyard vintage merlot chardonnay pour"],
+  ["\u{1F36F}", "honey jar sweet golden bee nectar syrup sticky natural amber drizzle comb pure organic pooh"],
+  // Activities & sports
+  ["\u{1F3AF}", "target bullseye goal aim focus precision objective hit center shoot accuracy direct purpose mission intent strategy plan motivation OKR productivity dart"],
+  ["\u{1F3C6}", "trophy award win champion success prize competition gold medal achieve glory honor excellence triumph motivation milestone cup"],
+  ["\u{1F947}", "medal gold first winner champion award best victory prize compete podium top achievement record olympic"],
+  ["\u{1F948}", "medal silver second place runner-up award competition podium honor prize achievement excellent strong effort"],
+  ["\u{1F949}", "medal bronze third place award competition podium honor prize achievement good effort solid worthy try"],
+  ["\u{1F3AE}", "game controller play video console gaming joystick fun arcade entertain pixel level score quest adventure videogame computer"],
+  ["\u{1F579}", "joystick arcade retro game controller play classic vintage gaming old-school pixel cabinet button lever stick"],
+  ["\u{1F3A8}", "art palette creative paint colors draw design brush canvas studio illustration sketch masterpiece gallery museum"],
+  ["\u{1F3B5}", "music note song melody tune sound rhythm beat listen audio harmony instrument compose lyric chorus sing"],
+  ["\u{1F3AC}", "clapper film movie cinema director action scene video cut shoot production camera reel premiere oscar"],
+  ["\u{1F4F7}", "camera photo picture snap capture image shoot lens portrait memory digital photography focus exposure selfie"],
+  ["\u{1F381}", "gift present box surprise birthday wrap holiday bow giving package reward treat donation offering christmas"],
+  ["\u{1F3B2}", "dice game random roll chance luck board casino gamble play probability bet wager odds risk number"],
+  ["\u{1F9E9}", "puzzle piece solve jigsaw fit connect challenge logic brain together assemble pattern match complete think"],
+  ["\u{1F3AD}", "theater masks drama comedy tragedy acting perform stage show play musical opera scene character broadway"],
+  ["\u{1F3C3}", "running exercise fitness jog sprint athlete sport race training track marathon cardio endurance speed fast"],
+  ["\u{1F6B6}", "walking walk stroll hike pedestrian step person pace wander roam amble stride commute foot path leisurely"],
+  ["\u{1F9D8}", "yoga meditation calm relax zen mindful stretch balance pose peace breathe serenity harmony wellness center"],
+  ["\u{1F3B8}", "guitar music rock instrument band play strings chord acoustic electric solo riff strum amplifier jam"],
+  ["\u{1F3A4}", "microphone sing voice karaoke record perform speak audio vocal stage broadcast interview podcast speech"],
+  ["\u{1F3A7}", "headphones music listen audio sound beats wireless over-ear podcast stereo noise-cancel bass volume zone"],
+  ["\u26BD", "soccer football ball sport kick goal field match team game play pitch league tournament world-cup"],
+  ["\u{1F3C0}", "basketball ball sport hoop court shoot dunk game team play dribble slam match league nba"],
+  ["\u{1F3BE}", "tennis ball racket sport court game match serve volley ace set tournament rally net wimbledon"],
+  // Travel & places
+  ["\u{1F680}", "rocket launch space shuttle blast explore mission fast speed orbit astronaut cosmos takeoff motivation ambition productivity moon"],
+  ["\u2708", "airplane travel fly flight jet trip journey airline departure sky arrival boarding runway pilot vacation"],
+  ["\u{1F682}", "train travel rail transport commute locomotive station track journey ride railway express schedule platform steam"],
+  ["\u{1F3E0}", "house home building family residence living shelter comfort cozy dwelling roof neighborhood street property safe"],
+  ["\u{1F3EB}", "school education building class study learn teach university college campus academy institution classroom student homework"],
+  ["\u{1F3E2}", "office building work corporate business tower downtown company workplace headquarters block urban professional city job"],
+  ["\u{1F3E5}", "hospital medical health building clinic doctor care emergency room treatment medicine patient ward heal nurse"],
+  ["\u{1F3F0}", "castle fortress palace medieval royal kingdom tower keep moat wall stone historic fairy-tale kingdom princess"],
+  ["\u{1F3EA}", "store shop convenience retail buy market local mini-mart business front awning sell goods supply corner"],
+  ["\u{1F3D9}", "city building skyline urban downtown skyscraper metro architecture towers busy modern concrete landscape panorama view"],
+  ["\u{1F306}", "city sunset evening skyline dusk twilight urban golden horizon vista panorama silhouette beautiful glow warm"],
+  ["\u{1F303}", "night city stars urban skyline dark evening lights downtown buildings starry midnight metropolitan late neon"],
+  ["\u{1F5FC}", "tower landmark tokyo tall structure monument observation antenna tourist famous iconic viewpoint skyline spire beacon"],
+  ["\u{1F3D6}", "beach vacation holiday sand sun relax coast tropical resort shore umbrella palm waves swim paradise"],
+  ["\u26FA", "tent camping outdoor adventure nature camp hike shelter wilderness trek bonfire campfire forest park survival"],
+  // Objects & tools
+  ["\u{1F4C1}", "folder directory organize files storage category archive system group contain collection structure project classify manage"],
+  ["\u{1F4C2}", "open folder browse directory files explore access documents content view expand reveal display inside look"],
+  ["\u{1F4C4}", "document page file text paper sheet blank note report form letter article template draft print"],
+  ["\u{1F4DD}", "memo write note edit pencil draft compose jot pad paper journal entry log record note-taking productivity PKM obsidian daily plan"],
+  ["\u{1F4CB}", "clipboard copy paste checklist list tasks form survey record data inventory register project management kanban workflow productivity board"],
+  ["\u{1F4D3}", "notebook journal diary daily log planner note-taking writing personal reflection thoughts record entry ledger bound"],
+  ["\u{1F4D2}", "ledger notebook yellow note-taking planner log record register journal study workbook pad bound memo handbook"],
+  ["\u{1F5D2}", "notepad spiral memo notes jot scratch paper quick draft scribble bullet list to-do reminder tear"],
+  ["\u{1F4CC}", "pushpin pin tack mark attach fixed bulletin board location hold sticky notice important remember highlight"],
+  ["\u{1F4CD}", "location pin map marker place navigate address point destination drop waypoint coordinate GPS venue spot"],
+  ["\u{1F516}", "bookmark save mark tag favorite label chapter placeholder remember keep flag reference highlight annotate later"],
+  ["\u{1F5C2}", "index dividers tabs organize sort category section file cabinet group partition separate classify second-brain PKM knowledge-base taxonomy"],
+  ["\u{1F4C5}", "calendar date schedule plan event day month year appointment agenda booking diary timeline deadline project management planner productivity week"],
+  ["\u{1F5D3}", "calendar spiral planner monthly schedule organize dates agenda timeline view weekly annual overview layout display"],
+  ["\u23F0", "alarm clock time wake morning schedule reminder urgent prompt early ring buzzer alert snooze set punctual"],
+  ["\u{1F550}", "clock time hour watch schedule deadline countdown moment period tick minute second duration interval pace"],
+  ["\u23F1", "stopwatch timer speed race countdown track measure performance seconds lap interval benchmark timing record split"],
+  ["\u{1F4CA}", "chart bar data statistics graph analytics metrics report visual compare dashboard insight trend analysis KPI project management score"],
+  ["\u{1F4C8}", "chart up growth trend increase rise profit improve progress gain ascend upward boost expand rally"],
+  ["\u{1F4C9}", "chart down decline fall drop decrease loss reduce crash lower slump downturn plunge shrink dip"],
+  ["\u{1F4A1}", "idea light bulb insight inspiration bright creative solution innovation tip eureka invention brainstorm thought motivation productivity spark"],
+  ["\u{1F50D}", "search magnify zoom find discover look investigate inspect explore detail examine research scan probe lens"],
+  ["\u{1F517}", "link chain url connect web hyperlink attach join bond reference anchor association PKM backlink graph share"],
+  ["\u{1F4E2}", "loudspeaker announce broadcast megaphone alert proclamation notify shout public news declaration publicity promote campaign"],
+  ["\u{1F514}", "bell notification alert ring alarm remind chime ding attention sound signal update notice ping subscribe"],
+  ["\u{1F4AC}", "speech bubble chat message talk communicate discuss conversation text dialog comment reply respond thread forum"],
+  ["\u{1F4AD}", "thought think bubble idea ponder dream imagine reflect wonder muse daydream consider fantasy vision cloud"],
+  ["\u{1F4DA}", "books study library read learn education knowledge stack collection reference textbook academic literature shelf reading-list second-brain school"],
+  ["\u{1F4D6}", "open book read learn study page text knowledge literature chapter story novel tale passage journal diary reading daily log"],
+  ["\u{1F4DC}", "scroll document ancient paper certificate decree parchment history old formal diploma charter proclamation manuscript"],
+  ["\u2709", "envelope email letter mail postal message inbox correspondence send post stamp seal deliver package address"],
+  ["\u{1F4E7}", "email message digital mail compose inbox outbox electronic send receive newsletter subscribe forward reply thread"],
+  ["\u{1F4E5}", "inbox download receive import collect arrive gather incoming tray message queue pending unread new items"],
+  ["\u{1F4E4}", "outbox upload send export share publish dispatch deliver release submit broadcast distribute deploy push ship"],
+  ["\u{1F5D1}", "trash delete remove waste garbage bin discard throw dispose recycle junk refuse clean purge erase"],
+  ["\u{1F4D0}", "triangle ruler geometry math angle measure draft technical precision shape protractor degree architect blueprint"],
+  ["\u{1F4CF}", "ruler measure length straight edge scale size dimension tool line centimeter inch foot metric distance"],
+  ["\u270F", "pencil write draw edit sketch lead yellow school art draft note homework study sharp HB graphite doodle"],
+  ["\u{1F58B}", "fountain pen write ink elegant calligraphy sign formal letter script cursive nib classic autograph premium"],
+  ["\u{1F58A}", "pen write edit sign note author draft compose ink letter ballpoint marker script signature document"],
+  ["\u{1F9F2}", "magnet attract pull force iron metal charge stick pole draw repel field north south horseshoe"],
+  ["\u{1F48A}", "pill medicine health pharmacy drug capsule vitamin dose cure treatment prescription supplement tablet remedy"],
+  ["\u{1FA7A}", "stethoscope doctor health medical exam checkup hospital clinical care heart listen diagnosis nurse physician"],
+  ["\u{1FA9E}", "mirror reflection look glass vanity self image surface shine check inspect reverse symmetry identity"],
+  ["\u{1F9F8}", "teddy bear toy cute stuffed plush child soft comfort cuddly huggable sweet innocent play nursery"],
+  // Tech
+  ["\u{1F4BB}", "laptop computer code program work device screen technology notebook portable developer software engineer terminal typing"],
+  ["\u{1F5A5}", "desktop monitor screen display computer workstation setup office technology pc tower dual ultrawide resolution"],
+  ["\u{1F4F1}", "phone mobile cell smartphone device app touch call text screen notification swipe tap digital pocket"],
+  ["\u2328", "keyboard type input keys computer hardware peripheral qwerty text entry shortcut mechanical switch layout coding"],
+  ["\u{1F5B1}", "mouse cursor click point scroll device hardware peripheral navigate input drag select hover right-click wireless"],
+  ["\u{1F4E1}", "satellite antenna signal dish broadcast communication tower radar network wireless frequency receiver transmit relay"],
+  ["\u{1F50C}", "plug power electric socket connect outlet cable charger cord adapter extension wire prong voltage charge"],
+  ["\u{1F50B}", "battery power charge energy cell electric level full low portable lithium ion rechargeable capacity drain"],
+  ["\u{1F4BE}", "floppy disk save store data backup memory archive retro old vintage legacy magnetic kilobyte classic"],
+  ["\u{1F4BF}", "disc cd dvd media music optical storage album data burn rom read write laser digital movie"],
+  ["\u{1F5A8}", "printer print output paper copy document hardware office machine ink toner laser inkjet scanner fax"],
+  ["\u{1F916}", "robot ai machine android bot automated intelligence tech future artificial neural network algorithm learning chatbot"],
+  ["\u{1F9EC}", "dna genetics biology helix science genome cell molecular life strand chromosome gene sequence mutation biotech"],
+  ["\u269B", "atom science physics nuclear particle element molecule chemistry quantum small electron proton neutron orbit fundamental"],
+  // Symbols & status
+  ["\u2705", "check done complete yes approved verified success tick confirm pass validate finished accepted cleared ready"],
+  ["\u274C", "cross error wrong no delete cancel reject fail remove block deny invalid prohibited forbidden stop"],
+  ["\u26A0", "warning caution alert danger attention risk hazard notice careful issue safety threat vulnerability problem critical"],
+  ["\u2753", "question mark ask help inquiry unknown uncertain confused what doubt curious wonder clarify explain why"],
+  ["\u2757", "exclamation important urgent priority attention notice alert emphasis critical vital crucial essential significant pressing"],
+  ["\u{1F512}", "lock secure private closed protect restrict safety password encrypted hidden sealed guarded classified secret"],
+  ["\u{1F513}", "unlock open public accessible free unrestricted available permission released clear exposed revealed transparent granted"],
+  ["\u{1F511}", "key password access login unlock secret credential enter permission code master skeleton passkey token auth"],
+  ["\u{1F6E1}", "shield protect security defense guard safe armor barrier firewall ward block prevent resist screen cover"],
+  ["\u2699", "gear settings config option preference control configure cog system parameter customize adjust tweak modify admin"],
+  ["\u{1F527}", "wrench tool fix repair adjust maintain tighten utility service spanner mechanic plumber twist socket tune"],
+  ["\u{1F528}", "hammer build construct create make forge strike nail tool shape smash break frame assemble craft"],
+  ["\u2697", "flask chemistry lab experiment science potion mix formula brew beaker distill reaction compound solution alchemy"],
+  ["\u{1F52C}", "microscope science research examine study magnify biology analysis close detail zoom cell tissue specimen lab"],
+  ["\u{1F52D}", "telescope space astronomy observe stars galaxy universe sky discover far lens optical view distant cosmos"],
+  ["\u{1F9EA}", "test tube experiment science lab sample vial chemistry research trial reagent solution liquid analysis test"],
+  ["\u{1F48E}", "gem diamond precious jewel crystal brilliant valuable treasure luxury rare sparkle facet carat polished values core principles quality"],
+  ["\u{1F4B0}", "money bag rich cash wealth dollar fortune profit savings invest finance gold bank fund income budget"],
+  ["\u{1F4B3}", "credit card payment bank buy purchase transaction checkout swipe digital debit visa mastercard billing pay"],
+  ["\u{1F3F7}", "label tag price mark category classify organize identify sale metadata name badge sticker barcode product"],
+  ["\u{1F380}", "ribbon bow gift decorate present wrap pretty ornament tie loop satin silk festive holiday cute"],
+  ["\u{1F6A9}", "flag red alert warning danger signal problem marker issue trouble indicator concern suspicious questionable deal-breaker"],
+  ["\u{1F3C1}", "checkered flag finish race end complete final victory lap done goal milestone conclude wrap-up sprint"],
+  ["\u{1F534}", "red circle dot stop error danger alert color marker bullet indicator badge status symbol active"],
+  ["\u{1F7E0}", "orange circle dot color marker warm autumn indicator badge status bullet accent symbol highlight amber"],
+  ["\u{1F7E1}", "yellow circle dot color marker bright caution indicator badge status bullet accent gold sunshine pending"],
+  ["\u{1F7E2}", "green circle dot go success active ok online color marker indicator badge status live ready"],
+  ["\u{1F535}", "blue circle dot color marker calm cool indicator badge status bullet accent symbol primary info"],
+  ["\u{1F7E3}", "purple circle dot color marker violet creative indicator badge status bullet accent symbol royal premium"],
+  ["\u26AB", "black circle dot dark color marker indicator badge status bullet strong bold minimal symbol filled"],
+  ["\u26AA", "white circle dot light color marker indicator badge status bullet clean minimal empty blank hollow"],
+  ["\u{1F536}", "orange diamond shape icon marker bullet accent highlight geometric bold warm indicator badge status large"],
+  ["\u{1F537}", "blue diamond shape icon marker bullet accent highlight geometric cool calm indicator badge status large"],
+  ["\u{1F4A0}", "diamond shape blue dot geometric pattern elegant jewel icon badge ornament decorative crystal sparkle small"],
+  ["\u2B06", "arrow up direction rise increase north ascend climb higher above upward elevate lift boost grow"],
+  ["\u2B07", "arrow down direction fall decrease south descend lower below drop downward sink decline reduce dig"],
+  ["\u27A1", "arrow right direction forward next proceed east continue advance move onward progress navigate step go"],
+  ["\u2B05", "arrow left direction back previous west return retreat before reverse rewind undo navigate earlier behind"],
+  ["\u21A9", "return back reply undo reverse respond previous revert answer redirect bounce comeback restore recover loop"],
+  // Misc useful
+  ["\u{1F9ED}", "compass navigate direction guide north south east west explore orient bearing heading course waypoint values purpose mission vision moral"],
+  ["\u{1F5FA}", "map world navigate travel atlas geography route chart explore guide territory region roadmap plan direction vision overview"],
+  ["\u{1F4E6}", "box package shipping delivery container cargo parcel product store wrap cardboard seal tape label inventory crate"],
+  ["\u{1F5C4}", "filing cabinet archive storage organize office records drawers department data repository vault preserve catalog backup"],
+  ["\u{1F510}", "lock key secure encrypted private protected closed password safe access authentication sealed vault classified hidden"],
+  ["\u{1F4CE}", "paperclip attach fasten bind clip connect hold office document organize staple pin secure bundle link"],
+  ["\u2702", "scissors cut trim snip crop edit clip divide separate shear slice chop prune carve sever craft"],
+  ["\u{1F505}", "dim brightness low light dark screen quiet soft subtle faint gentle muted toned-down ambient night"],
+  ["\u{1F506}", "bright sun light high intensity luminous vivid radiant glow display brilliant dazzling glaring spotlight max"],
+  ["\u267B", "recycle sustainability green reuse reduce environment eco circle renew clean conservation waste recovery compost earth"],
+  ["\u2714", "checkmark done complete approved correct verified valid pass accept tick confirmed affirmative positive cleared yes"],
+  ["\u2795", "plus add increase more extra positive create append new expand include insert extend supplement grow"],
+  ["\u2796", "minus remove decrease less subtract reduce negative take delete shrink diminish lower cut trim drop"],
+  ["\u{1F504}", "refresh sync loop reload update cycle rotate repeat restart renew regenerate restore reboot recycle retry"],
+  ["\u23E9", "fast forward skip ahead speed quick advance rapid jump next accelerate hurry rush double-time swift"],
+  ["\u23EA", "rewind back reverse previous return replay undo behind earlier retreat review revisit flashback recall past"],
+  ["\u23F8", "pause stop hold wait break freeze halt rest intermission delay suspend temporary standby timeout breathe"],
+  ["\u25B6", "play start begin resume run launch go forward trigger active initiate engage proceed operate execute"],
+  ["\u{1F500}", "shuffle random mix scramble reorder rearrange jumble variety change swap chaos unpredictable diverse assorted sort"],
+  ["\u2696", "balance scale justice fair equal weigh measure law court judge decide compare evaluate values equity"],
+  ["\u267E", "infinity forever endless eternal unlimited boundless perpetual continuous loop beyond limitless timeless always everlasting"],
+  ["\u{1FA84}", "magic wand spell enchant wizard cast transform miracle power trick illusion sorcery fantasy mystical fairy"],
+  ["\u{1F9D9}", "wizard mage sorcerer witch warlock fantasy spell magic enchant mystical conjure potion robes hat staff"],
+  ["\u{1F6E0}", "tools hammer wrench fix repair build maintain service kit utility workshop garage mechanic engineer craft"],
+  ["\u{1FAB6}", "feather light write quill bird soft gentle pen airy delicate float breeze wispy plume calligraphy"],
+  ["\u{1FAE7}", "bubbles soap float pop clean shiny transparent foam light airy sparkle iridescent wash rinse playful"]
+];
+
+// src/utils/emojiPicker.ts
+function createEmojiPicker(opts) {
+  const {
+    container,
+    panelContainer,
+    label,
+    value,
+    placeholder,
+    rowClass,
+    panelClass,
+    onSelect,
+    onClear,
+    onBeforeOpen
+  } = opts;
+  let currentValue = value;
+  const row = container.createDiv({ cls: rowClass ?? "emoji-picker-row" });
+  if (label) {
+    row.createSpan({ cls: "setting-item-name", text: label });
+  }
+  const triggerBtn = row.createEl("button", { cls: "emoji-picker-trigger" });
+  const clearBtn = row.createEl("button", { cls: "emoji-picker-clear", text: "\u2715" });
+  clearBtn.setAttribute("aria-label", "Clear emoji");
+  const updateTrigger = () => {
+    triggerBtn.empty();
+    triggerBtn.createSpan({ text: currentValue || placeholder });
+    triggerBtn.createSpan({ cls: "emoji-picker-chevron", text: "\u25BE" });
+    triggerBtn.toggleClass("is-placeholder", !currentValue);
+    clearBtn.toggleClass("hp-hidden", !currentValue);
+  };
+  updateTrigger();
+  const panelParent = panelContainer ?? container;
+  const panelCls = panelClass ? `emoji-picker-panel ${panelClass}` : "emoji-picker-panel";
+  const panel = panelParent.createDiv({ cls: panelCls });
+  panel.addClass("hp-hidden");
+  const searchInput = panel.createEl("input", {
+    cls: "emoji-picker-search",
+    attr: { type: "text", placeholder: "Search emojis\u2026" }
+  });
+  const gridEl = panel.createDiv({ cls: "emoji-picker-grid" });
+  const renderGrid = (query) => {
+    gridEl.empty();
+    const q = query.toLowerCase().trim();
+    const filtered = q ? EMOJI_PICKER_SET.filter(([e, kw]) => kw.includes(q) || e === q) : EMOJI_PICKER_SET;
+    for (const [emoji] of filtered) {
+      const btn = gridEl.createEl("button", { cls: "emoji-btn", text: emoji });
+      if (currentValue === emoji) btn.addClass("is-selected");
+      btn.addEventListener("click", () => {
+        currentValue = emoji;
+        updateTrigger();
+        onSelect(emoji);
+        close();
+      });
+    }
+    if (filtered.length === 0) {
+      gridEl.createSpan({ cls: "emoji-picker-empty", text: "No results" });
+    }
+  };
+  let outsideClickAc = null;
+  triggerBtn.addEventListener("click", () => {
+    if (!panel.hasClass("hp-hidden")) {
+      close();
+    } else {
+      onBeforeOpen?.();
+      panel.removeClass("hp-hidden");
+      searchInput.value = "";
+      renderGrid("");
+      searchInput.focus();
+      outsideClickAc?.abort();
+      outsideClickAc = new AbortController();
+      panel.doc.addEventListener("mousedown", (e) => {
+        const target = e.target;
+        if (!panel.contains(target) && !triggerBtn.contains(target) && !clearBtn.contains(target)) {
+          close();
+        }
+      }, { signal: outsideClickAc.signal });
+    }
+  });
+  clearBtn.addEventListener("click", () => {
+    currentValue = "";
+    updateTrigger();
+    onClear();
+    close();
+  });
+  let searchTimer = null;
+  searchInput.addEventListener("input", () => {
+    if (searchTimer) window.clearTimeout(searchTimer);
+    searchTimer = window.setTimeout(() => renderGrid(searchInput.value), 100);
+  });
+  const close = () => {
+    panel.addClass("hp-hidden");
+    outsideClickAc?.abort();
+    outsideClickAc = null;
+  };
+  const destroy = () => {
+    if (searchTimer) {
+      window.clearTimeout(searchTimer);
+      searchTimer = null;
+    }
+    outsideClickAc?.abort();
+    outsideClickAc = null;
+    row.remove();
+    panel.remove();
+  };
+  return { close, destroy };
+}
+
+// src/modals/BlockSettingsModal.ts
+var BLOCK_SETTINGS_TABS = [
+  { id: "header", label: "Header" },
+  { id: "body", label: "Body" },
+  { id: "card", label: "Card" },
+  { id: "content", label: "Content" }
+];
+var ACCENT_PRESETS = [
+  "#c0392b",
+  "#e67e22",
+  "#f1c40f",
+  "#ffef3a",
+  "#27ae60",
+  "#16a085",
+  "#2980b9",
+  "#8e44ad",
+  "#e84393",
+  "#6c5ce7",
+  "#636e72"
+];
+var BlockSettingsModal = class extends import_obsidian2.Modal {
+  constructor(app, instance, block, onSave) {
+    super(app);
+    this.instance = instance;
+    this.block = block;
+    this.onSave = onSave;
+  }
+  draft = {};
+  accentDirty = false;
+  gradDirty = false;
+  tabBodyEl = null;
+  tabButtons = /* @__PURE__ */ new Map();
+  defaultTitle = "";
+  refreshPreview = () => {
+  };
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.addClass("hp-block-settings-modal");
+    this.draft = structuredClone(this.instance.config);
+    const factory = BlockRegistry.get(this.instance.type);
+    this.defaultTitle = factory?.displayName ?? this.instance.type;
+    this.accentDirty = !!(typeof this.draft._accentColor === "string" && this.draft._accentColor);
+    const hasStart = typeof this.draft._gradientStart === "string" && HEX_COLOR_RE.test(this.draft._gradientStart);
+    const hasEnd = typeof this.draft._gradientEnd === "string" && HEX_COLOR_RE.test(this.draft._gradientEnd);
+    this.gradDirty = hasStart && hasEnd;
+    new import_obsidian2.Setting(contentEl).setName(`Block settings \u2014 ${this.defaultTitle}`).setHeading();
+    const previewWrap = contentEl.createDiv({ cls: "hp-settings-preview-wrap" });
+    const previewCard = previewWrap.createDiv({ cls: "settings-preview-card homepage-block-wrapper" });
+    const previewHeaderZone = previewCard.createDiv({ cls: "block-header-zone" });
+    const previewHeader = previewHeaderZone.createDiv({ cls: "block-header" });
+    const previewEmoji = previewHeader.createSpan({ cls: "block-header-emoji" });
+    const previewTitle = previewHeader.createSpan();
+    const previewDivider = previewCard.createDiv({ cls: "block-header-divider" });
+    const previewBody = previewCard.createDiv({ cls: "settings-preview-body" });
+    previewBody.createSpan({ cls: "settings-preview-body-text", text: "Block content area" });
+    this.refreshPreview = () => {
+      const d = this.draft;
+      const label = typeof d._titleLabel === "string" && d._titleLabel || this.defaultTitle;
+      const emoji = typeof d._titleEmoji === "string" ? d._titleEmoji : "";
+      previewEmoji.setText(emoji);
+      previewEmoji.toggleClass("hp-hidden", !emoji);
+      previewTitle.setText(label);
+      previewHeader.className = "block-header";
+      const sz = typeof d._titleSize === "string" && TITLE_SIZE_RE.test(d._titleSize) ? d._titleSize : "";
+      if (sz) previewHeader.addClass(`block-header-${sz}`);
+      previewHeaderZone.toggleClass("hp-hidden", d._showTitle === false);
+      previewDivider.toggleClass("hp-hidden", d._showDivider !== true);
+      applyBlockStyling(previewCard, d);
+    };
+    this.refreshPreview();
+    const tabBar = contentEl.createDiv({ cls: "hp-settings-tabbar" });
+    tabBar.setAttribute("role", "tablist");
+    this.tabButtons.clear();
+    for (const t of BLOCK_SETTINGS_TABS) {
+      const btn = tabBar.createDiv({ cls: "hp-settings-tab" });
+      btn.setAttribute("role", "tab");
+      btn.tabIndex = 0;
+      btn.createSpan({ cls: "hp-settings-tab-label", text: t.label });
+      const activate = () => this.switchTab(t.id);
+      btn.addEventListener("click", activate);
+      btn.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          activate();
+        }
+      });
+      this.tabButtons.set(t.id, btn);
+    }
+    this.tabBodyEl = contentEl.createDiv({ cls: "hp-settings-tabbody" });
+    new import_obsidian2.Setting(contentEl).addButton(
+      (btn) => btn.setButtonText("Save").setCta().onClick(() => this.commit())
+    ).addButton(
+      (btn) => btn.setButtonText("Cancel").onClick(() => this.close())
+    );
+    this.switchTab("header");
+  }
+  switchTab(id) {
+    for (const [tabId, btn] of this.tabButtons) {
+      btn.toggleClass("is-active", tabId === id);
+      btn.setAttribute("aria-selected", String(tabId === id));
+    }
+    if (!this.tabBodyEl) return;
+    this.tabBodyEl.empty();
+    switch (id) {
+      case "header":
+        this.renderHeaderTab(this.tabBodyEl);
+        break;
+      case "body":
+        this.renderBodyTab(this.tabBodyEl);
+        break;
+      case "card":
+        this.renderCardTab(this.tabBodyEl);
+        break;
+      case "content":
+        this.renderContentTab(this.tabBodyEl);
+        break;
+    }
+  }
+  renderHeaderTab(body) {
+    new import_obsidian2.Setting(body).setName("Title label").setDesc("Leave blank for the default.").addText(
+      (t) => t.setValue(typeof this.draft._titleLabel === "string" ? this.draft._titleLabel : "").setPlaceholder("Default title").onChange((v) => {
+        this.draft._titleLabel = v;
+        this.refreshPreview();
+      })
+    );
+    createEmojiPicker({
+      container: body,
+      label: "Title emoji",
+      value: typeof this.draft._titleEmoji === "string" ? this.draft._titleEmoji : "",
+      placeholder: "\uFF0B",
+      onSelect: (emoji) => {
+        this.draft._titleEmoji = emoji;
+        this.refreshPreview();
+      },
+      onClear: () => {
+        this.draft._titleEmoji = "";
+        this.refreshPreview();
+      }
+    });
+    new import_obsidian2.Setting(body).setName("Show title").addToggle(
+      (t) => t.setValue(this.draft._showTitle !== false).onChange((v) => {
+        this.draft._showTitle = v;
+        this.refreshPreview();
+      })
+    );
+    new import_obsidian2.Setting(body).setName("Title size").addDropdown(
+      (d) => d.addOption("", "Default").addOption("h1", "H1").addOption("h2", "H2").addOption("h3", "H3").addOption("h4", "H4").addOption("h5", "H5").addOption("h6", "H6").setValue(typeof this.draft._titleSize === "string" ? this.draft._titleSize : "").onChange((v) => {
+        this.draft._titleSize = TITLE_SIZE_RE.test(v) ? v : "";
+        this.refreshPreview();
+      })
+    );
+    new import_obsidian2.Setting(body).setName("Show divider after title").setDesc("Show a thin line between the title and content.").addToggle(
+      (t) => t.setValue(this.draft._showDivider === true).onChange((v) => {
+        this.draft._showDivider = v;
+        this.refreshPreview();
+      })
+    );
+    new import_obsidian2.Setting(body).setName("Title gap").setDesc("Gap between title and content in pixels (0 = default).").addSlider(
+      (s) => s.setLimits(0, 48, 2).setValue(typeof this.draft._titleGap === "number" ? this.draft._titleGap : 0).setDynamicTooltip().onChange((v) => {
+        this.draft._titleGap = v;
+        this.refreshPreview();
+      })
+    );
+    new import_obsidian2.Setting(body).setName("Show header bar").setDesc("Show the colored header accent behind the title.").addToggle(
+      (t) => t.setValue(this.draft._showHeaderAccent !== false).onChange((v) => {
+        this.draft._showHeaderAccent = v;
+        this.refreshPreview();
+      })
+    );
+  }
+  renderBodyTab(body) {
+    new import_obsidian2.Setting(body).setName("Padding").setDesc("Inner padding in pixels (0 = default). Negative values allowed.").addSlider(
+      (s) => s.setLimits(-48, 48, 4).setValue(typeof this.draft._cardPadding === "number" ? this.draft._cardPadding : 0).setDynamicTooltip().onChange((v) => {
+        this.draft._cardPadding = v;
+        this.refreshPreview();
+      })
+    );
+    new import_obsidian2.Setting(body).setName("Show background").setDesc("Show the body background. Turn off to let the block blend into the page.").addToggle(
+      (t) => t.setValue(this.draft._showBackground !== false).onChange((v) => {
+        this.draft._showBackground = v;
+        this.refreshPreview();
+      })
+    );
+    new import_obsidian2.Setting(body).setName("Background opacity").setDesc("Body background transparency (100 = fully opaque).").addSlider(
+      (s) => s.setLimits(0, 100, 5).setValue(typeof this.draft._bgOpacity === "number" ? this.draft._bgOpacity : 100).setDynamicTooltip().onChange((v) => {
+        this.draft._bgOpacity = v;
+        this.refreshPreview();
+      })
+    );
+    new import_obsidian2.Setting(body).setName("Backdrop blur").setDesc("Blur behind the body (only visible when opacity < 100).").addSlider(
+      (s) => s.setLimits(0, 20, 1).setValue(typeof this.draft._backdropBlur === "number" ? this.draft._backdropBlur : 0).setDynamicTooltip().onChange((v) => {
+        this.draft._backdropBlur = v;
+        this.refreshPreview();
+      })
+    );
+    body.createDiv({ cls: "hp-settings-subhead", text: "Background gradient" });
+    body.createEl("p", {
+      cls: "hp-settings-subhead-desc",
+      text: "Overrides the solid background when both colors are set."
+    });
+    let gradStartRef = null;
+    let gradEndRef = null;
+    new import_obsidian2.Setting(body).setName("Start color").addColorPicker((cp) => {
+      gradStartRef = cp;
+      const seed = typeof this.draft._gradientStart === "string" && this.draft._gradientStart ? this.draft._gradientStart : "#667eea";
+      cp.setValue(seed).onChange((v) => {
+        this.draft._gradientStart = v;
+        this.gradDirty = true;
+        this.refreshPreview();
+      });
+    });
+    new import_obsidian2.Setting(body).setName("End color").addColorPicker((cp) => {
+      gradEndRef = cp;
+      const seed = typeof this.draft._gradientEnd === "string" && this.draft._gradientEnd ? this.draft._gradientEnd : "#764ba2";
+      cp.setValue(seed).onChange((v) => {
+        this.draft._gradientEnd = v;
+        this.gradDirty = true;
+        this.refreshPreview();
+      });
+    });
+    new import_obsidian2.Setting(body).setName("Angle").addSlider(
+      (s) => s.setLimits(0, 360, 15).setValue(typeof this.draft._gradientAngle === "number" ? this.draft._gradientAngle : 135).setDynamicTooltip().onChange((v) => {
+        this.draft._gradientAngle = v;
+        this.refreshPreview();
+      })
+    );
+    new import_obsidian2.Setting(body).addButton(
+      (btn) => btn.setButtonText("Clear gradient").onClick(() => {
+        this.draft._gradientStart = "";
+        this.draft._gradientEnd = "";
+        this.gradDirty = false;
+        gradStartRef?.setValue("#667eea");
+        gradEndRef?.setValue("#764ba2");
+        this.refreshPreview();
+      })
+    );
+  }
+  renderCardTab(body) {
+    let cpRef = null;
+    const currentColor = typeof this.draft._accentColor === "string" ? this.draft._accentColor : "";
+    const accentRow = new import_obsidian2.Setting(body).setName("Accent color").setDesc("Tints header, body, and border.");
+    accentRow.addColorPicker((cp) => {
+      cpRef = cp;
+      cp.setValue(currentColor || "#888888").onChange((v) => {
+        this.draft._accentColor = v;
+        this.accentDirty = true;
+        this.refreshPreview();
+      });
+    });
+    accentRow.addExtraButton(
+      (btn) => btn.setIcon("x").setTooltip("Clear accent color").onClick(() => {
+        this.draft._accentColor = "";
+        this.accentDirty = false;
+        cpRef?.setValue("#888888");
+        this.refreshPreview();
+      })
+    );
+    const swatchRow = body.createDiv({ cls: "accent-preset-row" });
+    for (const hex of ACCENT_PRESETS) {
+      const swatch = swatchRow.createEl("button", {
+        cls: "accent-preset-swatch",
+        attr: { type: "button", "aria-label": `Accent ${hex}` }
+      });
+      swatch.style.setProperty("--hp-swatch-bg", hex);
+      swatch.addEventListener("click", () => {
+        this.draft._accentColor = hex;
+        this.accentDirty = true;
+        cpRef?.setValue(hex);
+        this.refreshPreview();
+      });
+    }
+    new import_obsidian2.Setting(body).setName("Accent intensity").setDesc("Strength of the accent tint (5\u2013100%).").addSlider((s) => {
+      s.setLimits(5, 100, 5).setValue(typeof this.draft._accentIntensity === "number" ? this.draft._accentIntensity : 15).setDynamicTooltip().onChange((v) => {
+        this.draft._accentIntensity = v;
+        this.refreshPreview();
+      });
+      s.sliderEl.addEventListener("input", () => {
+        this.draft._accentIntensity = s.getValue();
+        this.refreshPreview();
+      });
+    });
+    body.createDiv({ cls: "hp-settings-subhead", text: "Border" });
+    new import_obsidian2.Setting(body).setName("Show border").setDesc("Show the border and hover highlight.").addToggle(
+      (t) => t.setValue(this.draft._showBorder !== false).onChange((v) => {
+        this.draft._showBorder = v;
+        this.refreshPreview();
+      })
+    );
+    new import_obsidian2.Setting(body).setName("Width").setDesc("Border thickness in pixels (0 = default).").addSlider(
+      (s) => s.setLimits(0, 4, 1).setValue(typeof this.draft._borderWidth === "number" ? this.draft._borderWidth : 0).setDynamicTooltip().onChange((v) => {
+        this.draft._borderWidth = v;
+        this.refreshPreview();
+      })
+    );
+    new import_obsidian2.Setting(body).setName("Style").addDropdown(
+      (d) => d.addOption("", "Default").addOption("solid", "Solid").addOption("dashed", "Dashed").addOption("dotted", "Dotted").setValue(typeof this.draft._borderStyle === "string" ? this.draft._borderStyle : "").onChange((v) => {
+        this.draft._borderStyle = v;
+        this.refreshPreview();
+      })
+    );
+    new import_obsidian2.Setting(body).setName("Radius").setDesc("Corner rounding in pixels (0 = theme default).").addSlider(
+      (s) => s.setLimits(0, 24, 2).setValue(typeof this.draft._borderRadius === "number" ? this.draft._borderRadius : 0).setDynamicTooltip().onChange((v) => {
+        this.draft._borderRadius = v;
+        this.refreshPreview();
+      })
+    );
+    body.createDiv({ cls: "hp-settings-subhead", text: "Shadow" });
+    new import_obsidian2.Setting(body).setName("Elevation").setDesc("Card shadow depth.").addDropdown(
+      (d) => d.addOption("0", "None").addOption("1", "Subtle").addOption("2", "Medium").addOption("3", "Elevated").setValue(String(typeof this.draft._elevation === "number" ? this.draft._elevation : 0)).onChange((v) => {
+        this.draft._elevation = Number(v);
+        this.refreshPreview();
+      })
+    );
+  }
+  renderContentTab(body) {
+    this.block.renderContentSettings(body, this.draft);
+    if (!body.children.length) {
+      body.createEl("p", {
+        cls: "hp-settings-empty",
+        text: "This block has no content settings."
+      });
+    }
+  }
+  commit() {
+    if (!this.accentDirty) this.draft._accentColor = "";
+    if (!this.gradDirty) {
+      this.draft._gradientStart = "";
+      this.draft._gradientEnd = "";
+    }
+    this.onSave(this.draft);
+    this.close();
+  }
+  onClose() {
+    this.contentEl.empty();
+  }
+};
+
+// src/modals/RemoveBlockConfirmModal.ts
+var import_obsidian3 = require("obsidian");
+var RemoveBlockConfirmModal = class extends import_obsidian3.Modal {
+  constructor(app, onConfirm, blockLabel) {
+    super(app);
+    this.onConfirm = onConfirm;
+    this.blockLabel = blockLabel;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    new import_obsidian3.Setting(contentEl).setName("Remove block?").setHeading();
+    const what = this.blockLabel ? `the \u201C${this.blockLabel}\u201D block` : "this block";
+    contentEl.createEl("p", { text: `This will remove ${what} from your homepage.` });
+    new import_obsidian3.Setting(contentEl).addButton((btn) => {
+      btn.setButtonText("Cancel").setCta().onClick(() => this.close());
+      window.setTimeout(() => btn.buttonEl.focus(), 0);
+    }).addButton(
+      (btn) => btn.setButtonText("Remove").setWarning().onClick(() => {
+        this.onConfirm();
+        this.close();
+      })
+    );
+  }
+  onClose() {
+    this.contentEl.empty();
+  }
+};
+
+// src/grid/EditHandleBar.ts
+function attachEditHandleBar(host, wrapper, instance) {
+  const bar = wrapper.createDiv({ cls: "block-handle-bar" });
+  const handle = bar.createDiv({ cls: "block-move-handle" });
+  (0, import_obsidian4.setIcon)(handle, "grip-vertical");
+  handle.setAttribute("aria-label", "Drag to reorder");
+  handle.setAttribute("title", "Drag to reorder");
+  const moveUpBtn = bar.createEl("button", { cls: "block-move-up-btn" });
+  (0, import_obsidian4.setIcon)(moveUpBtn, "chevron-up");
+  moveUpBtn.setAttribute("aria-label", "Move block up");
+  moveUpBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    swapWithNeighbor(host, instance, "up");
+  });
+  const moveDownBtn = bar.createEl("button", { cls: "block-move-down-btn" });
+  (0, import_obsidian4.setIcon)(moveDownBtn, "chevron-down");
+  moveDownBtn.setAttribute("aria-label", "Move block down");
+  moveDownBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    swapWithNeighbor(host, instance, "down");
+  });
+  const dupBtn = bar.createEl("button", { cls: "block-duplicate-btn" });
+  (0, import_obsidian4.setIcon)(dupBtn, "copy");
+  dupBtn.setAttribute("aria-label", "Duplicate block");
+  dupBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const current = host.plugin.activeBlocks().find((b) => b.id === instance.id);
+    if (!current) return;
+    const clone = {
+      ...structuredClone(current),
+      id: newId(),
+      y: current.y + current.h
+    };
+    const newBlocks = [...host.plugin.activeBlocks(), clone];
+    host.setLastAddedBlockId(clone.id);
+    host.emitLayout(host.buildLayoutUpdate(newBlocks));
+    host.triggerRerender();
+  });
+  const settingsBtn = bar.createEl("button", { cls: "block-settings-btn" });
+  (0, import_obsidian4.setIcon)(settingsBtn, "settings");
+  settingsBtn.setAttribute("aria-label", "Block settings");
+  settingsBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const entry = host.blocks.get(instance.id);
+    if (!entry) return;
+    const onSave = (config) => {
+      const newBlocks = host.plugin.activeBlocks().map(
+        (b) => b.id === instance.id ? { ...b, config } : b
+      );
+      host.emitLayout(host.buildLayoutUpdate(newBlocks));
+      host.triggerRerender();
+    };
+    let tempBlock = null;
+    const block = entry.block ?? (() => {
+      const factory = BlockRegistry.get(instance.type);
+      if (!factory) return null;
+      tempBlock = factory.create(host.app, instance, host.plugin);
+      return tempBlock;
+    })();
+    if (!block) return;
+    const teardownTempBlock = () => {
+      if (tempBlock) {
+        tempBlock.unload();
+        tempBlock = null;
+      }
+    };
+    const modal = new BlockSettingsModal(host.app, instance, block, (config) => {
+      teardownTempBlock();
+      onSave(config);
+    });
+    const originalOnClose = modal.onClose.bind(modal);
+    modal.onClose = () => {
+      teardownTempBlock();
+      originalOnClose();
+    };
+    modal.open();
+  });
+  const removeBtn = bar.createEl("button", { cls: "block-remove-btn" });
+  (0, import_obsidian4.setIcon)(removeBtn, "x");
+  removeBtn.setAttribute("aria-label", "Remove block");
+  removeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (removeBtn.hasAttribute("data-remove-pending")) return;
+    removeBtn.setAttribute("data-remove-pending", "1");
+    const label = typeof instance.config._titleLabel === "string" && instance.config._titleLabel.trim() ? instance.config._titleLabel.trim() : instance.type;
+    const modal = new RemoveBlockConfirmModal(host.app, () => {
+      removeBtn.removeAttribute("data-remove-pending");
+      const gsItem = host.gridEl.querySelector(`[gs-id="${CSS.escape(instance.id)}"]`);
+      if (gsItem instanceof HTMLElement && host.gridStack) {
+        host.gridStack.batchUpdate();
+        try {
+          host.gridStack.removeWidget(gsItem);
+          host.gridStack.compact();
+        } finally {
+          host.gridStack.batchUpdate(false);
+        }
+      }
+      const entry = host.blocks.get(instance.id);
+      if (entry) {
+        entry.block?.unload();
+        host.blocks.delete(instance.id);
+      }
+      const remaining = host.plugin.activeBlocks().filter((b) => b.id !== instance.id);
+      if (remaining.length === 0) {
+        host.emitLayout(host.buildLayoutUpdate([]));
+        host.triggerRerender();
+        return;
+      }
+      if (!host.gridStack) {
+        host.emitLayout(host.buildLayoutUpdate(remaining));
+        return;
+      }
+      const posMap = /* @__PURE__ */ new Map();
+      for (const el of host.gridStack.getGridItems()) {
+        const node = el.gridstackNode;
+        const id = el.getAttribute("gs-id");
+        if (id && node) {
+          posMap.set(id, { x: node.x ?? 0, y: node.y ?? 0, w: node.w ?? 1, h: node.h ?? 1 });
+        }
+      }
+      const newBlocks = remaining.map((b) => {
+        const pos = posMap.get(b.id);
+        if (!pos) return b;
+        const isAuto = host.shouldAutoHeight(b);
+        const update = isAuto ? { x: pos.x, y: pos.y, w: pos.w } : pos;
+        return { ...b, ...update };
+      });
+      host.emitLayout(host.buildLayoutUpdate(newBlocks));
+    }, label);
+    const originalOnClose = modal.onClose.bind(modal);
+    modal.onClose = () => {
+      removeBtn.removeAttribute("data-remove-pending");
+      originalOnClose();
+    };
+    modal.open();
+  });
+  const headerZone = wrapper.querySelector(".block-header-zone");
+  if (headerZone) {
+    wrapper.insertBefore(bar, headerZone);
+  }
+}
+function swapWithNeighbor(host, instance, direction) {
+  const blocks = host.plugin.activeBlocks();
+  const current = blocks.find((b) => b.id === instance.id);
+  if (!current) return;
+  const columns = host.plugin.activeColumns();
+  const neighbor = blocks.filter((b) => b.id !== instance.id && (direction === "up" ? b.y < current.y || b.y === current.y && b.x < current.x : b.y > current.y || b.y === current.y && b.x > current.x)).sort(
+    (a, b) => direction === "up" ? b.y - a.y || b.x - a.x : a.y - b.y || a.x - b.x
+  )[0];
+  if (!neighbor) return;
+  const newBlocks = blocks.map((b) => {
+    if (b.id === current.id) {
+      return { ...b, x: Math.min(neighbor.x, Math.max(0, columns - current.w)), y: neighbor.y };
+    }
+    if (b.id === neighbor.id) {
+      return { ...b, x: Math.min(current.x, Math.max(0, columns - neighbor.w)), y: current.y };
+    }
+    return b;
+  });
+  host.emitLayout(host.buildLayoutUpdate(newBlocks));
+  host.triggerRerender();
+}
+
+// src/grid/packing.ts
+function packRows(items, columns, _priority = "row", reflow = false) {
+  const safeCols = Math.max(1, columns);
+  const colHeights = new Array(safeCols).fill(0);
+  if (reflow) {
+    items.sort(
+      (a, b) => (a.y ?? 0) - (b.y ?? 0) || (a.x ?? 0) - (b.x ?? 0)
+    );
+    for (const item of items) {
+      const w = Math.min(item.w ?? 1, safeCols);
+      let x = 0;
+      let bestY = Infinity;
+      for (let cx = 0; cx <= safeCols - w; cx++) {
+        let maxH = 0;
+        for (let c = cx; c < cx + w; c++) {
+          maxH = Math.max(maxH, colHeights[c] ?? 0);
+        }
+        if (maxH < bestY) {
+          bestY = maxH;
+          x = cx;
+        }
+      }
+      item.x = x;
+      item.w = w;
+      item.y = bestY;
+      for (let c = x; c < x + w; c++) {
+        colHeights[c] = bestY + (item.h ?? 1);
+      }
+    }
+    return;
+  }
+  const groupMap = /* @__PURE__ */ new Map();
+  for (const item of items) {
+    const y = item.y ?? 0;
+    let g = groupMap.get(y);
+    if (!g) {
+      g = [];
+      groupMap.set(y, g);
+    }
+    g.push(item);
+  }
+  const groups = [...groupMap.values()];
+  groups.sort((a, b) => (a[0].y ?? 0) - (b[0].y ?? 0));
+  for (const g of groups) g.sort((a, b) => (a.x ?? 0) - (b.x ?? 0));
+  for (const group of groups) {
+    let rowY = 0;
+    for (const item of group) {
+      const w = Math.min(item.w ?? 1, safeCols);
+      const x = Math.max(0, Math.min(item.x ?? 0, safeCols - w));
+      for (let c = x; c < x + w; c++) {
+        rowY = Math.max(rowY, colHeights[c] ?? 0);
+      }
+    }
+    for (const item of group) {
+      const w = Math.min(item.w ?? 1, safeCols);
+      item.w = w;
+      item.x = Math.max(0, Math.min(item.x ?? 0, safeCols - w));
+      item.y = rowY;
+    }
+    for (const item of group) {
+      const x = item.x ?? 0;
+      const w = item.w ?? 1;
+      const h = item.h ?? 1;
+      for (let c = x; c < x + w; c++) {
+        colHeights[c] = Math.max(colHeights[c] ?? 0, rowY + h);
+      }
+    }
+  }
+}
+function repackEditLayout(blocks, columns, priority = "row") {
+  const packed = blocks.map((b) => ({ ...b }));
+  packRows(packed, columns, priority);
+  return packed;
+}
+
+// src/grid/BlockWrapper.ts
+function buildBlockWrapper(container, instance, animDelayMs) {
+  const classes = ["homepage-block-wrapper", `hp-block-${instance.type}`];
+  const effectiveCollapsed = instance.collapsed && instance.config._showTitle !== false;
+  if (effectiveCollapsed) classes.push("block-collapsed");
+  const wrapper = container.createDiv({
+    cls: classes.join(" "),
+    attr: { "data-block-id": instance.id }
+  });
+  applyBlockStyling(wrapper, instance.config);
+  if (animDelayMs !== void 0) {
+    wrapper.style.setProperty("--hp-card-anim-delay", `${animDelayMs}ms`);
+  }
+  const headerZone = wrapper.createDiv({
+    cls: "block-header-zone hp-header-empty",
+    attr: { role: "button", tabindex: "0", "aria-expanded": String(!effectiveCollapsed) }
+  });
+  headerZone.createSpan({
+    cls: "block-collapse-chevron" + (effectiveCollapsed ? " is-collapsed" : ""),
+    attr: { "aria-hidden": "true" }
+  });
+  if (instance.config._showDivider === true) {
+    wrapper.createDiv({ cls: "block-header-divider" });
+  }
+  wrapper.createDiv({ cls: "block-content" });
+  return wrapper;
+}
+function createSkeleton(wrapper) {
+  const overlay = wrapper.createDiv({ cls: "hp-skeleton-overlay" });
+  overlay.createDiv({ cls: "hp-skeleton-line" });
+  overlay.createDiv({ cls: "hp-skeleton-line" });
+  overlay.createDiv({ cls: "hp-skeleton-line" });
+  return overlay;
+}
+var skeletonSeq = 0;
+function removeSkeleton(el, scheduler) {
+  if (!el?.isConnected) return;
+  el.classList.add("hp-skeleton-overlay--out");
+  const token = `skeleton-${skeletonSeq++}`;
+  scheduler.timeout(token, 200, () => el.remove());
+}
+function renderCompactPlaceholder(headerZone, contentEl, factory, instance) {
+  const titleLabel = typeof instance.config._titleLabel === "string" && instance.config._titleLabel ? instance.config._titleLabel : factory.displayName;
+  const emoji = typeof instance.config._titleEmoji === "string" ? instance.config._titleEmoji : "";
+  headerZone.removeClass("hp-header-empty");
+  const header = headerZone.createDiv({ cls: "block-header" });
+  if (emoji) header.createEl("em", { cls: "block-header-emoji", text: emoji });
+  header.createSpan({ text: titleLabel });
+  const info = contentEl.createDiv({ cls: "block-compact-info" });
+  info.createSpan({ cls: "block-compact-type", text: instance.type });
+  info.createSpan({ cls: "block-compact-size", text: `${instance.w}\xD7${instance.h}` });
+}
+function renderEmptyState(gridEl, opts) {
+  gridEl.empty();
+  const empty = gridEl.createDiv({ cls: "homepage-empty-state" });
+  empty.createDiv({ cls: "homepage-empty-icon", text: "\u{1F3E0}" });
+  empty.createEl("p", { cls: "homepage-empty-title", text: "Your homepage is empty" });
+  empty.createEl("p", {
+    cls: "homepage-empty-desc",
+    text: opts.editMode ? "Click the button below to add your first block." : "Toggle Edit mode in the toolbar to start adding blocks."
+  });
+  if (opts.editMode && opts.onRequestAddBlock) {
+    const cta = empty.createEl("button", { cls: "homepage-empty-cta", text: "Add your first block" });
+    cta.addEventListener("click", () => {
+      opts.onRequestAddBlock?.();
+    });
+  }
+}
+
+// src/GridLayout.ts
+var COMPACT_EDIT_H = 2;
+var GridLayout = class {
+  // ── Public API ─────────────────────────────────────────────────────────
+  constructor(containerEl, app, plugin, onLayoutChange) {
+    this.app = app;
+    this.plugin = plugin;
+    this.onLayoutChange = onLayoutChange;
+    this.gridEl = containerEl.createDiv({ cls: "homepage-grid grid-stack" });
+    this.effectiveColumns = plugin.activeColumns();
+    this.autoHeight = new AutoHeightManager(this);
+    this.responsiveColumns = new ResponsiveColumnsManager(this);
+    this.persister = new LayoutPersister(this);
+  }
+  // NOTE: several fields below are intentionally non-private (package-visible). AutoHeightManager
+  // and ResponsiveColumnsManager access them through their narrow Host interfaces (declared in
+  // grid/AutoHeight.ts and grid/ResponsiveColumns.ts) which this class structurally satisfies.
+  /** The grid DOM element owned by this layout. Used by ResponsiveColumnsManager for flex reordering. */
+  gridEl;
+  gridStack = null;
+  // Package-visible to satisfy EditHandleBarHost without leaking ownership;
+  // the host interface declares the same Map shape and only the EditHandleBar
+  // touches it externally.
+  blocks = /* @__PURE__ */ new Map();
+  scheduler = new Scheduler();
+  editMode = false;
+  effectiveColumns;
+  canonicalColumns = 3;
+  phase = Phase.Destroyed;
+  /** Callback to trigger the Add Block modal from the empty state CTA. */
+  onRequestAddBlock = null;
+  /** ID of the most recently added block — used for scroll-into-view. */
+  lastAddedBlockId = null;
+  autoHeight;
+  responsiveColumns;
+  persister;
+  /**
+   * Conform GridLayout to LayoutPersisterHost / EditHandleBarHost. The
+   * interfaces require an `emitLayout(layout)` adapter because `onLayoutChange`
+   * is private to GridLayout (callers shouldn't bypass GridLayout to write the
+   * layout).
+   */
+  emitLayout(layout) {
+    this.onLayoutChange(layout);
+  }
+  /**
+   * Public wrapper around the private rerender for EditHandleBarHost. Kept
+   * separate from the private path so the host method's name is descriptive
+   * outside the class.
+   */
+  triggerRerender() {
+    this.rerender();
+  }
+  /** Public setter for the lastAddedBlockId so EditHandleBar can mark a duplicate. */
+  setLastAddedBlockId(id) {
+    this.lastAddedBlockId = id;
+  }
+  /**
+   * Clear any queued auto-height measurements. Called by ResponsiveColumnsManager
+   * before a column change so stale measurements against the old column count are discarded.
+   */
+  clearPendingResizes() {
+    this.autoHeight.clearPending();
+  }
+  /** Enqueue a block for auto-height measurement in the next animation frame. */
+  requestAutoHeight(gsEl, instance) {
+    this.autoHeight.request(gsEl, instance);
+  }
+  /** Expose packRows as an instance method so ResponsiveColumnsManager can call it. */
+  packRows(items, columns, priority, reflow) {
+    packRows(items, columns, priority, reflow);
+  }
+  /** Determine if a block should auto-expand beyond its grid cell height. */
+  shouldAutoHeight(instance) {
+    const factory = BlockRegistry.get(instance.type);
+    if (!factory?.autoHeight) return false;
+    const hm = instance.config.heightMode;
+    const heightMode = typeof hm === "string" ? hm : "";
+    if (instance.type === "image-gallery") return heightMode !== "fixed";
+    if (instance.type === "quotes-list") return heightMode !== "wrap";
+    if (instance.type === "static-text") return heightMode !== "fixed";
+    if (instance.type === "embedded-note") return heightMode === "grow";
+    return true;
+  }
+  /** Expose the root grid element so HomepageView can reorder it in the DOM. */
+  getElement() {
+    return this.gridEl;
+  }
+  render(blocks, columns, isInitial = false) {
+    this.teardown();
+    this.phase = Phase.Ready;
+    this.gridEl.setAttribute("role", "list");
+    this.gridEl.setAttribute("aria-label", "Homepage blocks");
+    if (isInitial) {
+      this.gridEl.addClass("homepage-grid--animating");
+      this.scheduler.timeout("anim", 500, () => {
+        this.gridEl.removeClass("homepage-grid--animating");
+      });
+    }
+    if (this.editMode) {
+      this.gridEl.addClass("edit-mode");
+    } else {
+      this.gridEl.removeClass("edit-mode");
+    }
+    if (blocks.length === 0) {
+      renderEmptyState(this.gridEl, { editMode: this.editMode, onRequestAddBlock: this.onRequestAddBlock });
+      return;
+    }
+    this.initGridStack(blocks, columns, isInitial);
+  }
+  /** Full teardown: unload blocks and remove the grid element from the DOM. */
+  destroy() {
+    this.responsiveColumns.destroy();
+    this.teardown();
+    this.gridEl.remove();
+  }
+  setEditMode(enabled, skipRepack = false, flushInFlight = true) {
+    if (this.phase === Phase.Destroyed) return;
+    if (flushInFlight && this.editMode && this.gridStack && this.phase === Phase.Ready) {
+      this.tryPersist("edit-mode exit");
+    }
+    if (!enabled && this.editMode && !skipRepack) {
+      const repacked = repackEditLayout(
+        this.plugin.activeBlocks(),
+        this.canonicalColumns,
+        this.plugin.activeLayoutPriority()
+      );
+      this.onLayoutChange(this.buildLayoutUpdate(repacked));
+    }
+    this.editMode = enabled;
+    if (enabled) {
+      this.effectiveColumns = this.canonicalColumns;
+    }
+    if (this.gridStack) {
+      this.gridStack.setStatic(!enabled);
+    }
+    this.render(this.plugin.activeBlocks(), this.plugin.activeColumns());
+    if (!enabled) {
+      this.setZoom(1);
+    }
+  }
+  /**
+   * Cancel any queued debounced layout persist + auto-height measurement.
+   * Called by Discard so a late write (a 50ms `sync` debounce or a queued
+   * auto-height rAF) can't resurrect the discarded positions after the
+   * pre-edit snapshot has been restored.
+   */
+  cancelPendingPersist() {
+    this.scheduler.cancelTimeout("sync");
+    this.clearPendingResizes();
+  }
+  /** Update column count, clamping each block's w to fit. */
+  setColumns(n) {
+    if (this.phase === Phase.Destroyed) return;
+    if (this.editMode && this.gridStack && this.phase === Phase.Ready) {
+      this.tryPersist("column change");
+    }
+    const newBlocks = this.plugin.activeBlocks().map((b) => ({
+      ...b,
+      w: Math.min(b.w, n)
+    }));
+    this.onLayoutChange(this.buildLayoutUpdate(newBlocks, { columns: n }));
+    this.rerender();
+  }
+  /** Apply a zoom scale (0.1–1) via CSS transform. */
+  setZoom(scale) {
+    if (!this.gridEl.isConnected) return;
+    if (!Number.isFinite(scale) || scale <= 0) scale = 1;
+    if (scale >= 1) {
+      this.gridEl.style.removeProperty("--hp-grid-transform");
+      this.gridEl.removeClass("hp-zoomed");
+      this.gridEl.removeClass("viewport-fit");
+      return;
+    }
+    this.gridEl.style.setProperty("--hp-grid-transform", `scale(${scale})`);
+    this.gridEl.addClass("hp-zoomed");
+    this.gridEl.addClass("viewport-fit");
+  }
+  /** Compute zoom scale that fits all grid content in the viewport. */
+  computeFitZoom() {
+    if (!this.gridEl.isConnected) return 1;
+    const viewportHeight = this.gridEl.parentElement?.clientHeight ?? 0;
+    const contentHeight = this.gridEl.scrollHeight;
+    if (viewportHeight <= 0 || contentHeight <= viewportHeight) return 1;
+    const scale = viewportHeight / contentHeight;
+    return Math.max(0.75, Math.min(1, Math.round(scale * 20) / 20));
+  }
+  addBlock(instance) {
+    if (this.phase === Phase.Destroyed) return;
+    const maxY = this.plugin.activeBlocks().reduce((m, b) => Math.max(m, b.y + b.h), 0);
+    const positioned = { ...instance, y: maxY };
+    const newBlocks = [...this.plugin.activeBlocks(), positioned];
+    this.lastAddedBlockId = positioned.id;
+    this.onLayoutChange(this.buildLayoutUpdate(newBlocks));
+    this.rerender();
+  }
+  // ── Rendering ──────────────────────────────────────────────────────────
+  rerender() {
+    for (const { block } of this.blocks.values()) {
+      if (block?.hasUnsavedInlineState()) return;
+    }
+    this.render(this.plugin.activeBlocks(), this.plugin.activeColumns());
+  }
+  /** Unload all blocks and destroy GridStack instance. */
+  teardown() {
+    if (this.scheduler.hasTimeout("sync")) {
+      this.scheduler.cancelTimeout("sync");
+      this.tryPersist("teardown");
+    }
+    this.phase = Phase.Destroyed;
+    this.scheduler.cancelAll();
+    this.autoHeight.clearPending();
+    for (const { block } of this.blocks.values()) {
+      block?.unload();
+    }
+    this.blocks.clear();
+    if (this.gridStack) {
+      this.gridStack.removeAll(false);
+      this.gridStack.destroy(false);
+      this.gridStack = null;
+    }
+    this.gridEl.removeClass("hp-dragging");
+    this.gridEl.empty();
+    this.gridEl.removeClass("viewport-fit");
+    this.gridEl.style.removeProperty("--hp-grid-transform");
+    this.gridEl.removeClass("hp-zoomed");
+  }
+  initGridStack(blocks, columns, isInitial) {
+    this.phase = Phase.Initializing;
+    const items = blocks.map((instance) => {
+      const effectiveCollapsed = instance.collapsed && instance.config._showTitle !== false;
+      let renderH = instance.h;
+      if (instance.collapsed && !effectiveCollapsed) {
+        const expandedH = instance._expandedH;
+        if (typeof expandedH === "number" && expandedH > 0) renderH = expandedH;
+      }
+      return {
+        id: instance.id,
+        x: instance.x,
+        y: instance.y,
+        w: Math.min(instance.w, columns),
+        maxW: columns,
+        h: this.editMode && this.shouldAutoHeight(instance) ? COMPACT_EDIT_H : renderH
+        // Do NOT pass sizeToContent here — GridStack calls resizeToContent() during
+        // load() before we've added any DOM content, causing "firstElementChild is null".
+        // We call resizeToContent() manually after building each block's DOM below.
+      };
+    });
+    if (this.editMode || this.plugin.layout.compactLayout) {
+      packRows(items, columns, this.plugin.activeLayoutPriority());
+    }
+    this.effectiveColumns = columns;
+    this.gridEl.classList.toggle("hp-single-column", columns === 1);
+    this.gridStack = GridStack.init({
+      column: columns,
+      cellHeight: 80,
+      margin: 8,
+      float: true,
+      animate: true,
+      staticGrid: !this.editMode,
+      removable: false,
+      handleClass: "block-move-handle",
+      // Horizontal-only resize in edit mode (vertical managed by sizeToContent / GridStack rows).
+      // In view mode, staticGrid disables all interaction so handles are irrelevant.
+      resizable: { handles: "e,s,se" }
+    }, this.gridEl);
+    this.gridStack.load(items);
+    for (const [i, instance] of blocks.entries()) {
+      this.mountBlock(instance, i, isInitial);
+    }
+    if (columns === 1) {
+      const gridItems = [...this.gridEl.querySelectorAll(":scope > .grid-stack-item")];
+      gridItems.sort((a, b) => {
+        const na = a.gridstackNode;
+        const nb = b.gridstackNode;
+        return (na?.y ?? 0) - (nb?.y ?? 0) || (na?.x ?? 0) - (nb?.x ?? 0);
+      });
+      for (const el of gridItems) {
+        this.gridEl.appendChild(el);
+      }
+    }
+    this.gridStack.on("dragstart", () => {
+      this.gridEl.addClass("hp-dragging");
+    });
+    this.gridStack.on("dragstop", () => {
+      this.gridEl.removeClass("hp-dragging");
+      if (this.phase !== Phase.Ready || !this.editMode) return;
+      this.persistLayout();
+    });
+    this.gridStack.on("resizestop", () => {
+      if (this.phase !== Phase.Ready || !this.editMode) return;
+      this.persistLayout();
+      this.updateCompactSizeLabels();
+    });
+    const viewEl = this.gridEl.closest(".homepage-view");
+    this.responsiveColumns.setup(viewEl instanceof HTMLElement ? viewEl : null, columns);
+    if (this.lastAddedBlockId) {
+      const targetId = this.lastAddedBlockId;
+      this.lastAddedBlockId = null;
+      const el = this.gridEl.querySelector(`[gs-id="${CSS.escape(targetId)}"]`);
+      if (el instanceof HTMLElement) {
+        el.querySelector(".homepage-block-wrapper")?.addClass("block-just-added");
+        el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }
+    this.scheduler.raf("initSettle", () => {
+      if (this.phase === Phase.Destroyed) return;
+      this.phase = Phase.Ready;
+    });
+  }
+  /**
+   * Mount one block into its GridStack item: build the wrapper DOM, then either
+   * render a compact placeholder (edit mode) or instantiate the live block
+   * (view mode), wire the auto-height listener + skeleton, and attach the
+   * collapse toggle / edit handle bar. Extracted from initGridStack's per-block
+   * loop; the early `return`s here were `continue`s in the loop (skip a block
+   * whose expected DOM/factory is missing). `i` drives the staggered intro
+   * animation delay on the initial render only.
+   */
+  mountBlock(instance, i, isInitial) {
+    const gsEl = this.gridEl.querySelector(`[gs-id="${CSS.escape(instance.id)}"]`);
+    if (!(gsEl instanceof HTMLElement)) return;
+    gsEl.setAttribute("role", "listitem");
+    if (this.shouldAutoHeight(instance)) {
+      gsEl.classList.add("is-auto-height");
+    } else {
+      gsEl.classList.remove("is-auto-height");
+    }
+    const gsContent = gsEl.querySelector(".grid-stack-item-content");
+    if (!(gsContent instanceof HTMLElement)) return;
+    const animDelayMs = isInitial ? [0, 50, 100, 140, 170, 195, 215, 230][i] ?? 240 : void 0;
+    const wrapper = buildBlockWrapper(gsContent, instance, animDelayMs);
+    const headerZone = wrapper.querySelector(".block-header-zone");
+    const contentEl = wrapper.querySelector(".block-content");
+    if (!(contentEl instanceof HTMLElement) || !(headerZone instanceof HTMLElement)) return;
+    const factory = BlockRegistry.get(instance.type);
+    if (!factory) return;
+    if (this.editMode) {
+      renderCompactPlaceholder(headerZone, contentEl, factory, instance);
+      this.blocks.set(instance.id, { block: null, wrapper });
+    } else {
+      const block = factory.create(this.app, instance, this.plugin);
+      block.setHeaderContainer(headerZone);
+      block.load();
+      const needsResize = this.shouldAutoHeight(instance);
+      if (needsResize) {
+        const blockId = instance.id;
+        gsEl.addEventListener("request-auto-height", () => {
+          const live = this.plugin.activeBlocks().find((b) => b.id === blockId);
+          if (!live || !this.shouldAutoHeight(live)) return;
+          this.requestAutoHeight(gsEl, live);
+        });
+      }
+      const skeletonEl = isInitial ? createSkeleton(wrapper) : null;
+      const result = block.render(contentEl);
+      if (result instanceof Promise) {
+        result.then(() => {
+          removeSkeleton(skeletonEl, this.scheduler);
+          if (needsResize) this.requestAutoHeight(gsEl, instance);
+        }).catch((e) => {
+          removeSkeleton(skeletonEl, this.scheduler);
+          console.error(`[Homepage Blocks] Error rendering block ${instance.type}:`, e);
+          contentEl.setText("Error rendering block. Check console for details.");
+        });
+      } else {
+        skeletonEl?.remove();
+        if (needsResize) this.requestAutoHeight(gsEl, instance);
+      }
+      this.blocks.set(instance.id, { block, wrapper });
+    }
+    attachCollapseToggle(this, gsEl, instance, headerZone);
+    if (this.editMode) {
+      attachEditHandleBar(this, wrapper, instance);
+    }
+  }
+  // buildBlockWrapper / createSkeleton / removeSkeleton / renderCompactPlaceholder /
+  // renderEmptyState extracted to src/grid/BlockWrapper.ts (covered by render tests).
+  /** Update all compact size labels to reflect current GridStack node dimensions. */
+  updateCompactSizeLabels() {
+    if (!this.gridStack) return;
+    for (const el of this.gridStack.getGridItems()) {
+      const node = el.gridstackNode;
+      const label = el.querySelector(".block-compact-size");
+      if (node && label) {
+        label.textContent = `${node.w ?? 1}\xD7${node.h ?? 1}`;
+      }
+    }
+  }
+  // ── Layout Persistence ─────────────────────────────────────────────────
+  /**
+   * Build a LayoutConfig with blocks routed to the correct field (desktop or mobile).
+   * On mobile with separate mode, writes go to mobileBlocks/mobileColumns.
+   */
+  /**
+   * Public for callers that need the same mobile/desktop routing logic but
+   * don't go through onLayoutChange (e.g., EditToolbar's discardChanges).
+   * Keeping `buildLayoutUpdate` as the single funnel for layout writes that
+   * need the platform split prevents drift -- a future field added here
+   * propagates to every call site automatically.
+   */
+  buildLayoutUpdate(blocks, extra) {
+    const mobile = this.plugin.isMobileActive();
+    const base = { ...this.plugin.layout };
+    if (mobile) {
+      base.mobileBlocks = blocks;
+      if (extra?.columns !== void 0) base.mobileColumns = extra.columns;
+    } else {
+      base.blocks = blocks;
+      if (extra?.columns !== void 0) base.columns = extra.columns;
+    }
+    return base;
+  }
+  /** Read current positions from GridStack nodes and persist to layout. */
+  persistLayout() {
+    this.persister.persist();
+  }
+  /**
+   * Best-effort synchronous persist for the flush sites that must not throw
+   * (edit-exit, column change, teardown). A persist failure here would lose the
+   * user's in-flight edit; logging it (rather than swallowing silently) keeps it
+   * diagnosable, consistent with the rest of the codebase's error channels.
+   */
+  tryPersist(context) {
+    try {
+      this.persistLayout();
+    } catch (e) {
+      console.error(`[Homepage Blocks] layout persist failed during ${context}:`, e instanceof Error ? e.message : "unknown error");
+    }
+  }
+  /** Debounced persistLayout — coalesces rapid auto-height resize saves into one write. */
+  persistLayoutDebounced() {
+    this.persister.persistDebounced();
+  }
+  // ── Layout Utilities ───────────────────────────────────────────────────
+  // packRows + repackEditLayout extracted to src/grid/packing.ts (pure, tested).
+  /** Repack all GridStack nodes so blocks shift up to fill vertical gaps. */
+  repackGridNodes() {
+    this.persister.repackGridNodes(
+      (items, columns, priority) => packRows(items, columns, priority)
+    );
+  }
+  // attachCollapseToggle + attachEditHandleBar + swapWithNeighbor live in src/grid/.
+};
+
+// src/EditToolbar.ts
+var import_obsidian5 = require("obsidian");
+
+// src/blockMeta.ts
+var BLOCK_META = {
+  "greeting": { icon: "\u{1F44B}", desc: "Personalized greeting with time of day" },
+  "clock": { icon: "\u{1F550}", desc: "Live clock with date display" },
+  "folder-links": { icon: "\u{1F517}", desc: "Quick links to notes and folders" },
+  "button-grid": { icon: "\u{1F532}", desc: "Grid of emoji-labeled buttons" },
+  "quotes-list": { icon: "\u{1F4AC}", desc: "Collection of quotes from notes" },
+  "image-gallery": { icon: "\u{1F5BC}\uFE0F", desc: "Photo grid from a vault folder" },
+  "embedded-note": { icon: "\u{1F4C4}", desc: "Render a note inline on the page" },
+  "static-text": { icon: "\u{1F4DD}", desc: "Markdown text block you write directly" },
+  "html": { icon: "</>", desc: "Custom HTML content (sanitized)" },
+  "video-embed": { icon: "\u{1F3AC}", desc: "Embed YouTube, Vimeo, or other videos" },
+  "bookmarks": { icon: "\u{1F516}", desc: "Web links and vault bookmarks grid" },
+  "recent-files": { icon: "\u{1F4C2}", desc: "Recently modified notes in your vault" },
+  "pomodoro": { icon: "\u{1F345}", desc: "Pomodoro timer with work/break cycles" },
+  "spacer": { icon: "\u2B1C", desc: "Empty space for layout spacing" },
+  "random-note": { icon: "\u{1F3B2}", desc: "Random note card with cover image and preview" },
+  "voice-dictation": { icon: "\u{1F399}\uFE0F", desc: "Record voice notes saved automatically to a folder" },
+  "vault-search": { icon: "\u{1F50D}", desc: "Search notes by name with live results" }
+};
+
+// src/EditToolbar.ts
+var EditToolbar = class {
+  constructor(containerEl, app, plugin, grid, onColumnsChange) {
+    this.containerEl = containerEl;
+    this.app = app;
+    this.plugin = plugin;
+    this.grid = grid;
+    this.onColumnsChange = onColumnsChange;
+    this.fabEl = containerEl.createDiv({ cls: "homepage-edit-fab" });
+    this.fabEl.setAttribute("role", "button");
+    this.fabEl.setAttribute("tabindex", "0");
+    this.fabEl.setAttribute("aria-label", "Enter edit mode");
+    (0, import_obsidian5.setIcon)(this.fabEl, "pencil");
+    this.fabEl.addEventListener("click", () => this.toggleEditMode());
+    this.fabEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        this.toggleEditMode();
+      }
+    });
+    this.toolbarEl = containerEl.createDiv({ cls: "homepage-toolbar" });
+    this.toolbarEl.setAttribute("role", "toolbar");
+    this.toolbarEl.setAttribute("aria-label", "Homepage toolbar");
+    this.renderToolbar();
+  }
+  toolbarEl;
+  fabEl;
+  editMode = false;
+  zoomScale = 1;
+  /** Snapshot of blocks array taken when entering edit mode — used by Discard. */
+  blocksSnapshot = null;
+  /** Toggle edit mode — called from FAB, Done button, and keyboard shortcut command. */
+  toggleEditMode() {
+    this.editMode = !this.editMode;
+    if (this.editMode) {
+      this.blocksSnapshot = structuredClone(this.plugin.activeBlocks());
+    } else {
+      this.blocksSnapshot = null;
+      this.zoomScale = 1;
+    }
+    this.grid.setEditMode(this.editMode);
+    this.syncVisibility();
+    this.renderToolbar();
+    if (this.editMode) {
+      window.requestAnimationFrame(() => {
+        this.zoomScale = this.grid.computeFitZoom();
+        this.grid.setZoom(this.zoomScale);
+        this.renderToolbar();
+      });
+    }
+  }
+  /** Exit edit mode and revert all block changes made during this edit session. */
+  discardChanges() {
+    if (!this.editMode) return;
+    this.grid.cancelPendingPersist();
+    if (this.blocksSnapshot) {
+      const restored = this.grid.buildLayoutUpdate(this.blocksSnapshot);
+      this.plugin.layout = restored;
+      void this.plugin.saveLayout(restored);
+      this.blocksSnapshot = null;
+    }
+    this.editMode = false;
+    this.zoomScale = 1;
+    this.grid.setEditMode(false, true, false);
+    this.syncVisibility();
+    this.renderToolbar();
+  }
+  syncVisibility() {
+    this.fabEl.toggleClass("is-hidden", this.editMode);
+    this.toolbarEl.toggleClass("is-visible", this.editMode);
+    const view = this.toolbarEl.closest(".homepage-view");
+    if (view instanceof HTMLElement) view.toggleClass("hp-toolbar-open", this.editMode);
+  }
+  renderToolbar() {
+    this.toolbarEl.empty();
+    const indicator = this.toolbarEl.createDiv({ cls: "toolbar-edit-indicator is-visible" });
+    indicator.createDiv({ cls: "toolbar-edit-dot" });
+    indicator.createSpan({ text: "Editing" });
+    const colGroup = this.toolbarEl.createDiv({ cls: "toolbar-col-group" });
+    const colSelect = colGroup.createEl("select", { cls: "toolbar-col-select" });
+    colSelect.setAttribute("aria-label", "Number of columns");
+    const colChoices = this.plugin.isMobileActive() ? [1, 2, 3] : [2, 3, 4, 5];
+    colChoices.forEach((n) => {
+      const opt = colSelect.createEl("option", { value: String(n), text: `${n} col` });
+      if (n === this.plugin.activeColumns()) opt.selected = true;
+    });
+    colSelect.addEventListener("change", () => {
+      this.onColumnsChange(Number(colSelect.value));
+    });
+    const zoomGroup = this.toolbarEl.createDiv({ cls: "toolbar-zoom-group" });
+    zoomGroup.createSpan({ cls: "toolbar-zoom-label", text: "Zoom" });
+    const zoomSlider = zoomGroup.createEl("input", {
+      cls: "toolbar-zoom-slider",
+      type: "range",
+      attr: { min: "0.1", max: "1", step: "0.05", value: String(this.zoomScale), "aria-label": "Zoom level" }
+    });
+    const zoomValue = zoomGroup.createSpan({ cls: "toolbar-zoom-value", text: this.formatZoom(this.zoomScale) });
+    zoomSlider.addEventListener("input", () => {
+      this.zoomScale = parseFloat(zoomSlider.value);
+      zoomValue.setText(this.formatZoom(this.zoomScale));
+      this.grid.setZoom(this.zoomScale);
+    });
+    const addBtn = this.toolbarEl.createEl("button", { cls: "toolbar-add-btn" });
+    addBtn.createSpan({ cls: "toolbar-add-icon", text: "+" });
+    addBtn.createSpan({ cls: "toolbar-add-text", text: " Add block" });
+    addBtn.addEventListener("click", () => {
+      this.openAddBlockModal();
+    });
+    const discardBtn = this.toolbarEl.createEl("button", { cls: "toolbar-discard-btn", text: "\u2715 discard" });
+    discardBtn.addEventListener("click", () => this.discardChanges());
+    const doneBtn = this.toolbarEl.createEl("button", { cls: "toolbar-edit-btn toolbar-btn-active", text: "\u2713 done" });
+    doneBtn.addEventListener("click", () => this.toggleEditMode());
+    this.grid.onRequestAddBlock = () => {
+      this.openAddBlockModal();
+    };
+  }
+  /**
+   * Tracked so EditToolbar.destroy() can close it. A leftover modal would
+   * otherwise hold a closure over `this.grid` -- when the homepage view
+   * gets reloaded mid-pick (e.g., user changes a setting in another tab),
+   * the user's selection lands on a destroyed grid instance. Silent failure.
+   */
+  openModal = null;
+  /** Opens the Add Block modal. Called from toolbar button, empty state CTA, and command palette. */
+  openAddBlockModal() {
+    this.openModal?.close();
+    const modal = new AddBlockModal(this.app, (type) => {
+      if (this.openModal !== modal) return;
+      const factory = BlockRegistry.get(type);
+      if (!factory) return;
+      const instance = {
+        id: newId(),
+        type,
+        x: 0,
+        // GridLayout.addBlock recomputes y from the current maxY, so the value
+        // here is unused -- kept at 0 for clarity rather than the prior fake
+        // sentinel that pretended to mean something.
+        y: 0,
+        w: Math.min(factory.defaultSize.w, this.plugin.activeColumns()),
+        h: factory.defaultSize.h,
+        config: { ...factory.defaultConfig }
+      };
+      this.grid.addBlock(instance);
+    });
+    const originalOnClose = modal.onClose.bind(modal);
+    modal.onClose = () => {
+      if (this.openModal === modal) this.openModal = null;
+      originalOnClose();
+    };
+    this.openModal = modal;
+    modal.open();
+  }
+  formatZoom(scale) {
+    return `${Math.round(scale * 100)}%`;
+  }
+  getElement() {
+    return this.toolbarEl;
+  }
+  getFabElement() {
+    return this.fabEl;
+  }
+  destroy() {
+    this.openModal?.close();
+    this.openModal = null;
+    this.grid.onRequestAddBlock = null;
+    this.fabEl.remove();
+    this.toolbarEl.remove();
+  }
+};
+var AddBlockModal = class extends import_obsidian5.SuggestModal {
+  constructor(app, onSelect) {
+    super(app);
+    this.onSelect = onSelect;
+    this.setPlaceholder("Search blocks\u2026");
+    this.modalEl.addClass("add-block-suggest");
+  }
+  getSuggestions(query) {
+    const q = query.trim().toLowerCase();
+    const all = BlockRegistry.getAll();
+    if (!q) return all;
+    return all.filter((f) => {
+      const meta = BLOCK_META[f.type];
+      return `${f.displayName} ${f.type} ${meta?.desc ?? ""}`.toLowerCase().includes(q);
+    });
+  }
+  renderSuggestion(factory, el) {
+    el.addClass("add-block-suggestion");
+    const meta = BLOCK_META[factory.type];
+    el.createSpan({ cls: "add-block-suggestion-icon", text: meta?.icon ?? "\u25AA" });
+    const text = el.createDiv({ cls: "add-block-suggestion-text" });
+    text.createDiv({ cls: "add-block-suggestion-name", text: factory.displayName });
+    if (meta?.desc) {
+      text.createDiv({ cls: "add-block-suggestion-desc", text: meta.desc });
+    }
+  }
+  onChooseSuggestion(factory) {
+    this.onSelect(factory.type);
+  }
+};
+
+// src/HomepageView.ts
+var VIEW_TYPE = "homepage-blocks";
+var HomepageView = class extends import_obsidian6.ItemView {
+  constructor(leaf, plugin) {
+    super(leaf);
+    this.plugin = plugin;
+  }
+  grid = null;
+  toolbar = null;
+  getViewType() {
+    return VIEW_TYPE;
+  }
+  getDisplayText() {
+    return "Homepage";
+  }
+  getIcon() {
+    return "home";
+  }
+  // Returns Promise<void> to match ItemView.onOpen and keep `reload()`'s await
+  // meaningful. If future work needs awaiting (per-leaf state, editor-ready
+  // signal), switch this back to `async` and await inside the body.
+  onOpen() {
+    this.grid?.destroy();
+    this.toolbar?.destroy();
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.addClass("homepage-view");
+    contentEl.toggleClass("homepage-no-scrollbar", this.plugin.layout.showScrollbar === false);
+    contentEl.toggleClass("homepage-hover-highlight", !!this.plugin.layout.hoverHighlight);
+    const onLayoutChange = (newLayout) => {
+      this.plugin.layout = newLayout;
+      void this.plugin.saveLayout(newLayout);
+    };
+    this.grid = new GridLayout(contentEl, this.app, this.plugin, onLayoutChange);
+    this.toolbar = new EditToolbar(
+      contentEl,
+      this.app,
+      this.plugin,
+      this.grid,
+      (columns) => {
+        this.grid?.setColumns(columns);
+      }
+    );
+    contentEl.insertBefore(this.toolbar.getElement(), this.grid.getElement());
+    contentEl.insertBefore(this.toolbar.getFabElement(), this.toolbar.getElement());
+    this.grid.render(this.plugin.activeBlocks(), this.plugin.activeColumns(), true);
+    return Promise.resolve();
+  }
+  onClose() {
+    this.grid?.destroy();
+    this.toolbar?.destroy();
+    return Promise.resolve();
+  }
+  /** Toggle edit mode — called from keyboard shortcut command. */
+  toggleEditMode() {
+    this.toolbar?.toggleEditMode();
+  }
+  /** Open the Add Block modal — called from command palette. */
+  openAddBlockModal() {
+    this.toolbar?.openAddBlockModal();
+  }
+  /** Re-render the view from scratch (e.g. after settings reset). */
+  async reload() {
+    await this.onOpen();
+  }
+};
+
+// src/types.ts
+var BLOCK_TYPES = [
+  "greeting",
+  "folder-links",
+  "button-grid",
+  "quotes-list",
+  "image-gallery",
+  "clock",
+  "embedded-note",
+  "static-text",
+  "html",
+  "video-embed",
+  "bookmarks",
+  "recent-files",
+  "pomodoro",
+  "spacer",
+  "random-note",
+  "voice-dictation",
+  "vault-search"
+];
+
+// src/validation.ts
+var VALID_OPEN_MODES = /* @__PURE__ */ new Set(["replace-all", "replace-last", "retain"]);
+var VALID_LAYOUT_PRIORITIES = /* @__PURE__ */ new Set(["row"]);
+var VALID_RESPONSIVE_MODES = /* @__PURE__ */ new Set(["unified", "separate"]);
+function isOpenMode(v) {
+  return typeof v === "string" && VALID_OPEN_MODES.has(v);
+}
+function isLayoutPriority(v) {
+  return typeof v === "string" && VALID_LAYOUT_PRIORITIES.has(v);
+}
+function isResponsiveMode(v) {
+  return typeof v === "string" && VALID_RESPONSIVE_MODES.has(v);
+}
+var DEFAULT_LAYOUT_DATA = {
+  columns: 3,
+  layoutPriority: "row",
+  responsiveMode: "unified",
+  mobileColumns: 1,
+  mobileLayoutPriority: "row",
+  mobileBlocks: [],
+  openOnStartup: false,
+  openMode: "retain",
+  manualOpenMode: "retain",
+  openWhenEmpty: false,
+  pin: false,
+  separateStartup: false,
+  mobileOpenOnStartup: false,
+  mobileOpenMode: "retain",
+  mobileManualOpenMode: "retain",
+  mobileOpenWhenEmpty: false,
+  mobilePin: false,
+  showScrollbar: true,
+  compactLayout: true,
+  hoverHighlight: true,
+  blocks: [
+    // Row 0 (y: 0–2)
+    {
+      id: "default-static-text",
+      type: "static-text",
+      x: 0,
+      y: 0,
+      w: 1,
+      h: 3,
+      config: { content: "" }
+    },
+    {
+      id: "default-clock",
+      type: "clock",
+      x: 1,
+      y: 0,
+      w: 1,
+      h: 3,
+      config: { showSeconds: false, showDate: true }
+    },
+    {
+      id: "default-folder-links",
+      type: "folder-links",
+      x: 2,
+      y: 0,
+      w: 1,
+      h: 3,
+      config: { _titleLabel: "Quick links", links: [] }
+    },
+    // Row 1 (y: 3–5)
+    {
+      id: "default-insight",
+      type: "quotes-list",
+      x: 0,
+      y: 3,
+      w: 2,
+      h: 3,
+      config: { tag: "", _titleLabel: "Daily insight", dailySeed: true }
+    },
+    {
+      id: "default-button-grid",
+      type: "button-grid",
+      x: 2,
+      y: 3,
+      w: 1,
+      h: 5,
+      config: {
+        _titleLabel: "Quick actions",
+        columns: 2,
+        items: [
+          { emoji: "\u{1F4DD}", label: "New note" },
+          { emoji: "\u{1F4C5}", label: "Today" },
+          { emoji: "\u2B50", label: "Favorites" },
+          { emoji: "\u{1F50D}", label: "Search" },
+          { emoji: "\u{1F4DA}", label: "Library" },
+          { emoji: "\u2699\uFE0F", label: "Settings" }
+        ]
+      }
+    },
+    // Row 2 (y: 6–8)
+    {
+      id: "default-quotes",
+      type: "quotes-list",
+      x: 0,
+      y: 6,
+      w: 2,
+      h: 3,
+      config: { tag: "", _titleLabel: "Quotes", columns: 2, maxItems: 0 }
+    },
+    // Row 3 (y: 8)
+    {
+      id: "default-voice-dictation",
+      type: "voice-dictation",
+      x: 0,
+      y: 8,
+      w: 2,
+      h: 3,
+      config: { folder: "", triggerMode: "tap", _titleLabel: "Voice notes" }
+    },
+    // Row 4 (y: 11–13)
+    {
+      id: "default-gallery",
+      type: "image-gallery",
+      x: 0,
+      y: 11,
+      w: 3,
+      h: 3,
+      config: { folder: "", _titleLabel: "Gallery", columns: 3, maxItems: 0 }
+    }
+  ]
+};
+function getDefaultLayout() {
+  return structuredClone(DEFAULT_LAYOUT_DATA);
+}
+var VALID_BLOCK_TYPES = new Set(BLOCK_TYPES);
+var SAFE_ID_RE = /^[a-zA-Z0-9_-]+$/;
+var MAX_BLOCKS = 100;
+function migrateBlockInstance(b) {
+  const m = { ...b };
+  if (typeof m.col === "number" && typeof m.x !== "number") {
+    m.x = Math.max(0, m.col - 1);
+  }
+  if (typeof m.row === "number" && typeof m.y !== "number") {
+    m.y = Math.max(0, m.row - 1);
+  }
+  if (typeof m.colSpan === "number" && typeof m.w !== "number") {
+    m.w = m.colSpan;
+  }
+  if (typeof m.rowSpan === "number" && typeof m.h !== "number") {
+    m.h = m.rowSpan;
+  }
+  delete m.col;
+  delete m.row;
+  delete m.colSpan;
+  delete m.rowSpan;
+  delete m.newRow;
+  if (m.type === "tag-grid") {
+    m.type = "button-grid";
+  }
+  const cfg = m.config;
+  if (cfg && cfg._transparent === true) {
+    if (cfg._showBorder === void 0) cfg._showBorder = false;
+    if (cfg._showBackground === void 0) cfg._showBackground = false;
+    delete cfg._transparent;
+  }
+  if (cfg) {
+    const HIDE_TO_SHOW = [
+      ["_hideTitle", "_showTitle"],
+      ["_hideBorder", "_showBorder"],
+      ["_hideBackground", "_showBackground"],
+      ["_hideHeaderAccent", "_showHeaderAccent"]
+    ];
+    for (const [hideKey, showKey] of HIDE_TO_SHOW) {
+      if (hideKey in cfg) {
+        if (cfg[hideKey] === true && cfg[showKey] === void 0) {
+          cfg[showKey] = false;
+        }
+        delete cfg[hideKey];
+      }
+    }
+    if (m.type === "quotes-list" && "hideAccentBar" in cfg) {
+      if (cfg.hideAccentBar === true && cfg.showAccentBar === void 0) {
+        cfg.showAccentBar = false;
+      }
+      delete cfg.hideAccentBar;
+    }
+  }
+  if (m.type === "voice-dictation" && cfg) {
+    if (typeof cfg.whisperApiKey === "string" && !cfg.apiKey) {
+      cfg.apiKey = cfg.whisperApiKey;
+    }
+    if (typeof cfg.whisperLanguage === "string" && !cfg.language) {
+      cfg.language = cfg.whisperLanguage;
+    }
+    delete cfg.whisperApiKey;
+    delete cfg.whisperLanguage;
+  }
+  if (m.type === "button-grid" && cfg && typeof cfg.columns === "number" && cfg.columns > 3) {
+    cfg.columns = 3;
+  }
+  if (cfg && m.type !== "button-grid" && "customCss" in cfg) {
+    delete cfg.customCss;
+  }
+  if (cfg && typeof cfg.title === "string") {
+    if (cfg.title && !cfg._titleLabel) {
+      cfg._titleLabel = cfg.title;
+    }
+    if (!cfg.title && (m.type === "html" || m.type === "static-text")) {
+      if (cfg._showTitle === void 0) cfg._showTitle = false;
+    }
+    delete cfg.title;
+  }
+  return m;
+}
+function isValidBlockInstance(b) {
+  if (!b || typeof b !== "object") return false;
+  const block = b;
+  return typeof block.id === "string" && SAFE_ID_RE.test(block.id) && typeof block.type === "string" && VALID_BLOCK_TYPES.has(block.type) && typeof block.x === "number" && Number.isFinite(block.x) && block.x >= 0 && typeof block.y === "number" && Number.isFinite(block.y) && block.y >= 0 && typeof block.w === "number" && Number.isFinite(block.w) && block.w >= 1 && typeof block.h === "number" && block.h >= 1 && Number.isFinite(block.h) && block.config !== null && typeof block.config === "object" && !Array.isArray(block.config);
+}
+function validateBlocks(raw, columns, defaults, onInvalidDropped) {
+  if (!Array.isArray(raw)) return defaults;
+  const migrated = raw.map((b) => migrateBlockInstance(b));
+  const validAll = migrated.filter(isValidBlockInstance);
+  const invalidCount = migrated.length - validAll.length;
+  if (invalidCount > 0) onInvalidDropped?.(invalidCount);
+  const valid = validAll.slice(0, MAX_BLOCKS);
+  const seen = /* @__PURE__ */ new Set();
+  const dedup = valid.filter((b) => {
+    if (seen.has(b.id)) return false;
+    seen.add(b.id);
+    return true;
+  });
+  return dedup.map((b) => ({
+    ...b,
+    w: Math.min(b.w, columns),
+    x: Math.min(b.x, Math.max(0, columns - Math.min(b.w, columns)))
+  }));
+}
+function validateLayout(raw, onTopLevelCorruption, onBlocksDropped) {
+  const defaults = getDefaultLayout();
+  if (raw === null || raw === void 0) return defaults;
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    onTopLevelCorruption?.(raw);
+    return defaults;
+  }
+  const r = raw;
+  const columns = typeof r.columns === "number" && [2, 3, 4, 5].includes(r.columns) ? r.columns : defaults.columns;
+  const layoutPriority = isLayoutPriority(r.layoutPriority) ? r.layoutPriority : defaults.layoutPriority;
+  const responsiveMode = isResponsiveMode(r.responsiveMode) ? r.responsiveMode : defaults.responsiveMode;
+  const mobileColumns = typeof r.mobileColumns === "number" && [1, 2, 3].includes(r.mobileColumns) ? r.mobileColumns : defaults.mobileColumns;
+  const mobileLayoutPriority = isLayoutPriority(r.mobileLayoutPriority) ? r.mobileLayoutPriority : defaults.mobileLayoutPriority;
+  const openOnStartup = typeof r.openOnStartup === "boolean" ? r.openOnStartup : defaults.openOnStartup;
+  const openMode = isOpenMode(r.openMode) ? r.openMode : defaults.openMode;
+  const manualOpenMode = isOpenMode(r.manualOpenMode) ? r.manualOpenMode : defaults.manualOpenMode;
+  const openWhenEmpty = typeof r.openWhenEmpty === "boolean" ? r.openWhenEmpty : defaults.openWhenEmpty;
+  const pin = typeof r.pin === "boolean" ? r.pin : defaults.pin;
+  const separateStartup = typeof r.separateStartup === "boolean" ? r.separateStartup : defaults.separateStartup;
+  const mobileOpenOnStartup = typeof r.mobileOpenOnStartup === "boolean" ? r.mobileOpenOnStartup : openOnStartup;
+  const mobileOpenMode = isOpenMode(r.mobileOpenMode) ? r.mobileOpenMode : openMode;
+  const mobileManualOpenMode = isOpenMode(r.mobileManualOpenMode) ? r.mobileManualOpenMode : manualOpenMode;
+  const mobileOpenWhenEmpty = typeof r.mobileOpenWhenEmpty === "boolean" ? r.mobileOpenWhenEmpty : openWhenEmpty;
+  const mobilePin = typeof r.mobilePin === "boolean" ? r.mobilePin : pin;
+  const showScrollbar = typeof r.showScrollbar === "boolean" ? r.showScrollbar : typeof r.hideScrollbar === "boolean" ? !r.hideScrollbar : defaults.showScrollbar;
+  const compactLayout = typeof r.compactLayout === "boolean" ? r.compactLayout : defaults.compactLayout;
+  const hoverHighlight = typeof r.hoverHighlight === "boolean" ? r.hoverHighlight : defaults.hoverHighlight;
+  let droppedBlocks = 0;
+  const countDropped = (n) => {
+    droppedBlocks += n;
+  };
+  const blocks = validateBlocks(r.blocks, columns, defaults.blocks, countDropped);
+  const mobileBlocks = validateBlocks(r.mobileBlocks, mobileColumns, defaults.mobileBlocks, countDropped);
+  if (droppedBlocks > 0) onBlocksDropped?.(droppedBlocks);
+  return {
+    columns,
+    layoutPriority,
+    responsiveMode,
+    mobileColumns,
+    mobileLayoutPriority,
+    mobileBlocks,
+    openOnStartup,
+    openMode,
+    manualOpenMode,
+    openWhenEmpty,
+    pin,
+    separateStartup,
+    mobileOpenOnStartup,
+    mobileOpenMode,
+    mobileManualOpenMode,
+    mobileOpenWhenEmpty,
+    mobilePin,
+    showScrollbar,
+    compactLayout,
+    hoverHighlight,
+    blocks
+  };
+}
+
+// src/settings/HomepageSettingTab.ts
+var import_obsidian8 = require("obsidian");
+
+// src/utils/layoutReset.ts
+var MOBILE_LAYOUT_FIELDS = [
+  "mobileBlocks",
+  "mobileColumns",
+  "mobileLayoutPriority"
+];
+var STARTUP_FIELDS = [
+  "openOnStartup",
+  "openMode",
+  "manualOpenMode",
+  "openWhenEmpty",
+  "pin",
+  "separateStartup",
+  "mobileOpenOnStartup",
+  "mobileOpenMode",
+  "mobileManualOpenMode",
+  "mobileOpenWhenEmpty",
+  "mobilePin"
+];
+function pickFields(src, keys) {
+  const out = {};
+  for (const k of keys) out[k] = src[k];
+  return out;
+}
+function buildResetLayout(current, fresh, isMobileActive) {
+  const keepStartup = pickFields(current, STARTUP_FIELDS);
+  if (current.responsiveMode !== "separate") {
+    return { ...fresh, ...pickFields(current, MOBILE_LAYOUT_FIELDS), ...keepStartup };
+  }
+  if (isMobileActive) {
+    return { ...current, ...pickFields(fresh, MOBILE_LAYOUT_FIELDS) };
+  }
+  return { ...fresh, ...pickFields(current, MOBILE_LAYOUT_FIELDS), ...keepStartup };
+}
+
+// src/modals/ConfirmPresetModal.ts
+var import_obsidian7 = require("obsidian");
+var ConfirmPresetModal = class extends import_obsidian7.Modal {
+  constructor(app, presetName, onConfirm) {
+    super(app);
+    this.presetName = presetName;
+    this.onConfirm = onConfirm;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    new import_obsidian7.Setting(contentEl).setName("Load preset?").setHeading();
+    contentEl.createEl("p", {
+      text: `This will replace your current layout with the "${this.presetName}" preset. This cannot be undone.`
+    });
+    new import_obsidian7.Setting(contentEl).addButton(
+      (btn) => btn.setButtonText("Load preset").setWarning().onClick(() => {
+        void Promise.resolve(this.onConfirm()).catch(
+          (e) => console.error("[Homepage Blocks] Preset apply failed:", e)
+        );
+        this.close();
+      })
+    ).addButton(
+      (btn) => btn.setButtonText("Cancel").onClick(() => this.close())
+    );
+  }
+  onClose() {
+    this.contentEl.empty();
+  }
+};
+
+// src/utils/importSanitizer.ts
+var SHARED_CONFIG_KEYS = /* @__PURE__ */ new Set([
+  // Every `_`-prefixed key is shared styling — handled specially below, but listing
+  // the well-known ones here documents the contract.
+  "_titleLabel",
+  "_titleEmoji",
+  "_showTitle",
+  "_titleSize",
+  "_titleGap",
+  "_showDivider",
+  "_showHeaderAccent",
+  "_showBorder",
+  "_borderWidth",
+  "_borderStyle",
+  "_borderRadius",
+  "_showBackground",
+  "_bgOpacity",
+  "_backdropBlur",
+  "_cardPadding",
+  "_elevation",
+  "_accentColor",
+  "_accentIntensity",
+  "_gradientStart",
+  "_gradientEnd",
+  "_gradientAngle"
+]);
+var TITLE_SIZE_RE2 = /^h[1-6]$/;
+var BORDER_STYLE_VALUES = /* @__PURE__ */ new Set(["solid", "dashed", "dotted"]);
+var SHARED_VALIDATORS = {
+  _titleLabel: (v) => typeof v === "string" ? v.slice(0, 200) : void 0,
+  _titleEmoji: (v) => typeof v === "string" ? v.slice(0, 16) : void 0,
+  _showTitle: (v) => typeof v === "boolean" ? v : void 0,
+  _titleSize: (v) => typeof v === "string" && TITLE_SIZE_RE2.test(v) ? v : void 0,
+  _titleGap: (v) => typeof v === "number" && Number.isFinite(v) ? Math.max(-32, Math.min(32, v)) : void 0,
+  _showDivider: (v) => typeof v === "boolean" ? v : void 0,
+  _showHeaderAccent: (v) => typeof v === "boolean" ? v : void 0,
+  _showBorder: (v) => typeof v === "boolean" ? v : void 0,
+  _borderWidth: (v) => typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.min(8, v)) : void 0,
+  _borderStyle: (v) => typeof v === "string" && BORDER_STYLE_VALUES.has(v) ? v : void 0,
+  _borderRadius: (v) => typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.min(48, v)) : void 0,
+  _showBackground: (v) => typeof v === "boolean" ? v : void 0,
+  _bgOpacity: (v) => typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : void 0,
+  _backdropBlur: (v) => typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.min(48, v)) : void 0,
+  _cardPadding: (v) => typeof v === "number" && Number.isFinite(v) ? Math.max(-48, Math.min(48, v)) : void 0,
+  _elevation: (v) => typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.min(8, v)) : void 0,
+  _accentColor: (v) => typeof v === "string" && (v === "" || HEX_COLOR_RE.test(v)) ? v : void 0,
+  _accentIntensity: (v) => typeof v === "number" && Number.isFinite(v) ? Math.max(5, Math.min(100, v)) : void 0,
+  _gradientStart: (v) => typeof v === "string" && (v === "" || HEX_COLOR_RE.test(v)) ? v : void 0,
+  _gradientEnd: (v) => typeof v === "string" && (v === "" || HEX_COLOR_RE.test(v)) ? v : void 0,
+  _gradientAngle: (v) => typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.min(360, v)) : void 0
+};
+function sanitizeImportedConfig(blockType, config) {
+  const factory = BlockRegistry.get(blockType);
+  const allowed = new Set(factory ? Object.keys(factory.defaultConfig) : []);
+  SHARED_CONFIG_KEYS.forEach((k) => allowed.add(k));
+  const clean = {};
+  const stripped = [];
+  for (const [key, value] of Object.entries(config)) {
+    if (key === "apiKey") {
+      stripped.push(key);
+      continue;
+    }
+    if (key.startsWith("_")) {
+      const validator = SHARED_VALIDATORS[key];
+      if (validator) {
+        const validated = validator(value);
+        if (validated === void 0) {
+          stripped.push(key);
+          continue;
+        }
+        clean[key] = validated;
+      } else {
+        const t = typeof value;
+        if (t === "string" || t === "number" || t === "boolean") {
+          clean[key] = value;
+        } else {
+          stripped.push(key);
+        }
+      }
+      continue;
+    }
+    if (allowed.has(key)) {
+      clean[key] = value;
+    } else {
+      stripped.push(key);
+    }
+  }
+  return { config: clean, stripped };
+}
+function sanitizeImportedLayout(layout) {
+  let strippedCount = 0;
+  const sanitizeBlock = (b) => {
+    const { config, stripped } = sanitizeImportedConfig(b.type, b.config);
+    strippedCount += stripped.length;
+    return { ...b, config };
+  };
+  return {
+    layout: {
+      ...layout,
+      blocks: layout.blocks.map(sanitizeBlock),
+      mobileBlocks: layout.mobileBlocks.map(sanitizeBlock)
+    },
+    strippedCount
+  };
+}
+
+// src/settings/HomepageSettingTab.ts
+var OPEN_MODE_LABELS = {
+  "retain": "Keep existing tabs (new tab)",
+  "replace-last": "Replace active tab",
+  "replace-all": "Close all tabs"
+};
+var HomepageSettingTab = class extends import_obsidian8.PluginSettingTab {
+  constructor(app, plugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+  display() {
+    const { containerEl } = this;
+    containerEl.empty();
+    this.renderStartupSection(containerEl);
+    this.renderLayoutSection(containerEl);
+    this.renderDisplaySection(containerEl);
+    this.renderExportImportSection(containerEl);
+  }
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  /**
+   * Common pattern: after a mutation that changes what's currently rendered on
+   * other homepage tabs (column count, compact mode, etc.), reload every open
+   * homepage view so they pick up the new settings.
+   */
+  async reloadOpenHomepages() {
+    for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE)) {
+      if (leaf.view instanceof HomepageView) {
+        await leaf.view.reload();
+      }
+    }
+  }
+  /** Briefly change a button's label, then restore it. Timeout is auto-cleaned on plugin unload. */
+  flashButton(btn, label, original, ms = 2e3) {
+    btn.setButtonText(label);
+    const t = window.setTimeout(() => {
+      btn.setButtonText(original);
+    }, ms);
+    this.plugin.register(() => window.clearTimeout(t));
+  }
+  // ── Section renderers ──────────────────────────────────────────────────────
+  renderStartupSection(root) {
+    const separate = this.plugin.layout.separateStartup;
+    new import_obsidian8.Setting(root).setName("Separate startup for mobile").setDesc("Use different startup settings on mobile devices \u2014 for example, open the homepage on startup only on desktop. Independent of the layout responsive mode below.").addToggle(
+      (toggle) => toggle.setValue(separate).onChange((value) => {
+        const base = this.plugin.layout;
+        const mobileMirrorsDesktop = base.mobileOpenOnStartup === base.openOnStartup && base.mobileOpenMode === base.openMode && base.mobileManualOpenMode === base.manualOpenMode && base.mobileOpenWhenEmpty === base.openWhenEmpty && base.mobilePin === base.pin;
+        let next;
+        if (!value) {
+          next = { ...base, separateStartup: false };
+        } else if (mobileMirrorsDesktop) {
+          next = {
+            ...base,
+            separateStartup: true,
+            mobileOpenOnStartup: base.openOnStartup,
+            mobileOpenMode: base.openMode,
+            mobileManualOpenMode: base.manualOpenMode,
+            mobileOpenWhenEmpty: base.openWhenEmpty,
+            mobilePin: base.pin
+          };
+        } else {
+          next = { ...base, separateStartup: true };
+        }
+        void this.plugin.saveLayout(next).then(() => this.display());
+      })
+    );
+    if (separate) new import_obsidian8.Setting(root).setName("Desktop startup").setHeading();
+    this.renderStartupControls(root, false);
+    if (separate) {
+      new import_obsidian8.Setting(root).setName("Mobile startup").setHeading();
+      this.renderStartupControls(root, true);
+    }
+  }
+  /**
+   * Render the five startup controls bound to either the desktop fields or the
+   * `mobile*` overrides. `mobile=false` reads/writes `openOnStartup`, `openMode`,
+   * …; `mobile=true` reads/writes `mobileOpenOnStartup`, `mobileOpenMode`, … so
+   * the same UI serves both the unified case and each half of the split.
+   */
+  renderStartupControls(root, mobile) {
+    const L = this.plugin.layout;
+    const openOnStartup = mobile ? L.mobileOpenOnStartup : L.openOnStartup;
+    const openMode = mobile ? L.mobileOpenMode : L.openMode;
+    const openWhenEmpty = mobile ? L.mobileOpenWhenEmpty : L.openWhenEmpty;
+    const manualOpenMode = mobile ? L.mobileManualOpenMode : L.manualOpenMode;
+    const pin = mobile ? L.mobilePin : L.pin;
+    new import_obsidian8.Setting(root).setName("Open on startup").setDesc("Open the homepage when Obsidian starts.").addToggle(
+      (toggle) => toggle.setValue(openOnStartup).onChange((value) => {
+        const patch = mobile ? { mobileOpenOnStartup: value } : { openOnStartup: value };
+        void this.plugin.saveLayout({ ...this.plugin.layout, ...patch }).then(() => this.display());
+      })
+    );
+    if (openOnStartup) {
+      new import_obsidian8.Setting(root).setName("Startup open mode").setDesc("What to do with existing tabs on startup.").addDropdown((drop) => {
+        for (const [value, label] of Object.entries(OPEN_MODE_LABELS)) {
+          drop.addOption(value, label);
+        }
+        drop.setValue(openMode).onChange((value) => {
+          if (!isOpenMode(value)) return;
+          const patch = mobile ? { mobileOpenMode: value } : { openMode: value };
+          void this.plugin.saveLayout({ ...this.plugin.layout, ...patch });
+        });
+      });
+    }
+    new import_obsidian8.Setting(root).setName("Open when empty").setDesc("Open the homepage when all tabs are closed.").addToggle(
+      (toggle) => toggle.setValue(openWhenEmpty).onChange((value) => {
+        const patch = mobile ? { mobileOpenWhenEmpty: value } : { openWhenEmpty: value };
+        void this.plugin.saveLayout({ ...this.plugin.layout, ...patch });
+      })
+    );
+    new import_obsidian8.Setting(root).setName("Manual open mode").setDesc("What to do with existing tabs when you open the homepage manually.").addDropdown((drop) => {
+      for (const [value, label] of Object.entries(OPEN_MODE_LABELS)) {
+        drop.addOption(value, label);
+      }
+      drop.setValue(manualOpenMode).onChange((value) => {
+        if (!isOpenMode(value)) return;
+        const patch = mobile ? { mobileManualOpenMode: value } : { manualOpenMode: value };
+        void this.plugin.saveLayout({ ...this.plugin.layout, ...patch });
+      });
+    });
+    new import_obsidian8.Setting(root).setName("Pin homepage tab").setDesc("Prevent the homepage tab from being closed.").addToggle(
+      (toggle) => toggle.setValue(pin).onChange((value) => {
+        const patch = mobile ? { mobilePin: value } : { pin: value };
+        void this.plugin.saveLayout({ ...this.plugin.layout, ...patch });
+        for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE)) {
+          leaf.setPinned(this.plugin.activePin());
+        }
+      })
+    );
+  }
+  renderLayoutSection(root) {
+    new import_obsidian8.Setting(root).setName("Layout").setHeading();
+    new import_obsidian8.Setting(root).setName("Responsive mode").setDesc("Unified: one layout for all screen sizes. Separate: different layouts for desktop and mobile.").addDropdown(
+      (drop) => drop.addOption("unified", "Unified (adaptive)").addOption("separate", "Separate (desktop + mobile)").setValue(this.plugin.layout.responsiveMode).onChange((value) => {
+        if (!isResponsiveMode(value)) return;
+        void this.plugin.saveLayout({ ...this.plugin.layout, responsiveMode: value }).then(() => this.display());
+      })
+    );
+    if (this.plugin.layout.responsiveMode === "separate") {
+      new import_obsidian8.Setting(root).setName("Desktop layout").setHeading();
+    }
+    new import_obsidian8.Setting(root).setName("Default columns").setDesc("Number of grid columns.").addDropdown((drop) => {
+      for (const n of [2, 3, 4, 5]) drop.addOption(String(n), `${n} columns`);
+      drop.setValue(String(this.plugin.layout.columns)).onChange((value) => {
+        void this.plugin.saveLayout({ ...this.plugin.layout, columns: Number(value) });
+      });
+    });
+    if (this.plugin.layout.responsiveMode === "separate") {
+      this.renderMobileLayoutControls(root);
+    }
+  }
+  renderMobileLayoutControls(root) {
+    new import_obsidian8.Setting(root).setName("Mobile layout").setHeading();
+    new import_obsidian8.Setting(root).setName("Mobile columns").setDesc("Number of grid columns on mobile.").addDropdown((drop) => {
+      for (const n of [1, 2, 3]) drop.addOption(String(n), `${n} ${n === 1 ? "column" : "columns"}`);
+      drop.setValue(String(this.plugin.layout.mobileColumns)).onChange((value) => {
+        void this.plugin.saveLayout({ ...this.plugin.layout, mobileColumns: Number(value) });
+      });
+    });
+    new import_obsidian8.Setting(root).setName("Copy desktop layout to mobile").setDesc("Overwrite the mobile layout with a copy of the desktop layout, fitted to mobile columns.").addButton(
+      (btn) => btn.setButtonText("Copy to mobile").onClick(() => void (async () => {
+        const desktopBlocks = structuredClone(this.plugin.layout.blocks);
+        const mobileCols = this.plugin.layout.mobileColumns;
+        const clamped = desktopBlocks.map((b) => {
+          const config = { ...b.config };
+          if ("apiKey" in config) config.apiKey = "";
+          return {
+            ...b,
+            id: newId(),
+            w: Math.min(b.w, mobileCols),
+            x: Math.min(b.x, Math.max(0, mobileCols - Math.min(b.w, mobileCols))),
+            config
+          };
+        });
+        await this.plugin.saveLayout({ ...this.plugin.layout, mobileBlocks: clamped });
+        await this.reloadOpenHomepages();
+        this.flashButton(btn, "Copied!", "Copy to mobile");
+      })())
+    );
+    const mobileBlockCount = this.plugin.layout.mobileBlocks.length;
+    new import_obsidian8.Setting(root).setName("Mobile blocks").setDesc(mobileBlockCount + " block(s) configured for mobile. Edit them on a mobile device, or copy from desktop above.");
+  }
+  renderDisplaySection(root) {
+    new import_obsidian8.Setting(root).setName("Show scrollbar").setDesc("Show the scrollbar on the homepage. You can still scroll when hidden.").addToggle(
+      (toggle) => toggle.setValue(this.plugin.layout.showScrollbar !== false).onChange((value) => {
+        void this.plugin.saveLayout({ ...this.plugin.layout, showScrollbar: value });
+        for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE)) {
+          leaf.view.containerEl.toggleClass("homepage-no-scrollbar", !value);
+        }
+      })
+    );
+    new import_obsidian8.Setting(root).setName("Compact layout").setDesc("Remove vertical gaps between blocks. Turn off to allow free placement with gaps.").addToggle(
+      (toggle) => toggle.setValue(this.plugin.layout.compactLayout).onChange(async (value) => {
+        await this.plugin.saveLayout({ ...this.plugin.layout, compactLayout: value });
+        await this.reloadOpenHomepages();
+      })
+    );
+    new import_obsidian8.Setting(root).setName("Hover highlight").setDesc("Subtly lift blocks on mouseover and reveal the collapse toggle.").addToggle(
+      (toggle) => toggle.setValue(this.plugin.layout.hoverHighlight).onChange((value) => {
+        void this.plugin.saveLayout({ ...this.plugin.layout, hoverHighlight: value });
+        for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE)) {
+          if (leaf.view instanceof HomepageView) {
+            leaf.view.contentEl.toggleClass("homepage-hover-highlight", value);
+          }
+        }
+      })
+    );
+    new import_obsidian8.Setting(root).setName("Reset to default layout").setDesc("Restore all blocks to the default layout. This can\u2019t be undone.").addButton(
+      (btn) => btn.setButtonText("Reset layout").setWarning().onClick(() => void (async () => {
+        const next = buildResetLayout(
+          this.plugin.layout,
+          getDefaultLayout(),
+          this.plugin.isMobileActive()
+        );
+        await this.plugin.saveLayout(next);
+        await this.reloadOpenHomepages();
+      })())
+    );
+  }
+  renderExportImportSection(root) {
+    new import_obsidian8.Setting(root).setName("Export / import").setHeading();
+    new import_obsidian8.Setting(root).setName("Export layout").setDesc("Copy the layout to your clipboard as JSON.").addButton((btn) => {
+      btn.setButtonText("Copy to clipboard").onClick(() => void (async () => {
+        if (!navigator.clipboard?.writeText) {
+          this.flashButton(btn, "Clipboard unavailable", "Copy to clipboard");
+          return;
+        }
+        try {
+          const exportLayout = structuredClone(this.plugin.layout);
+          for (const block of exportLayout.blocks) {
+            delete block.config.apiKey;
+            delete block.config.customCss;
+          }
+          for (const block of exportLayout.mobileBlocks) {
+            delete block.config.apiKey;
+            delete block.config.customCss;
+          }
+          const json = JSON.stringify(exportLayout, null, 2);
+          await navigator.clipboard.writeText(json);
+          this.flashButton(btn, "Copied!", "Copy to clipboard");
+        } catch {
+          this.flashButton(btn, "Copy failed", "Copy to clipboard");
+        }
+      })());
+    });
+    new import_obsidian8.Setting(root).setName("Import layout").setDesc("Paste an exported layout JSON to restore it.").addButton((btn) => {
+      btn.setButtonText("Import from clipboard").onClick(() => void (async () => {
+        if (!navigator.clipboard?.readText) {
+          this.flashButton(btn, "Clipboard unavailable", "Import from clipboard");
+          return;
+        }
+        try {
+          const text = await navigator.clipboard.readText();
+          const parsed = JSON.parse(text);
+          let corrupt = false;
+          const validated = validateLayout(parsed, () => {
+            corrupt = true;
+          });
+          if (corrupt) {
+            this.flashButton(btn, "Not a layout", "Import from clipboard");
+            return;
+          }
+          const { layout: safe, strippedCount } = sanitizeImportedLayout(validated);
+          const blockTypes = safe.blocks.map((b) => b.type);
+          const hadKey = [...this.plugin.layout.blocks, ...this.plugin.layout.mobileBlocks].some((b) => typeof b.config.apiKey === "string" && b.config.apiKey.length > 0);
+          const summary = `${safe.blocks.length} block(s): ${[...new Set(blockTypes)].join(", ")}` + (strippedCount > 0 ? ` \xB7 stripped ${strippedCount} unsafe / unknown field(s)` : "") + (hadKey ? " \xB7 your saved API key will be removed" : "");
+          new ConfirmPresetModal(this.app, `Import (${summary})`, async () => {
+            await this.plugin.saveLayout(safe);
+            await this.reloadOpenHomepages();
+            this.flashButton(btn, "Imported!", "Import from clipboard");
+          }).open();
+        } catch {
+          this.flashButton(btn, "Invalid JSON", "Import from clipboard");
+        }
+      })());
+    });
+  }
+};
+
+// src/utils/tags.ts
+var import_obsidian9 = require("obsidian");
+function cacheHasTag(cache, tag) {
+  if (!cache) return false;
+  if (cache.tags?.some((t) => t.tag === tag)) return true;
+  const rawFmTags = cache.frontmatter?.tags;
+  const fmTagArray = Array.isArray(rawFmTags) ? rawFmTags.filter((t) => typeof t === "string") : typeof rawFmTags === "string" ? [rawFmTags] : [];
+  return fmTagArray.some((t) => (t.startsWith("#") ? t : `#${t}`) === tag);
+}
+function normalizeTag(tag) {
+  const t = tag.trim();
+  return t.startsWith("#") ? t : `#${t}`;
+}
+var tagCache = /* @__PURE__ */ new Map();
+var listenersInstalled = false;
+function dropPathFromCache(path) {
+  const prefix = path + "/";
+  for (const [tag, files] of tagCache) {
+    const next = files.filter((f) => f.path !== path && !f.path.startsWith(prefix));
+    if (next.length !== files.length) tagCache.set(tag, next);
+  }
+}
+function reindexFile(file, cache) {
+  if (file.extension !== "md") return;
+  for (const [tag, files] of tagCache) {
+    const has = cacheHasTag(cache, tag);
+    const idx = files.findIndex((f) => f.path === file.path);
+    if (has && idx === -1) {
+      tagCache.set(tag, [...files, file]);
+    } else if (!has && idx !== -1) {
+      tagCache.set(tag, files.filter((f) => f.path !== file.path));
+    } else if (has && idx !== -1 && files[idx] !== file) {
+      const next = files.slice();
+      next[idx] = file;
+      tagCache.set(tag, next);
+    }
+  }
+}
+function installTagCacheListeners(plugin) {
+  tagCache.clear();
+  if (listenersInstalled) return;
+  listenersInstalled = true;
+  plugin.register(() => {
+    listenersInstalled = false;
+    tagCache.clear();
+  });
+  plugin.registerEvent(plugin.app.vault.on("delete", (f) => {
+    dropPathFromCache(f.path);
+  }));
+  plugin.registerEvent(plugin.app.vault.on("rename", (f, oldPath) => {
+    dropPathFromCache(oldPath);
+    if (f instanceof import_obsidian9.TFile) reindexFile(f, plugin.app.metadataCache.getFileCache(f));
+  }));
+  plugin.registerEvent(plugin.app.metadataCache.on("changed", (f, _data, cache) => {
+    reindexFile(f, cache);
+  }));
+}
+function getFilesWithTag(app, tag) {
+  const cached = tagCache.get(tag);
+  if (cached) return cached;
+  const files = app.vault.getMarkdownFiles().filter(
+    (file) => cacheHasTag(app.metadataCache.getFileCache(file), tag)
+  );
+  tagCache.set(tag, files);
+  return files;
+}
+
+// src/utils/apiKeyCrypto.ts
+var DB_NAME = "homepage-blocks-kv";
+var DB_STORE = "keys";
+var DB_RECORD = "apiKeyDeviceKey";
+var PREFIX = "enc:v1:";
+var cachedKey = null;
+function hasWebCrypto() {
+  return typeof window.crypto?.subtle?.generateKey === "function" && typeof indexedDB !== "undefined";
+}
+function openDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      req.result.createObjectStore(DB_STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error ?? new Error("IndexedDB open failed"));
+  });
+}
+function idbGet(db, key) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, "readonly");
+    const req = tx.objectStore(DB_STORE).get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error ?? new Error("IndexedDB get failed"));
+  });
+}
+function idbSet(db, key, value) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, "readwrite");
+    tx.objectStore(DB_STORE).put(value, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error ?? new Error("IndexedDB put failed"));
+  });
+}
+async function loadDeviceKey() {
+  if (cachedKey) return { key: cachedKey, transient: false };
+  if (!hasWebCrypto()) return { key: null, transient: false };
+  try {
+    const db = await openDb();
+    try {
+      const existing = await idbGet(db, DB_RECORD);
+      if (existing instanceof CryptoKey) {
+        cachedKey = existing;
+        return { key: existing, transient: false };
+      }
+      const fresh = await crypto.subtle.generateKey(
+        { name: "AES-GCM", length: 256 },
+        false,
+        // non-extractable
+        ["encrypt", "decrypt"]
+      );
+      await idbSet(db, DB_RECORD, fresh);
+      cachedKey = fresh;
+      return { key: fresh, transient: false };
+    } finally {
+      db.close();
+    }
+  } catch (err) {
+    console.error("[Homepage Blocks] device key unavailable (transient)", err instanceof Error ? err.message : "unknown error");
+    return { key: null, transient: true };
+  }
+}
+function toBase64(bytes) {
+  const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  let bin = "";
+  for (let i = 0; i < view.length; i++) bin += String.fromCharCode(view[i]);
+  return btoa(bin);
+}
+function fromBase64(b64) {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function isEncrypted(value) {
+  return typeof value === "string" && value.startsWith(PREFIX);
+}
+async function encryptStringEx(plaintext) {
+  if (!plaintext) return { ok: true, value: plaintext };
+  if (isEncrypted(plaintext)) return { ok: true, value: plaintext };
+  const { key, transient } = await loadDeviceKey();
+  if (!key) {
+    if (!transient) {
+      console.warn("[Homepage Blocks] WebCrypto unavailable \u2014 apiKey will be stored in plaintext on disk");
+    }
+    return { ok: false, reason: "fallback-plaintext", value: plaintext, transient };
+  }
+  try {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(plaintext));
+    return { ok: true, value: `${PREFIX}${toBase64(iv)}:${toBase64(ct)}` };
+  } catch (err) {
+    console.error("[Homepage Blocks] API key encryption failed \u2014 key left unencrypted this save, will retry", err instanceof Error ? err.message : "unknown error");
+    return { ok: false, reason: "crypto-error", value: plaintext, transient: true };
+  }
+}
+async function decryptStringEx(value) {
+  if (!isEncrypted(value)) return { ok: true, plaintext: value };
+  const { key, transient } = await loadDeviceKey();
+  if (!key) {
+    return { ok: false, reason: "no-key", transient };
+  }
+  const body = value.slice(PREFIX.length);
+  const sep = body.indexOf(":");
+  if (sep < 0) return { ok: false, reason: "corrupt", transient: false };
+  const ivB64 = body.slice(0, sep);
+  const ctB64 = body.slice(sep + 1);
+  try {
+    const ivBytes = fromBase64(ivB64);
+    const ctBytes = fromBase64(ctB64);
+    const iv = new Uint8Array(ivBytes.length);
+    iv.set(ivBytes);
+    const ct = new Uint8Array(ctBytes.length);
+    ct.set(ctBytes);
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
+    return { ok: true, plaintext: new TextDecoder().decode(pt) };
+  } catch {
+    return { ok: false, reason: "corrupt", transient: false };
+  }
+}
+function _resetDeviceKeyCache() {
+  cachedKey = null;
+}
+
+// src/utils/startupResolver.ts
+function mobileStartupActive(layout, isMobile) {
+  return isMobile && layout.separateStartup;
+}
+function resolveStartup(layout, isMobile) {
+  const mobile = mobileStartupActive(layout, isMobile);
+  return {
+    openOnStartup: mobile ? layout.mobileOpenOnStartup : layout.openOnStartup,
+    openMode: mobile ? layout.mobileOpenMode : layout.openMode,
+    manualOpenMode: mobile ? layout.mobileManualOpenMode : layout.manualOpenMode,
+    openWhenEmpty: mobile ? layout.mobileOpenWhenEmpty : layout.openWhenEmpty,
+    pin: mobile ? layout.mobilePin : layout.pin
+  };
+}
+
+// src/blocks/GreetingBlock.ts
+var import_obsidian11 = require("obsidian");
+
+// src/utils/dailySeed.ts
+var import_obsidian10 = require("obsidian");
+var MS_PER_DAY = 864e5;
+function dailyEpochDay() {
+  return Math.floor((0, import_obsidian10.moment)().startOf("day").valueOf() / MS_PER_DAY);
+}
+function dailyIndex(poolLength) {
+  if (poolLength <= 0) return 0;
+  return (dailyEpochDay() % poolLength + poolLength) % poolLength;
+}
+
+// src/blocks/GreetingBlock.ts
+var LANG_PRESETS = {
+  it: { label: "Italiano", morning: "Buongiorno", afternoon: "Buon pomeriggio", evening: "Buonasera" },
+  en: { label: "English", morning: "Good morning", afternoon: "Good afternoon", evening: "Good evening" },
+  es: { label: "Espa\xF1ol", morning: "Buenos d\xEDas", afternoon: "Buenas tardes", evening: "Buenas noches" },
+  fr: { label: "Fran\xE7ais", morning: "Bonjour", afternoon: "Bon apr\xE8s-midi", evening: "Bonsoir" },
+  de: { label: "Deutsch", morning: "Guten Morgen", afternoon: "Guten Tag", evening: "Guten Abend" },
+  pt: { label: "Portugu\xEAs", morning: "Bom dia", afternoon: "Boa tarde", evening: "Boa noite" },
+  nl: { label: "Nederlands", morning: "Goedemorgen", afternoon: "Goedemiddag", evening: "Goedenavond" },
+  sv: { label: "Svenska", morning: "God morgon", afternoon: "God eftermiddag", evening: "God kv\xE4ll" },
+  no: { label: "Norsk", morning: "God morgen", afternoon: "God ettermiddag", evening: "God kveld" },
+  da: { label: "Dansk", morning: "God morgen", afternoon: "God eftermiddag", evening: "God aften" },
+  fi: { label: "Suomi", morning: "Hyv\xE4\xE4 huomenta", afternoon: "Hyv\xE4\xE4 iltap\xE4iv\xE4\xE4", evening: "Hyv\xE4\xE4 iltaa" },
+  pl: { label: "Polski", morning: "Dzie\u0144 dobry", afternoon: "Dzie\u0144 dobry", evening: "Dobry wiecz\xF3r" },
+  cs: { label: "\u010Ce\u0161tina", morning: "Dobr\xE9 r\xE1no", afternoon: "Dobr\xE9 odpoledne", evening: "Dobr\xFD ve\u010Der" },
+  sk: { label: "Sloven\u010Dina", morning: "Dobr\xE9 r\xE1no", afternoon: "Dobr\xE9 popoludnie", evening: "Dobr\xFD ve\u010Der" },
+  hu: { label: "Magyar", morning: "J\xF3 reggelt", afternoon: "J\xF3 napot", evening: "J\xF3 est\xE9t" },
+  ro: { label: "Rom\xE2n\u0103", morning: "Bun\u0103 diminea\u021Ba", afternoon: "Bun\u0103 ziua", evening: "Bun\u0103 seara" },
+  hr: { label: "Hrvatski", morning: "Dobro jutro", afternoon: "Dobar dan", evening: "Dobra ve\u010Der" },
+  sr: { label: "Srpski", morning: "Dobro jutro", afternoon: "Dobar dan", evening: "Dobro ve\u010De" },
+  bg: { label: "\u0411\u044A\u043B\u0433\u0430\u0440\u0441\u043A\u0438", morning: "\u0414\u043E\u0431\u0440\u043E \u0443\u0442\u0440\u043E", afternoon: "\u0414\u043E\u0431\u044A\u0440 \u0434\u0435\u043D", evening: "\u0414\u043E\u0431\u044A\u0440 \u0432\u0435\u0447\u0435\u0440" },
+  uk: { label: "\u0423\u043A\u0440\u0430\u0457\u043D\u0441\u044C\u043A\u0430", morning: "\u0414\u043E\u0431\u0440\u043E\u0433\u043E \u0440\u0430\u043D\u043A\u0443", afternoon: "\u0414\u043E\u0431\u0440\u0438\u0439 \u0434\u0435\u043D\u044C", evening: "\u0414\u043E\u0431\u0440\u0438\u0439 \u0432\u0435\u0447\u0456\u0440" },
+  ru: { label: "\u0420\u0443\u0441\u0441\u043A\u0438\u0439", morning: "\u0414\u043E\u0431\u0440\u043E\u0435 \u0443\u0442\u0440\u043E", afternoon: "\u0414\u043E\u0431\u0440\u044B\u0439 \u0434\u0435\u043D\u044C", evening: "\u0414\u043E\u0431\u0440\u044B\u0439 \u0432\u0435\u0447\u0435\u0440" },
+  el: { label: "\u0395\u03BB\u03BB\u03B7\u03BD\u03B9\u03BA\u03AC", morning: "\u039A\u03B1\u03BB\u03B7\u03BC\u03AD\u03C1\u03B1", afternoon: "\u039A\u03B1\u03BB\u03CC \u03B1\u03C0\u03CC\u03B3\u03B5\u03C5\u03BC\u03B1", evening: "\u039A\u03B1\u03BB\u03B7\u03C3\u03C0\u03AD\u03C1\u03B1" },
+  tr: { label: "T\xFCrk\xE7e", morning: "G\xFCnayd\u0131n", afternoon: "T\xFCnayd\u0131n", evening: "\u0130yi ak\u015Famlar" },
+  ar: { label: "\u0627\u0644\u0639\u0631\u0628\u064A\u0629", morning: "\u0635\u0628\u0627\u062D \u0627\u0644\u062E\u064A\u0631", afternoon: "\u0645\u0633\u0627\u0621 \u0627\u0644\u062E\u064A\u0631", evening: "\u0645\u0633\u0627\u0621 \u0627\u0644\u062E\u064A\u0631" },
+  he: { label: "\u05E2\u05D1\u05E8\u05D9\u05EA", morning: "\u05D1\u05D5\u05E7\u05E8 \u05D8\u05D5\u05D1", afternoon: "\u05E6\u05D4\u05E8\u05D9\u05D9\u05DD \u05D8\u05D5\u05D1\u05D9\u05DD", evening: "\u05E2\u05E8\u05D1 \u05D8\u05D5\u05D1" },
+  fa: { label: "\u0641\u0627\u0631\u0633\u06CC", morning: "\u0635\u0628\u062D \u0628\u062E\u06CC\u0631", afternoon: "\u0639\u0635\u0631 \u0628\u062E\u06CC\u0631", evening: "\u0634\u0628 \u0628\u062E\u06CC\u0631" },
+  hi: { label: "\u0939\u093F\u0928\u094D\u0926\u0940", morning: "\u0938\u0941\u092A\u094D\u0930\u092D\u093E\u0924", afternoon: "\u0928\u092E\u0938\u094D\u0915\u093E\u0930", evening: "\u0936\u0941\u092D \u0938\u0902\u0927\u094D\u092F\u093E" },
+  bn: { label: "\u09AC\u09BE\u0982\u09B2\u09BE", morning: "\u09B8\u09C1\u09AA\u09CD\u09B0\u09AD\u09BE\u09A4", afternoon: "\u09B6\u09C1\u09AD \u0985\u09AA\u09B0\u09BE\u09B9\u09CD\u09A3", evening: "\u09B6\u09C1\u09AD \u09B8\u09A8\u09CD\u09A7\u09CD\u09AF\u09BE" },
+  ta: { label: "\u0BA4\u0BAE\u0BBF\u0BB4\u0BCD", morning: "\u0B95\u0BBE\u0BB2\u0BC8 \u0BB5\u0BA3\u0B95\u0BCD\u0B95\u0BAE\u0BCD", afternoon: "\u0BAE\u0BA4\u0BBF\u0BAF \u0BB5\u0BA3\u0B95\u0BCD\u0B95\u0BAE\u0BCD", evening: "\u0BAE\u0BBE\u0BB2\u0BC8 \u0BB5\u0BA3\u0B95\u0BCD\u0B95\u0BAE\u0BCD" },
+  te: { label: "\u0C24\u0C46\u0C32\u0C41\u0C17\u0C41", morning: "\u0C36\u0C41\u0C2D\u0C4B\u0C26\u0C2F\u0C02", afternoon: "\u0C36\u0C41\u0C2D \u0C2E\u0C27\u0C4D\u0C2F\u0C3E\u0C39\u0C4D\u0C28\u0C02", evening: "\u0C36\u0C41\u0C2D \u0C38\u0C3E\u0C2F\u0C02\u0C24\u0C4D\u0C30\u0C02" },
+  mr: { label: "\u092E\u0930\u093E\u0920\u0940", morning: "\u0938\u0941\u092A\u094D\u0930\u092D\u093E\u0924", afternoon: "\u0936\u0941\u092D \u0926\u0941\u092A\u093E\u0930", evening: "\u0936\u0941\u092D \u0938\u0902\u0927\u094D\u092F\u093E\u0915\u093E\u0933" },
+  gu: { label: "\u0A97\u0AC1\u0A9C\u0AB0\u0ABE\u0AA4\u0AC0", morning: "\u0AB8\u0AC1\u0AAA\u0ACD\u0AB0\u0AAD\u0ABE\u0AA4", afternoon: "\u0AB6\u0AC1\u0AAD \u0AAC\u0AAA\u0ACB\u0AB0", evening: "\u0AB6\u0AC1\u0AAD \u0AB8\u0ABE\u0A82\u0A9C" },
+  ur: { label: "\u0627\u0631\u062F\u0648", morning: "\u0635\u0628\u062D \u0628\u062E\u06CC\u0631", afternoon: "\u0633\u06C1 \u067E\u06C1\u0631 \u0628\u062E\u06CC\u0631", evening: "\u0634\u0627\u0645 \u0628\u062E\u06CC\u0631" },
+  th: { label: "\u0E44\u0E17\u0E22", morning: "\u0E2A\u0E27\u0E31\u0E2A\u0E14\u0E35\u0E15\u0E2D\u0E19\u0E40\u0E0A\u0E49\u0E32", afternoon: "\u0E2A\u0E27\u0E31\u0E2A\u0E14\u0E35\u0E15\u0E2D\u0E19\u0E1A\u0E48\u0E32\u0E22", evening: "\u0E2A\u0E27\u0E31\u0E2A\u0E14\u0E35\u0E15\u0E2D\u0E19\u0E40\u0E22\u0E47\u0E19" },
+  vi: { label: "Ti\u1EBFng Vi\u1EC7t", morning: "Ch\xE0o bu\u1ED5i s\xE1ng", afternoon: "Ch\xE0o bu\u1ED5i chi\u1EC1u", evening: "Ch\xE0o bu\u1ED5i t\u1ED1i" },
+  id: { label: "Bahasa Indonesia", morning: "Selamat pagi", afternoon: "Selamat siang", evening: "Selamat malam" },
+  ms: { label: "Bahasa Melayu", morning: "Selamat pagi", afternoon: "Selamat petang", evening: "Selamat malam" },
+  tl: { label: "Filipino", morning: "Magandang umaga", afternoon: "Magandang hapon", evening: "Magandang gabi" },
+  zh: { label: "\u4E2D\u6587", morning: "\u65E9\u4E0A\u597D", afternoon: "\u4E0B\u5348\u597D", evening: "\u665A\u4E0A\u597D" },
+  ja: { label: "\u65E5\u672C\u8A9E", morning: "\u304A\u306F\u3088\u3046\u3054\u3056\u3044\u307E\u3059", afternoon: "\u3053\u3093\u306B\u3061\u306F", evening: "\u3053\u3093\u3070\u3093\u306F" },
+  ko: { label: "\uD55C\uAD6D\uC5B4", morning: "\uC88B\uC740 \uC544\uCE68", afternoon: "\uC88B\uC740 \uC624\uD6C4", evening: "\uC88B\uC740 \uC800\uB141" },
+  sw: { label: "Kiswahili", morning: "Habari ya asubuhi", afternoon: "Habari ya mchana", evening: "Habari ya jioni" },
+  am: { label: "\u12A0\u121B\u122D\u129B", morning: "\u12A5\u1295\u12F0\u121D\u1295 \u12A0\u12F0\u122D\u12AD", afternoon: "\u12A5\u1295\u12F0\u121D\u1295 \u12CB\u120D\u12AD", evening: "\u12A5\u1295\u12F0\u121D\u1295 \u12A0\u1218\u1238\u1205" },
+  yo: { label: "Yor\xF9b\xE1", morning: "E kaaro", afternoon: "E kaasan", evening: "E kaal\u1EB9" },
+  zu: { label: "isiZulu", morning: "Sawubona ekuseni", afternoon: "Sawubona emini", evening: "Sawubona kusihlwa" },
+  ha: { label: "Hausa", morning: "Ina kwana", afternoon: "Barka da rana", evening: "Barka da yamma" },
+  ga: { label: "Gaeilge", morning: "Maidin mhaith", afternoon: "Tr\xE1thn\xF3na maith", evening: "O\xEDche mhaith" },
+  cy: { label: "Cymraeg", morning: "Bore da", afternoon: "Prynhawn da", evening: "Noswaith dda" },
+  ca: { label: "Catal\xE0", morning: "Bon dia", afternoon: "Bona tarda", evening: "Bona nit" },
+  eu: { label: "Euskara", morning: "Egun on", afternoon: "Arratsalde on", evening: "Gabon" },
+  gl: { label: "Galego", morning: "Bo d\xEDa", afternoon: "Boa tarde", evening: "Boa noite" }
+};
+var PRESET_KEYS = Object.keys(LANG_PRESETS).sort(
+  (a, b) => LANG_PRESETS[a].label.localeCompare(LANG_PRESETS[b].label)
+);
+var DEFAULT_SALUT = LANG_PRESETS["it"];
+var DEFAULT_EMOJIS = {
+  morning: "\u2600\uFE0F",
+  afternoon: "\u{1F324}\uFE0F",
+  evening: "\u{1F306}",
+  night: "\u{1F319}"
+};
+function timeSlot(hour) {
+  if (hour >= 5 && hour < 12) return "morning";
+  if (hour >= 12 && hour < 17) return "afternoon";
+  if (hour >= 17 && hour < 21) return "evening";
+  return "night";
+}
+function salutSlot(hour) {
+  if (hour >= 5 && hour < 12) return "morning";
+  if (hour >= 12 && hour < 18) return "afternoon";
+  return "evening";
+}
+function getSalutation(cfg, hour) {
+  const mode = cfg.salutationMode ?? "auto";
+  if (mode === "custom") {
+    const slot = salutSlot(hour);
+    const map = {
+      morning: cfg.salutMorning,
+      afternoon: cfg.salutAfternoon,
+      evening: cfg.salutEvening
+    };
+    const custom = map[slot]?.trim();
+    if (custom) return custom;
+  }
+  const presetKey = cfg.salutationPreset ?? "it";
+  const preset = LANG_PRESETS[presetKey] ?? DEFAULT_SALUT;
+  return preset[salutSlot(hour)];
+}
+function pickEmoji(cfg, hour) {
+  const mode = cfg.emojiMode ?? "auto";
+  if (mode === "custom") {
+    const slot = timeSlot(hour);
+    const map = {
+      morning: cfg.emojiMorning,
+      afternoon: cfg.emojiAfternoon,
+      evening: cfg.emojiEvening,
+      night: cfg.emojiNight
+    };
+    return map[slot]?.trim() || DEFAULT_EMOJIS[slot];
+  }
+  if (mode === "random") {
+    const pool = parseEmojiPool(cfg.emojiPool ?? "");
+    if (pool.length === 0) return DEFAULT_EMOJIS[timeSlot(hour)];
+    if (cfg.emojiDailySeed) {
+      return pool[dailyIndex(pool.length)];
+    }
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  return DEFAULT_EMOJIS[timeSlot(hour)];
+}
+function parseEmojiPool(raw) {
+  const trimmed = raw.trim();
+  if (!trimmed) return [];
+  return trimmed.split(/[\s,]+/).filter((s) => s.length > 0);
+}
+var GreetingBlock = class extends BaseBlock {
+  emojiEl = null;
+  nameEl = null;
+  timeEl = null;
+  render(el) {
+    el.addClass("greeting-block");
+    const cfg = this.instance.config;
+    const { showTime = true, showEmoji = true } = cfg;
+    if (showEmoji) {
+      this.emojiEl = el.createDiv({ cls: "greeting-emoji" });
+    }
+    this.nameEl = el.createDiv({ cls: "greeting-name" });
+    if (showTime) {
+      this.timeEl = el.createDiv({ cls: "greeting-time" });
+    }
+    this.tick();
+    this.registerInterval(window.setInterval(() => this.tick(), 6e4));
+  }
+  tick() {
+    const now = (0, import_obsidian11.moment)();
+    const hour = now.hour();
+    const cfg = this.instance.config;
+    const { name = "bentornato", showTime = true, showEmoji = true } = cfg;
+    if (this.emojiEl && showEmoji) {
+      this.emojiEl.setText(pickEmoji(cfg, hour));
+    }
+    if (this.nameEl) {
+      this.nameEl.empty();
+      this.nameEl.createSpan({ cls: "greeting-salut", text: `${getSalutation(cfg, hour)}, ` });
+      this.nameEl.createSpan({ cls: "greeting-user", text: name });
+    }
+    if (this.timeEl && showTime) {
+      this.timeEl.setText(now.format("HH:mm"));
+    }
+  }
+  renderContentSettings(body, draft) {
+    const cfg = draft;
+    new import_obsidian11.Setting(body).setName("Name").addText(
+      (t) => t.setValue(cfg.name ?? "bentornato").onChange((v) => {
+        cfg.name = v;
+      })
+    );
+    new import_obsidian11.Setting(body).setName("Show time").addToggle(
+      (t) => t.setValue(cfg.showTime ?? true).onChange((v) => {
+        cfg.showTime = v;
+      })
+    );
+    new import_obsidian11.Setting(body).setName("Salutation").setHeading();
+    const salutSection = body.createDiv();
+    const buildSalutSettings = () => {
+      salutSection.empty();
+      const mode = cfg.salutationMode ?? "auto";
+      new import_obsidian11.Setting(salutSection).setName("Salutation mode").setDesc("Auto: language preset. Custom: write your own for each time slot.").addDropdown(
+        (d) => d.addOption("auto", "Language preset").addOption("custom", "Custom text").setValue(mode).onChange((v) => {
+          cfg.salutationMode = v === "custom" ? "custom" : "auto";
+          buildSalutSettings();
+        })
+      );
+      if (mode === "auto") {
+        new import_obsidian11.Setting(salutSection).setName("Language").addDropdown((d) => {
+          for (const key of PRESET_KEYS) {
+            d.addOption(key, LANG_PRESETS[key].label);
+          }
+          d.setValue(cfg.salutationPreset ?? "it").onChange((v) => {
+            cfg.salutationPreset = v;
+          });
+        });
+        const preset = LANG_PRESETS[cfg.salutationPreset ?? "it"] ?? DEFAULT_SALUT;
+        const preview = salutSection.createDiv({ cls: "setting-item-description" });
+        preview.addClass("hp-preview-hint");
+        preview.setText(`${preset.morning} / ${preset.afternoon} / ${preset.evening}`);
+      }
+      if (mode === "custom") {
+        const slots = [
+          { key: "salutMorning", label: "Morning", time: "5:00\u201312:00", fallback: DEFAULT_SALUT.morning },
+          { key: "salutAfternoon", label: "Afternoon", time: "12:00\u201318:00", fallback: DEFAULT_SALUT.afternoon },
+          { key: "salutEvening", label: "Evening", time: "18:00\u20135:00", fallback: DEFAULT_SALUT.evening }
+        ];
+        for (const slot of slots) {
+          new import_obsidian11.Setting(salutSection).setName(`${slot.label} greeting`).setDesc(slot.time).addText(
+            (t) => t.setValue(cfg[slot.key] ?? slot.fallback).setPlaceholder(slot.fallback).onChange((v) => {
+              cfg[slot.key] = v;
+            })
+          );
+        }
+      }
+    };
+    buildSalutSettings();
+    new import_obsidian11.Setting(body).setName("Emoji").setHeading();
+    new import_obsidian11.Setting(body).setName("Show emoji").addToggle(
+      (t) => t.setValue(cfg.showEmoji ?? true).onChange((v) => {
+        cfg.showEmoji = v;
+        buildEmojiSettings();
+      })
+    );
+    const emojiSection = body.createDiv();
+    let slotPickers = [];
+    const buildEmojiSettings = () => {
+      for (const p of slotPickers) p.destroy();
+      slotPickers = [];
+      emojiSection.empty();
+      if (cfg.showEmoji === false) return;
+      new import_obsidian11.Setting(emojiSection).setName("Emoji mode").setDesc("Auto: based on time of day. Custom: one per time slot. Random: picked from a pool.").addDropdown(
+        (d) => d.addOption("auto", "Auto (time of day)").addOption("custom", "Custom per slot").addOption("random", "Random pool").setValue(cfg.emojiMode ?? "auto").onChange((v) => {
+          cfg.emojiMode = v === "custom" || v === "random" ? v : "auto";
+          buildEmojiSettings();
+        })
+      );
+      const mode = cfg.emojiMode ?? "auto";
+      if (mode === "custom") {
+        const slots = [
+          { key: "emojiMorning", label: "Morning", default: "\u2600\uFE0F", time: "5:00\u201312:00" },
+          { key: "emojiAfternoon", label: "Afternoon", default: "\u{1F324}\uFE0F", time: "12:00\u201317:00" },
+          { key: "emojiEvening", label: "Evening", default: "\u{1F306}", time: "17:00\u201321:00" },
+          { key: "emojiNight", label: "Night", default: "\u{1F319}", time: "21:00\u20135:00" }
+        ];
+        for (const slot of slots) {
+          const row = emojiSection.createDiv({ cls: "setting-item" });
+          row.createDiv({ cls: "setting-item-info" }).createDiv({ cls: "setting-item-name", text: `${slot.label} emoji (${slot.time})` });
+          const control = row.createDiv({ cls: "setting-item-control" });
+          const closePickers = () => {
+            for (const p of slotPickers) p.close();
+          };
+          const picker = createEmojiPicker({
+            container: control,
+            value: cfg[slot.key] ?? slot.default,
+            placeholder: slot.default,
+            onSelect: (emoji) => {
+              cfg[slot.key] = emoji;
+            },
+            onClear: () => {
+              cfg[slot.key] = "";
+            },
+            onBeforeOpen: closePickers
+          });
+          slotPickers.push(picker);
+        }
+      }
+      if (mode === "random") {
+        const poolRow = emojiSection.createDiv({ cls: "setting-item" });
+        const poolInfo = poolRow.createDiv({ cls: "setting-item-info" });
+        poolInfo.createDiv({ cls: "setting-item-name", text: "Emoji pool" });
+        poolInfo.createDiv({ cls: "setting-item-description", text: "Click to add emoji. Remove by clicking the \u2715 on each." });
+        const poolControl = poolRow.createDiv({ cls: "setting-item-control" });
+        const poolContainer = poolControl.createDiv({ cls: "greeting-emoji-pool" });
+        const currentPool = parseEmojiPool(cfg.emojiPool ?? "");
+        const renderPool = () => {
+          poolContainer.empty();
+          for (let i = 0; i < currentPool.length; i++) {
+            const chip = poolContainer.createDiv({ cls: "greeting-emoji-chip" });
+            chip.createSpan({ text: currentPool[i] });
+            const del = chip.createEl("button", { cls: "greeting-emoji-chip-del", text: "\u2715" });
+            del.addEventListener("click", () => {
+              currentPool.splice(i, 1);
+              cfg.emojiPool = currentPool.join(" ");
+              renderPool();
+            });
+          }
+          const addBtn = poolContainer.createDiv({ cls: "greeting-emoji-pool-add" });
+          const closePickers = () => {
+            for (const p of slotPickers) p.close();
+          };
+          const addPicker = createEmojiPicker({
+            container: addBtn,
+            value: "",
+            placeholder: "\uFF0B",
+            onSelect: (emoji) => {
+              currentPool.push(emoji);
+              cfg.emojiPool = currentPool.join(" ");
+              renderPool();
+            },
+            onClear: () => {
+            },
+            onBeforeOpen: closePickers
+          });
+          slotPickers.push(addPicker);
+        };
+        renderPool();
+        new import_obsidian11.Setting(emojiSection).setName("Same emoji all day").setDesc("Pick one at midnight, keep it all day.").addToggle(
+          (t) => t.setValue(cfg.emojiDailySeed ?? false).onChange((v) => {
+            cfg.emojiDailySeed = v;
+          })
+        );
+      }
+    };
+    buildEmojiSettings();
+  }
+};
+
+// src/blocks/ClockBlock.ts
+var import_obsidian12 = require("obsidian");
+var CLOCK_STYLES = {
+  minimal: "Minimal",
+  centered: "Centered",
+  large: "Large",
+  accent: "Accent"
+};
+var ClockBlock = class extends BaseBlock {
+  timeEl = null;
+  dateEl = null;
+  render(el) {
+    const { showDate = true, showSeconds = false, clockStyle = "minimal" } = this.instance.config;
+    el.addClass("clock-block");
+    const safeStyle = clockStyle in CLOCK_STYLES ? clockStyle : "minimal";
+    el.addClass(`clock-style-${safeStyle}`);
+    this.timeEl = el.createDiv({ cls: "clock-time" });
+    if (showDate) {
+      this.dateEl = el.createDiv({ cls: "clock-date" });
+    }
+    this.tick();
+    const interval = showSeconds ? 1e3 : 6e4;
+    this.registerInterval(window.setInterval(() => this.tick(), interval));
+  }
+  tick() {
+    const now = (0, import_obsidian12.moment)();
+    const { showSeconds = false, showDate = true, format = "" } = this.instance.config;
+    if (this.timeEl) {
+      if (format) {
+        this.timeEl.setText(now.format(format));
+      } else {
+        this.timeEl.setText(now.format(showSeconds ? "HH:mm:ss" : "HH:mm"));
+      }
+    }
+    if (this.dateEl && showDate) {
+      this.dateEl.setText(now.format("dddd, D MMMM YYYY"));
+    }
+  }
+  renderContentSettings(body, draft) {
+    new import_obsidian12.Setting(body).setName("Style").setDesc("How the clock looks.").addDropdown(
+      (d) => d.addOptions(CLOCK_STYLES).setValue(draft.clockStyle ?? "minimal").onChange((v) => {
+        draft.clockStyle = v;
+      })
+    );
+    new import_obsidian12.Setting(body).setName("Show seconds").addToggle(
+      (t) => t.setValue(draft.showSeconds ?? false).onChange((v) => {
+        draft.showSeconds = v;
+      })
+    );
+    new import_obsidian12.Setting(body).setName("Show date").addToggle(
+      (t) => t.setValue(draft.showDate ?? true).onChange((v) => {
+        draft.showDate = v;
+      })
+    );
+    new import_obsidian12.Setting(body).setName("Custom format").setDesc("Moment.js format string. Leave blank for default.").addText(
+      (t) => t.setValue(draft.format ?? "").onChange((v) => {
+        draft.format = v;
+      })
+    );
+  }
+};
+
+// src/blocks/FolderLinksBlock.ts
+var import_obsidian14 = require("obsidian");
+
+// src/utils/FolderSuggestModal.ts
+var import_obsidian13 = require("obsidian");
+var FolderSuggestModal = class extends import_obsidian13.SuggestModal {
+  constructor(app, onChoose) {
+    super(app);
+    this.onChoose = onChoose;
+    this.setPlaceholder("Type to search vault folders\u2026");
+  }
+  cachedFolders = null;
+  getAllFolders() {
+    if (this.cachedFolders) return this.cachedFolders;
+    const folders = [];
+    const recurse = (f) => {
+      folders.push(f);
+      for (const child of f.children) {
+        if (child instanceof import_obsidian13.TFolder) recurse(child);
+      }
+    };
+    recurse(this.app.vault.getRoot());
+    this.cachedFolders = folders;
+    return folders;
+  }
+  getSuggestions(query) {
+    const q = query.toLowerCase();
+    return this.getAllFolders().filter(
+      (f) => f.path.toLowerCase().includes(q)
+    );
+  }
+  renderSuggestion(folder, el) {
+    el.createSpan({ text: folder.path === "/" ? "/ (vault root)" : folder.path });
+  }
+  onChooseSuggestion(folder) {
+    this.onChoose(folder);
+  }
+};
+
+// src/utils/dragReorder.ts
+function enableDragReorder(row, index, items, state, renderList) {
+  row.setAttribute("draggable", "true");
+  row.addEventListener("dragstart", (e) => {
+    state.dragIdx = index;
+    row.addClass("is-dragging");
+    e.dataTransfer?.setData("text/plain", String(index));
+  });
+  row.addEventListener("dragend", () => {
+    row.removeClass("is-dragging");
+  });
+  row.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    row.addClass("drag-over");
+  });
+  row.addEventListener("dragleave", () => {
+    row.removeClass("drag-over");
+  });
+  row.addEventListener("drop", (e) => {
+    e.preventDefault();
+    row.removeClass("drag-over");
+    if (state.dragIdx >= 0 && state.dragIdx !== index) {
+      const [moved] = items.splice(state.dragIdx, 1);
+      items.splice(index, 0, moved);
+      renderList();
+    }
+  });
+  const grip = row.createSpan({ cls: "drag-grip", text: "\u2630" });
+  grip.setAttribute("aria-label", "Drag to reorder");
+}
+
+// src/utils/urls.ts
+var DANGEROUS_SCHEMES = /* @__PURE__ */ new Set(["javascript:", "data:", "vbscript:", "file:", "blob:"]);
+function isDangerousUrl(value) {
+  if (typeof value !== "string" || !value) return false;
+  try {
+    return DANGEROUS_SCHEMES.has(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+}
+
+// src/blocks/FolderLinksBlock.ts
+var VALID_ALIGNS = /* @__PURE__ */ new Set(["left", "center", "right"]);
+function parseFolderPattern(input) {
+  const trimmed = (input ?? "").trim().replace(/\/+$/, "");
+  if (!trimmed) return { folder: "", hasPattern: false, matches: () => true };
+  const wildcardIdx = trimmed.search(/[*?]/);
+  if (wildcardIdx === -1) {
+    return { folder: trimmed, hasPattern: false, matches: () => true };
+  }
+  const lastSlash = trimmed.lastIndexOf("/", wildcardIdx);
+  const folder = lastSlash === -1 ? "" : trimmed.slice(0, lastSlash);
+  const patternStr = lastSlash === -1 ? trimmed : trimmed.slice(lastSlash + 1);
+  const re = globToRegex(patternStr);
+  return { folder, hasPattern: true, matches: (p) => re.test(p) };
+}
+function globToRegex(glob) {
+  let re = "";
+  for (let i = 0; i < glob.length; i++) {
+    const c = glob[i];
+    if (c === "*") {
+      if (glob[i + 1] === "*") {
+        re += ".*";
+        i++;
+        if (glob[i + 1] === "/") i++;
+      } else {
+        re += "[^/]*";
+      }
+    } else if (c === "?") {
+      re += "[^/]";
+    } else if (".+^${}()|[]\\".includes(c)) {
+      re += "\\" + c;
+    } else {
+      re += c;
+    }
+  }
+  return new RegExp("^" + re + "$", "i");
+}
+var FolderLinksBlock = class _FolderLinksBlock extends BaseBlock {
+  static DEBOUNCE_MS = 150;
+  render(el) {
+    this.containerEl = el;
+    el.addClass("folder-links-block");
+    const trigger = () => this.scheduleRender(_FolderLinksBlock.DEBOUNCE_MS, () => this.renderContent());
+    const cfg = this.instance.config;
+    const scopeOf = () => parseFolderPattern(cfg.folder ?? "").folder;
+    const isRelevant = (file) => {
+      const folder = scopeOf();
+      return folder === "" ? true : file.path.startsWith(folder + "/");
+    };
+    this.registerEvent(this.app.vault.on("create", (f) => {
+      if (isRelevant(f)) trigger();
+    }));
+    this.registerEvent(this.app.vault.on("delete", (f) => {
+      if (isRelevant(f)) trigger();
+    }));
+    this.registerEvent(this.app.vault.on("rename", (f, oldPath) => {
+      const folder = scopeOf();
+      const underFolder = folder === "" || oldPath.startsWith(folder + "/");
+      if (isRelevant(f) || underFolder) trigger();
+    }));
+    this.app.workspace.onLayoutReady(() => this.renderContent());
+  }
+  renderContent() {
+    const el = this.containerEl;
+    if (!el) return;
+    el.empty();
+    const cfg = this.instance.config;
+    const folderInput = cfg.folder ?? "";
+    const links = cfg.links ?? [];
+    const linkAlign = VALID_ALIGNS.has(cfg.linkAlign ?? "") ? cfg.linkAlign : "left";
+    const folderEmoji = cfg.folderEmoji ?? "";
+    this.renderHeader(el, "Folder links");
+    const list = el.createDiv({ cls: "folder-links-list" });
+    list.addClass(`folder-links-align-${linkAlign}`);
+    if (folderInput.trim()) {
+      const parsed = parseFolderPattern(folderInput);
+      if (!parsed.folder && !parsed.hasPattern) {
+        list.createEl("p", { text: "Vault root listing is not supported. Select a subfolder.", cls: "block-loading" });
+      } else {
+        const root = parsed.folder ? this.app.vault.getAbstractFileByPath(parsed.folder) : this.app.vault.getRoot();
+        if (!(root instanceof import_obsidian14.TFolder)) {
+          list.createEl("p", { text: `Folder "${parsed.folder}" not found.`, cls: "block-loading" });
+        } else {
+          const prefix = parsed.folder ? parsed.folder + "/" : "";
+          const notes = this.getNotesInFolder(root).filter((f) => parsed.matches(prefix ? f.path.slice(prefix.length) : f.path)).sort((a, b) => a.basename.localeCompare(b.basename));
+          for (const file of notes) {
+            const item = list.createDiv({ cls: "folder-link-item" });
+            const btn = item.createEl("button", { cls: "folder-link-btn" });
+            if (folderEmoji) {
+              btn.createSpan({ cls: "link-emoji", text: folderEmoji });
+            }
+            btn.createSpan({ text: file.basename });
+            btn.addEventListener("click", () => {
+              void this.app.workspace.openLinkText(file.path, "");
+            });
+          }
+          if (notes.length === 0) {
+            const label = parsed.hasPattern ? `matching "${folderInput}"` : `in "${root.path}"`;
+            list.createEl("p", { text: `No notes ${label}.`, cls: "block-loading" });
+          }
+        }
+      }
+    }
+    for (const link of links) {
+      const item = list.createDiv({ cls: "folder-link-item" });
+      const btn = item.createEl("button", { cls: "folder-link-btn" });
+      if (link.emoji) {
+        btn.createSpan({ cls: "link-emoji", text: link.emoji });
+      }
+      btn.createSpan({ text: link.label });
+      btn.addEventListener("click", () => {
+        if (isDangerousUrl(link.path)) {
+          new import_obsidian14.Notice("Homepage blocks: blocked an unsafe link.");
+          return;
+        }
+        void this.app.workspace.openLinkText(link.path, "");
+      });
+    }
+    if (!folderInput.trim() && links.length === 0) {
+      const hint = list.createDiv({ cls: "block-empty-hint" });
+      hint.createDiv({ cls: "block-empty-hint-icon", text: "\u{1F517}" });
+      hint.createDiv({ cls: "block-empty-hint-text", text: "No links yet. Add manual links or pick a folder in settings." });
+    }
+  }
+  /** Recursively collect all files within a folder. */
+  getNotesInFolder(folder) {
+    const files = [];
+    const recurse = (f) => {
+      for (const child of f.children) {
+        if (child instanceof import_obsidian14.TFile) files.push(child);
+        else if (child instanceof import_obsidian14.TFolder) recurse(child);
+      }
+    };
+    recurse(folder);
+    return files;
+  }
+  renderContentSettings(body, draft) {
+    const cfg = draft;
+    cfg.links ??= [];
+    const links = cfg.links;
+    const pickers = [];
+    const closeAllPickers = () => {
+      for (const p of pickers) p.close();
+    };
+    new import_obsidian14.Setting(body).setName("Link alignment").setDesc("Left, center, or right.").addDropdown(
+      (d) => d.addOptions({ left: "Left", center: "Center", right: "Right" }).setValue(cfg.linkAlign ?? "left").onChange((v) => {
+        cfg.linkAlign = v;
+      })
+    );
+    let folderText;
+    new import_obsidian14.Setting(body).setName("Auto-list folder").setDesc("Folder path, with optional wildcards. Examples: Projects, Projects/*.md, Projects/**/*-draft.md").addText((t) => {
+      folderText = t;
+      t.setValue(cfg.folder ?? "").setPlaceholder("Projects/*.md").onChange((v) => {
+        cfg.folder = v;
+      });
+    }).addButton(
+      (btn) => btn.setIcon("folder").setTooltip("Browse vault folders").onClick(() => {
+        new FolderSuggestModal(this.app, (folder) => {
+          const path = folder.path === "/" ? "" : folder.path;
+          cfg.folder = path;
+          folderText.setValue(path);
+        }).open();
+      })
+    );
+    const folderPicker = createEmojiPicker({
+      container: body,
+      label: "Folder link emoji",
+      value: cfg.folderEmoji ?? "",
+      placeholder: "None",
+      rowClass: "link-emoji-picker-row",
+      panelClass: "link-emoji-panel",
+      onSelect: (emoji) => {
+        cfg.folderEmoji = emoji;
+      },
+      onClear: () => {
+        cfg.folderEmoji = "";
+      },
+      onBeforeOpen: closeAllPickers
+    });
+    pickers.push(folderPicker);
+    new import_obsidian14.Setting(body).setName("Manual links").setHeading();
+    const linksContainer = body.createDiv();
+    const dragState = { dragIdx: -1 };
+    const renderLinks = () => {
+      pickers.length = 1;
+      linksContainer.empty();
+      links.forEach((link, i) => {
+        const row = linksContainer.createDiv({ cls: "settings-link-row" });
+        enableDragReorder(row, i, links, dragState, renderLinks);
+        new import_obsidian14.Setting(row).setName(`Link ${i + 1}`).addText((t) => t.setPlaceholder("Label").setValue(link.label).onChange((v) => {
+          link.label = v;
+        })).addText((t) => t.setPlaceholder("Path").setValue(link.path).onChange((v) => {
+          link.path = v;
+        })).addButton((btn) => btn.setIcon("trash").setTooltip("Remove").onClick(() => {
+          links.splice(i, 1);
+          renderLinks();
+        }));
+        const linkPicker = createEmojiPicker({
+          container: row,
+          panelContainer: row,
+          value: link.emoji ?? "",
+          placeholder: "Emoji",
+          rowClass: "link-emoji-picker-row",
+          panelClass: "link-emoji-panel",
+          onSelect: (emoji) => {
+            link.emoji = emoji;
+          },
+          onClear: () => {
+            link.emoji = void 0;
+          },
+          onBeforeOpen: closeAllPickers
+        });
+        pickers.push(linkPicker);
+      });
+    };
+    renderLinks();
+    new import_obsidian14.Setting(body).addButton((btn) => btn.setButtonText("Add link").onClick(() => {
+      links.push({ label: "", path: "" });
+      renderLinks();
+    }));
+  }
+};
+
+// src/blocks/ButtonGridBlock.ts
+var import_obsidian15 = require("obsidian");
+var ButtonGridBlock = class extends BaseBlock {
+  render(el) {
+    el.addClass("button-grid-block");
+    const { columns = 2, items = [] } = this.instance.config;
+    this.renderHeader(el, "Buttons");
+    const grid = el.createDiv({ cls: "button-grid" });
+    const safeCols = Math.max(1, Math.min(3, Math.floor(Number(columns) || 2)));
+    grid.style.setProperty("--hp-grid-cols", `repeat(${safeCols}, 1fr)`);
+    grid.setAttribute(AUTO_HEIGHT_ATTR, "");
+    this.observeWidthForAutoHeight(grid);
+    if (items.length === 0) {
+      const hint = grid.createDiv({ cls: "block-empty-hint" });
+      hint.createDiv({ cls: "block-empty-hint-icon", text: "\u{1F532}" });
+      hint.createDiv({ cls: "block-empty-hint-text", text: "No items yet. Add buttons with emojis and labels in settings." });
+      return;
+    }
+    for (const item of items) {
+      const btn = grid.createEl("button", { cls: "grid-btn" });
+      if (item.emoji) {
+        btn.createSpan({ cls: "grid-btn-emoji", text: item.emoji });
+      }
+      btn.createSpan({ text: item.label });
+      if (item.link) {
+        btn.addEventListener("click", () => {
+          if (isDangerousUrl(item.link)) {
+            new import_obsidian15.Notice("Homepage blocks: blocked an unsafe link.");
+            return;
+          }
+          void this.app.workspace.openLinkText(item.link, "");
+        });
+      } else {
+        btn.addClass("hp-cursor-default");
+      }
+    }
+  }
+  renderContentSettings(body, draft) {
+    const cfg = draft;
+    if (!Array.isArray(cfg.items)) cfg.items = [];
+    new import_obsidian15.Setting(body).setName("Columns").addDropdown(
+      (d) => d.addOption("1", "1").addOption("2", "2").addOption("3", "3").setValue(String(cfg.columns ?? 2)).onChange((v) => {
+        cfg.columns = Number(v);
+      })
+    );
+    const cssSection = body.createDiv({ cls: "hp-custom-css-section" });
+    cssSection.createDiv({ cls: "setting-item-name", text: "Custom CSS" });
+    const cssTextarea = cssSection.createEl("textarea", { cls: "hp-custom-css-textarea" });
+    cssTextarea.placeholder = "--hp-btn-bg: transparent;\n--hp-btn-border: none;\n--hp-btn-shadow: none;\n--hp-btn-hover-bg: var(--background-modifier-hover);\n--hp-btn-hover-border-color: transparent;\n--hp-btn-hover-transform: none;\n--hp-btn-hover-shadow: none;";
+    cssTextarea.maxLength = 4096;
+    cssTextarea.value = typeof cfg.customCss === "string" ? cfg.customCss : "";
+    cssTextarea.addEventListener("input", () => {
+      cfg.customCss = cssTextarea.value;
+    });
+    body.createEl("p", { text: "Items", cls: "setting-item-name" });
+    const listEl = body.createDiv({ cls: "btn-grid-item-list" });
+    const dragState = { dragIdx: -1 };
+    let pickers = [];
+    const renderList = () => {
+      pickers.forEach((p) => p.destroy());
+      pickers = [];
+      listEl.empty();
+      cfg.items.forEach((item, i) => {
+        const row = listEl.createDiv({ cls: "btn-grid-item-row" });
+        enableDragReorder(row, i, cfg.items, dragState, renderList);
+        const picker = createEmojiPicker({
+          container: row,
+          panelContainer: listEl,
+          value: item.emoji,
+          placeholder: "\u{1F600}",
+          rowClass: "btn-grid-emoji-picker-row",
+          onBeforeOpen: () => pickers.forEach((p) => p !== picker && p.close()),
+          onSelect: (emoji) => {
+            item.emoji = emoji;
+          },
+          onClear: () => {
+            item.emoji = "";
+          }
+        });
+        pickers.push(picker);
+        const labelInput = row.createEl("input", { type: "text", cls: "btn-grid-item-label" });
+        labelInput.value = item.label;
+        labelInput.placeholder = "Label";
+        labelInput.addEventListener("input", () => {
+          item.label = labelInput.value;
+        });
+        const linkInput = row.createEl("input", { type: "text", cls: "btn-grid-item-link" });
+        linkInput.value = item.link ?? "";
+        linkInput.placeholder = "Note path (optional)";
+        linkInput.addEventListener("input", () => {
+          item.link = linkInput.value || void 0;
+        });
+        const delBtn = row.createEl("button", { cls: "btn-grid-item-del", text: "\u2715" });
+        delBtn.addEventListener("click", () => {
+          cfg.items.splice(i, 1);
+          renderList();
+        });
+      });
+    };
+    renderList();
+    new import_obsidian15.Setting(body).addButton(
+      (btn) => btn.setButtonText("+ add item").onClick(() => {
+        cfg.items.push({ emoji: "", label: "" });
+        renderList();
+      })
+    );
+  }
+};
+
+// src/blocks/QuotesListBlock.ts
+var import_obsidian16 = require("obsidian");
+
+// src/utils/noteContent.ts
+function parseNoteInsight(content, cache) {
+  const heading = cache?.headings?.[0]?.heading ?? "";
+  const fmEnd = cache?.frontmatterPosition?.end.offset ?? 0;
+  const afterFm = content.slice(fmEnd);
+  const body = afterFm.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#")).join(" ");
+  return { heading, body };
+}
+
+// src/blocks/QuotesListBlock.ts
+var COLOR_RE = /^(#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,20}|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*(,\s*[\d.]+\s*)?\)|hsla?\(\s*\d{1,3}\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*(,\s*[\d.]+\s*)?\))$/;
+var DEBOUNCE_MS = 500;
+var SAFE_FONT_RE = /^[a-zA-Z0-9\s,'\-_]+$/;
+var INLINE_FMT_RE = /\*\*([^*\n]+?)\*\*|(^|\s)(#[\p{L}0-9_\-/]+)/gu;
+function renderFormatted(el, text) {
+  INLINE_FMT_RE.lastIndex = 0;
+  let lastIndex = 0;
+  let m;
+  while ((m = INLINE_FMT_RE.exec(text)) !== null) {
+    if (m.index > lastIndex) el.appendText(text.slice(lastIndex, m.index));
+    if (m[1] !== void 0) {
+      el.createEl("strong", { text: m[1] });
+    } else {
+      if (m[2]) el.appendText(m[2]);
+      el.createSpan({ cls: "quote-hashtag", text: m[3] });
+    }
+    lastIndex = INLINE_FMT_RE.lastIndex;
+  }
+  if (lastIndex < text.length) el.appendText(text.slice(lastIndex));
+}
+var QuotesListBlock = class extends BaseBlock {
+  /** Column ResizeObserver — disconnected before each re-render. */
+  colsRo = null;
+  render(el) {
+    this.containerEl = el;
+    el.addClass("quotes-list-block");
+    const trigger = () => this.scheduleRender(DEBOUNCE_MS, (e) => {
+      e.empty();
+      return this.loadAndRender(e);
+    });
+    this.registerEvent(this.app.metadataCache.on("changed", (_file, _data, cache) => {
+      const cfg = this.instance.config;
+      if (cfg.source === "text" || !cfg.tag) return;
+      const tagSearch = normalizeTag(cfg.tag);
+      if (cacheHasTag(cache, tagSearch)) trigger();
+    }));
+    this.registerEvent(this.app.vault.on("delete", (file) => {
+      const cfg = this.instance.config;
+      if (cfg.source === "text" || !cfg.tag) return;
+      if (file.path.endsWith(".md")) trigger();
+    }));
+    return this.loadAndRender(el).catch((e) => {
+      console.error("[Homepage Blocks] QuotesListBlock failed to render:", e);
+      this.renderErrorHint(el, "Couldn\u2019t load quotes \u2014 check the console for details.");
+    });
+  }
+  async loadAndRender(el) {
+    const gen = this.nextGeneration();
+    const {
+      source = "tag",
+      tag = "",
+      quotes = "",
+      columns = 2,
+      maxItems = 20,
+      heightMode = "extend",
+      quoteStyle = "classic",
+      fontStyle = "default",
+      customFont = "",
+      dailySeed = true,
+      textAlign = "left",
+      verticalAlign = "top"
+    } = this.instance.config;
+    el.style.setProperty("--hp-quote-valign", verticalAlign === "middle" ? "center" : verticalAlign === "bottom" ? "flex-end" : "flex-start");
+    el.style.setProperty("--hp-quote-align", textAlign === "center" ? "center" : textAlign === "right" ? "right" : "start");
+    this.renderHeader(el, "Quotes");
+    const effectiveMax = typeof maxItems === "number" && maxItems > 0 ? maxItems : 0;
+    const safeMode = effectiveMax === 1 ? "single" : "list";
+    const safeFontStyle = fontStyle === "serif" || fontStyle === "handwriting" ? fontStyle : "default";
+    el.toggleClass("quote-font-serif", safeFontStyle === "serif");
+    el.toggleClass("quote-font-handwriting", safeFontStyle === "handwriting");
+    const fontCandidate = typeof customFont === "string" ? customFont.trim().slice(0, 64) : "";
+    const safeFont = fontCandidate && SAFE_FONT_RE.test(fontCandidate) ? fontCandidate : "";
+    if (safeFont) el.style.setProperty("--hp-quote-font", safeFont);
+    else el.style.removeProperty("--hp-quote-font");
+    el.toggleClass("quote-style-centered", false);
+    el.toggleClass("quote-style-card", false);
+    el.toggleClass("quotes-list-block--extend", false);
+    el.toggleClass("quote-no-accent", this.instance.config.showAccentBar === false);
+    if (safeMode === "single") {
+      if (source === "text") {
+        this.renderSingleTextQuote(el, quotes, dailySeed);
+        return;
+      }
+      if (!tag) {
+        const hint = el.createDiv({ cls: "block-empty-hint" });
+        hint.createDiv({ cls: "block-empty-hint-icon", text: "\u{1F4A1}" });
+        hint.createDiv({ cls: "block-empty-hint-text", text: "No tag configured. Add a tag in settings to show a daily rotating note." });
+        return;
+      }
+      const tagSearch2 = normalizeTag(tag);
+      const files2 = getFilesWithTag(this.app, tagSearch2);
+      if (files2.length === 0) {
+        el.createDiv({ cls: "insight-card" }).setText(`No files found with tag ${tagSearch2}`);
+        return;
+      }
+      const index = dailySeed ? dailyIndex(files2.length) : Math.floor(Math.random() * files2.length);
+      const file = files2[index];
+      try {
+        const content = await this.app.vault.read(file);
+        if (this.isStale(gen)) return;
+        const cache = this.app.metadataCache.getFileCache(file);
+        const { heading, body } = parseNoteInsight(content, cache);
+        const card2 = el.createDiv({ cls: "insight-card" });
+        const showTitle = this.instance.config.showNoteTitle !== false;
+        if (showTitle) card2.createDiv({ cls: "insight-title", text: heading || file.basename });
+        const bodyEl = card2.createDiv({ cls: "insight-body" });
+        renderFormatted(bodyEl, body);
+      } catch (e) {
+        console.error("[Homepage Blocks] QuotesListBlock single mode failed to read file:", e);
+        el.createDiv({ cls: "insight-card" }).setText("Error reading file.");
+      }
+      const card = el.querySelector(".insight-card");
+      if (card && heightMode === "extend") {
+        el.toggleClass("quotes-list-block--extend", true);
+        card.setAttribute(AUTO_HEIGHT_ATTR, "");
+      }
+      return;
+    }
+    const safeQuoteStyle = quoteStyle === "centered" || quoteStyle === "card" ? quoteStyle : "classic";
+    el.toggleClass("quote-style-centered", safeQuoteStyle === "centered");
+    el.toggleClass("quote-style-card", safeQuoteStyle === "card");
+    el.toggleClass("quotes-list-block--extend", heightMode === "extend");
+    const colsEl = el.createDiv({ cls: "quotes-columns" });
+    if (heightMode !== "wrap") colsEl.setAttribute(AUTO_HEIGHT_ATTR, "");
+    if (heightMode === "wrap") {
+      colsEl.setAttribute("tabindex", "0");
+      colsEl.setAttribute("role", "region");
+      colsEl.setAttribute("aria-label", "Quotes");
+    }
+    if (safeQuoteStyle !== "centered") {
+      const MIN_COL_WIDTH = 200;
+      const updateCols = () => {
+        const w = colsEl.offsetWidth;
+        const effective = w > 0 ? Math.max(1, Math.min(columns, Math.floor(w / MIN_COL_WIDTH))) : columns;
+        colsEl.style.setProperty("--hp-column-count", String(effective));
+      };
+      updateCols();
+      this.colsRo?.disconnect();
+      this.colsRo = new ResizeObserver(updateCols);
+      this.colsRo.observe(colsEl);
+      this.register(() => {
+        this.colsRo?.disconnect();
+        this.colsRo = null;
+      });
+    }
+    if (heightMode !== "wrap") {
+      this.observeWidthForAutoHeight(colsEl);
+    }
+    if (source === "text") {
+      this.renderTextQuotes(colsEl, quotes, effectiveMax);
+      return;
+    }
+    if (!tag) {
+      const hint = colsEl.createDiv({ cls: "block-empty-hint" });
+      hint.createDiv({ cls: "block-empty-hint-icon", text: "\u{1F4AC}" });
+      hint.createDiv({ cls: "block-empty-hint-text", text: "No tag configured. Add a tag in settings to pull quotes from your notes." });
+      return;
+    }
+    const tagSearch = normalizeTag(tag);
+    const allFiles = getFilesWithTag(this.app, tagSearch);
+    const files = effectiveMax > 0 ? allFiles.slice(0, effectiveMax) : allFiles;
+    const results = await Promise.allSettled(
+      files.map(async (file) => {
+        const content = await this.app.vault.read(file);
+        const cache = this.app.metadataCache.getFileCache(file);
+        return { file, content, cache };
+      })
+    );
+    if (this.isStale(gen)) return;
+    for (const result of results) {
+      if (result.status === "rejected") {
+        console.error("[Homepage Blocks] QuotesListBlock failed to read file:", result.reason);
+        continue;
+      }
+      const { file, content, cache } = result.value;
+      const rawColor = cache?.frontmatter?.color ?? "";
+      const color = typeof rawColor === "string" ? rawColor.slice(0, 64) : "";
+      const body = this.extractBody(content, cache);
+      if (!body) continue;
+      const item = colsEl.createDiv({ cls: "quote-item" });
+      const quote = item.createEl("blockquote", { cls: "quote-content" });
+      renderFormatted(quote, body);
+      if (color && COLOR_RE.test(color)) {
+        quote.style.setProperty("--hp-quote-color", color);
+        quote.addClass("quote-colored");
+      }
+      const showTitle = this.instance.config.showNoteTitle !== false;
+      if (showTitle) item.createDiv({ cls: "quote-source", text: file.basename });
+    }
+  }
+  /** Render a single quote picked from the text list (daily or random). */
+  renderSingleTextQuote(el, raw, dailySeed) {
+    if (!raw.trim()) {
+      const hint = el.createDiv({ cls: "block-empty-hint" });
+      hint.createDiv({ cls: "block-empty-hint-icon", text: "\u{1F4AC}" });
+      hint.createDiv({ cls: "block-empty-hint-text", text: "No quotes yet. Add them in settings, separated by ---." });
+      return;
+    }
+    const blocks = raw.split(/\n---\n/).map((b) => b.trim()).filter(Boolean);
+    if (blocks.length === 0) return;
+    const index = dailySeed ? dailyIndex(blocks.length) : Math.floor(Math.random() * blocks.length);
+    const block = blocks[index];
+    const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (lines.length === 0) return;
+    const lastLine = lines[lines.length - 1];
+    const hasSource = lines.length > 1 && /^(—|–|--)/.test(lastLine);
+    const sourceText = hasSource ? lastLine.replace(/^(—|–|--)\s*/, "") : "";
+    const bodyLines = hasSource ? lines.slice(0, -1) : lines;
+    const body = bodyLines.join(" ");
+    const card = el.createDiv({ cls: "insight-card" });
+    if (sourceText) card.createDiv({ cls: "insight-title", text: sourceText });
+    const bodyEl = card.createDiv({ cls: "insight-body" });
+    renderFormatted(bodyEl, body);
+  }
+  /**
+   * Render quotes from plain text. Each quote is separated by `---` on its own line.
+   * Optionally a source line can follow the quote text, prefixed with `—`, `–`, or `--`.
+   *
+   * Example:
+   *   The only way to do great work is to love what you do.
+   *   — Steve Jobs
+   *   ---
+   *   In the middle of difficulty lies opportunity.
+   *   — Albert Einstein
+   */
+  renderTextQuotes(colsEl, raw, maxItems) {
+    if (!raw.trim()) {
+      const hint = colsEl.createDiv({ cls: "block-empty-hint" });
+      hint.createDiv({ cls: "block-empty-hint-icon", text: "\u{1F4AC}" });
+      hint.createDiv({ cls: "block-empty-hint-text", text: "No quotes yet. Add them in settings, separated by ---." });
+      return;
+    }
+    const allBlocks = raw.split(/\n---\n/).map((b) => b.trim()).filter(Boolean);
+    const blocks = maxItems > 0 ? allBlocks.slice(0, maxItems) : allBlocks;
+    for (const block of blocks) {
+      const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
+      const lastLine = lines[lines.length - 1];
+      const hasSource = lines.length > 1 && /^(—|–|--)/.test(lastLine);
+      const sourceText = hasSource ? lastLine.replace(/^(—|–|--)\s*/, "") : "";
+      const bodyLines = hasSource ? lines.slice(0, -1) : lines;
+      const body = bodyLines.join(" ");
+      if (!body) continue;
+      const item = colsEl.createDiv({ cls: "quote-item" });
+      const quote = item.createEl("blockquote", { cls: "quote-content" });
+      renderFormatted(quote, body);
+      if (sourceText) item.createDiv({ cls: "quote-source", text: sourceText });
+    }
+  }
+  /** Extract the first few lines of body content using metadataCache frontmatter offset. */
+  extractBody(content, cache) {
+    const fmEnd = cache?.frontmatterPosition?.end.offset ?? 0;
+    const afterFm = content.slice(fmEnd);
+    const lines = afterFm.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
+    return lines.slice(0, 3).join(" ");
+  }
+  renderContentSettings(body, draft) {
+    const cfg = draft;
+    cfg.source ??= "tag";
+    let tagSection;
+    let textSection;
+    new import_obsidian16.Setting(body).setName("Source").setDesc("From tagged notes, or entered manually.").addDropdown(
+      (d) => d.addOption("tag", "Notes with tag").addOption("text", "Manual text").setValue(cfg.source ?? "tag").onChange((v) => {
+        cfg.source = v === "text" ? "text" : "tag";
+        tagSection.toggleClass("hp-hidden", v !== "tag");
+        textSection.toggleClass("hp-hidden", v !== "text");
+      })
+    );
+    tagSection = body.createDiv();
+    tagSection.toggleClass("hp-hidden", cfg.source !== "tag");
+    new import_obsidian16.Setting(tagSection).setName("Tag").setDesc("Without # prefix").addText(
+      (t) => t.setValue(cfg.tag ?? "").onChange((v) => {
+        cfg.tag = v;
+      })
+    );
+    new import_obsidian16.Setting(tagSection).setName("Show note title").setDesc("Display the note filename as the quote attribution.").addToggle(
+      (t) => t.setValue(cfg.showNoteTitle !== false).onChange((v) => {
+        cfg.showNoteTitle = v;
+      })
+    );
+    textSection = body.createDiv();
+    textSection.toggleClass("hp-hidden", cfg.source !== "text");
+    const textSetting = new import_obsidian16.Setting(textSection).setName("Quotes").setDesc("Separate quotes with --- on its own line, then add a source with \u2014 (e.g. \u2014 author).");
+    textSetting.settingEl.addClass("hp-setting-column");
+    const textarea = textSetting.settingEl.createEl("textarea");
+    textarea.rows = 8;
+    textarea.addClass("hp-textarea-full");
+    textarea.value = cfg.quotes ?? "";
+    textarea.addEventListener("input", () => {
+      cfg.quotes = textarea.value;
+    });
+    new import_obsidian16.Setting(body).setName("Max quotes").setDesc("Leave empty for all. Set to 1 for a daily rotating quote.").addText(
+      (t) => t.setPlaceholder("All").setValue(typeof cfg.maxItems === "number" && cfg.maxItems > 0 ? String(cfg.maxItems) : "").onChange((v) => {
+        const n = parseInt(v);
+        cfg.maxItems = isNaN(n) || n <= 0 ? 0 : Math.min(n, 500);
+        dailySeedSetting.toggleClass("hp-hidden", cfg.maxItems !== 1);
+      })
+    );
+    const dailySeedSetting = body.createDiv();
+    dailySeedSetting.toggleClass("hp-hidden", (cfg.maxItems ?? 0) !== 1);
+    new import_obsidian16.Setting(dailySeedSetting).setName("Daily seed").setDesc("Same quote all day, changes at midnight.").addToggle(
+      (t) => t.setValue(cfg.dailySeed !== false).onChange((v) => {
+        cfg.dailySeed = v;
+      })
+    );
+    new import_obsidian16.Setting(body).setName("Columns").addDropdown(
+      (d) => d.addOption("1", "1").addOption("2", "2").addOption("3", "3").setValue(String(typeof cfg.columns === "number" ? cfg.columns : 2)).onChange((v) => {
+        cfg.columns = Number(v);
+      })
+    );
+    new import_obsidian16.Setting(body).setName("Height mode").setDesc("Scroll keeps the block compact. Grow to fit expands to show all quotes.").addDropdown(
+      (d) => d.addOption("wrap", "Scroll (fixed height)").addOption("extend", "Grow to fit all").setValue(typeof cfg.heightMode === "string" ? cfg.heightMode : "extend").onChange((v) => {
+        cfg.heightMode = v === "wrap" ? "wrap" : "extend";
+      })
+    );
+    new import_obsidian16.Setting(body).setName("Quote style").setDesc("Classic: left accent bar. Centered: single column. Card: each quote in its own box.").addDropdown(
+      (d) => d.addOption("classic", "Classic").addOption("centered", "Centered").addOption("card", "Card").setValue(typeof cfg.quoteStyle === "string" ? cfg.quoteStyle : "classic").onChange((v) => {
+        cfg.quoteStyle = v === "centered" || v === "card" ? v : "classic";
+      })
+    );
+    new import_obsidian16.Setting(body).setName("Show accent bar").setDesc("Show the vertical line next to each quote.").addToggle(
+      (t) => t.setValue(cfg.showAccentBar !== false).onChange((v) => {
+        cfg.showAccentBar = v;
+      })
+    );
+    new import_obsidian16.Setting(body).setName("Text alignment").setDesc("Left, center, or right.").addDropdown(
+      (d) => d.addOption("left", "Left").addOption("center", "Center").addOption("right", "Right").setValue(typeof cfg.textAlign === "string" ? cfg.textAlign : "left").onChange((v) => {
+        cfg.textAlign = v;
+      })
+    );
+    new import_obsidian16.Setting(body).setName("Vertical alignment").setDesc("Vertical alignment within the block.").addDropdown(
+      (d) => d.addOption("top", "Top").addOption("middle", "Middle").addOption("bottom", "Bottom").setValue(typeof cfg.verticalAlign === "string" ? cfg.verticalAlign : "top").onChange((v) => {
+        cfg.verticalAlign = v;
+      })
+    );
+    new import_obsidian16.Setting(body).setName("Font style").setDesc("Font preset. A custom font below will override this (line-height still applies).").addDropdown(
+      (d) => d.addOption("default", "Default").addOption("serif", "Serif").addOption("handwriting", "Handwriting").setValue(typeof cfg.fontStyle === "string" ? cfg.fontStyle : "default").onChange((v) => {
+        cfg.fontStyle = v === "serif" || v === "handwriting" ? v : "default";
+      })
+    );
+    new import_obsidian16.Setting(body).setName("Custom font").setDesc("Any installed font. Overrides the preset above.").addText(
+      (t) => t.setPlaceholder("Georgia").setValue(typeof cfg.customFont === "string" ? cfg.customFont : "").onChange((v) => {
+        cfg.customFont = v;
+      })
+    );
+  }
+};
+
+// src/blocks/ImageGalleryBlock.ts
+var import_obsidian17 = require("obsidian");
+
+// src/utils/responsiveGrid.ts
+function responsiveGridColumns(safeCols, minPx = 120) {
+  return `repeat(auto-fill, minmax(max(${minPx}px, calc(100% / ${safeCols})), 1fr))`;
+}
+
+// src/utils/imageCache.ts
+var THUMB_MAX_DIM = 400;
+var THUMB_QUALITY = 0.75;
+var MAX_ENTRIES = 300;
+var THUMB_TIMEOUT_MS = 5e3;
+var MAX_PIXELS = 1e8;
+var THUMBABLE_EXTS = /* @__PURE__ */ new Set([".png", ".jpg", ".jpeg", ".gif", ".webp"]);
+var ImageCacheStore = class {
+  entries = /* @__PURE__ */ new Map();
+  pending = /* @__PURE__ */ new Map();
+  disposed = false;
+  /** Synchronous lookup — returns the entry only if already cached and fresh. */
+  getCached(path, mtime) {
+    const e = this.entries.get(path);
+    return e && e.mtime === mtime ? e : null;
+  }
+  /** Async lookup — generates a thumbnail if not cached. */
+  async get(app, file) {
+    const { path } = file;
+    const mtime = file.stat.mtime;
+    const hit = this.entries.get(path);
+    if (hit && hit.mtime === mtime) return hit;
+    const inflight = this.pending.get(path);
+    if (inflight) return inflight;
+    const work = this.generate(app, file, mtime);
+    this.pending.set(path, work);
+    try {
+      const entry = await work;
+      if (this.disposed || this.pending.get(path) !== work) {
+        if (entry.isBlob) URL.revokeObjectURL(entry.thumbUrl);
+        return entry;
+      }
+      const current = this.entries.get(path);
+      if (current?.isBlob) URL.revokeObjectURL(current.thumbUrl);
+      this.entries.set(path, entry);
+      this.evict();
+      return entry;
+    } finally {
+      if (this.pending.get(path) === work) {
+        this.pending.delete(path);
+      }
+    }
+  }
+  /** Get full-res URL (sync — uses cached value or falls back to the Obsidian API). */
+  fullUrl(app, file) {
+    const e = this.entries.get(file.path);
+    return e && e.mtime === file.stat.mtime ? e.fullUrl : app.vault.getResourcePath(file);
+  }
+  /** Remove a path from cache, revoking its blob URL if any. */
+  invalidate(path) {
+    const e = this.entries.get(path);
+    if (e?.isBlob) URL.revokeObjectURL(e.thumbUrl);
+    this.entries.delete(path);
+    this.pending.delete(path);
+  }
+  /** Revoke all blob URLs and clear the cache entirely. */
+  destroy() {
+    this.disposed = true;
+    for (const e of this.entries.values()) {
+      if (e.isBlob) URL.revokeObjectURL(e.thumbUrl);
+    }
+    this.entries.clear();
+    this.pending.clear();
+  }
+  /**
+   * Re-arm the cache after a previous destroy(). Required because the singleton
+   * survives plugin disable+enable in the same renderer process; without this the
+   * `disposed` flag would stay true forever and every gallery render would rebuild
+   * its thumbnails (and leak blob URLs) on the path at line 56.
+   */
+  reset() {
+    this.disposed = false;
+  }
+  // ── internals ──
+  async generate(app, file, mtime) {
+    const fullUrl = app.vault.getResourcePath(file);
+    const ext = `.${file.extension.toLowerCase()}`;
+    if (!THUMBABLE_EXTS.has(ext)) {
+      return { thumbUrl: fullUrl, fullUrl, mtime, isBlob: false };
+    }
+    try {
+      const thumbUrl = await resizeToBlob(fullUrl, THUMB_MAX_DIM, THUMB_QUALITY);
+      return { thumbUrl, fullUrl, mtime, isBlob: thumbUrl !== fullUrl };
+    } catch {
+      return { thumbUrl: fullUrl, fullUrl, mtime, isBlob: false };
+    }
+  }
+  /** Evict oldest entries (Map insertion order) when over capacity. */
+  evict() {
+    if (this.entries.size <= MAX_ENTRIES) return;
+    const excess = this.entries.size - MAX_ENTRIES;
+    let n = 0;
+    for (const [key] of this.entries) {
+      if (n >= excess) break;
+      this.entries.delete(key);
+      n++;
+    }
+  }
+};
+function resizeToBlob(src, maxDim, quality) {
+  return new Promise((resolve) => {
+    const timeout = window.setTimeout(() => resolve(src), THUMB_TIMEOUT_MS);
+    const img = new Image();
+    img.onload = () => {
+      const { naturalWidth: w, naturalHeight: h } = img;
+      if (w <= maxDim && h <= maxDim) {
+        window.clearTimeout(timeout);
+        resolve(src);
+        return;
+      }
+      if (w * h > MAX_PIXELS) {
+        window.clearTimeout(timeout);
+        resolve(src);
+        return;
+      }
+      const scale = Math.min(maxDim / w, maxDim / h);
+      const tw = Math.round(w * scale);
+      const th = Math.round(h * scale);
+      const canvas = createEl("canvas");
+      canvas.width = tw;
+      canvas.height = th;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        window.clearTimeout(timeout);
+        resolve(src);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, tw, th);
+      try {
+        canvas.toBlob(
+          (blob) => {
+            window.clearTimeout(timeout);
+            resolve(blob ? URL.createObjectURL(blob) : src);
+          },
+          "image/webp",
+          quality
+        );
+      } catch {
+        window.clearTimeout(timeout);
+        resolve(src);
+      }
+    };
+    img.onerror = () => {
+      window.clearTimeout(timeout);
+      resolve(src);
+    };
+    img.src = src;
+  });
+}
+var imageCache = new ImageCacheStore();
+
+// src/blocks/ImageGalleryBlock.ts
+var IMAGE_EXTS = /* @__PURE__ */ new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"]);
+var VIDEO_EXTS = /* @__PURE__ */ new Set([".mp4", ".webm", ".mov", ".mkv"]);
+var SWIPE_THRESHOLD_PX = 50;
+var SWIPE_DIRECTION_RATIO = 1.5;
+var activeLightbox = null;
+function isLightboxOpen() {
+  return activeLightbox !== null;
+}
+function abortActiveLightbox() {
+  if (!activeLightbox) return;
+  activeLightbox.ac.abort();
+  activeLightbox.overlay.remove();
+  activeLightbox = null;
+}
+function openMediaLightbox(items, startIndex) {
+  if (items.length === 0) return null;
+  const doc = activeDocument;
+  const opener = doc.activeElement instanceof HTMLElement ? doc.activeElement : null;
+  abortActiveLightbox();
+  const ac = new AbortController();
+  const { signal } = ac;
+  let current = startIndex;
+  const overlay = doc.body.createDiv({ cls: "gallery-lightbox" });
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-label", "Image viewer");
+  overlay.tabIndex = -1;
+  activeLightbox = { ac, overlay };
+  const prevBtn = overlay.createEl("button", { cls: "gallery-lightbox-prev", attr: { "aria-label": "Previous" } });
+  (0, import_obsidian17.setIcon)(prevBtn, "chevron-left");
+  const mediaContainer = overlay.createDiv({ cls: "gallery-lightbox-media" });
+  const nextBtn = overlay.createEl("button", { cls: "gallery-lightbox-next", attr: { "aria-label": "Next" } });
+  (0, import_obsidian17.setIcon)(nextBtn, "chevron-right");
+  const counter = overlay.createSpan({ cls: "gallery-lightbox-counter" });
+  if (items.length <= 1) {
+    prevBtn.addClass("gallery-lightbox-nav-hidden");
+    nextBtn.addClass("gallery-lightbox-nav-hidden");
+    counter.addClass("gallery-lightbox-nav-hidden");
+  }
+  const pauseCurrentVideo = () => {
+    const vid = mediaContainer.querySelector("video");
+    if (vid) vid.pause();
+  };
+  const showItem = (index) => {
+    pauseCurrentVideo();
+    mediaContainer.empty();
+    current = (index % items.length + items.length) % items.length;
+    const item = items[current];
+    counter.setText(`${current + 1} / ${items.length}`);
+    if (item.type === "image") {
+      const img = mediaContainer.createEl("img", { cls: "gallery-lightbox-img", attr: { src: item.src, alt: item.alt } });
+      img.addEventListener("click", (e) => e.stopPropagation());
+      img.addEventListener("error", () => {
+        img.alt = "Image unavailable";
+      });
+    } else {
+      const video = mediaContainer.createEl("video", {
+        cls: "gallery-lightbox-video",
+        attr: { src: item.src, "aria-label": item.alt }
+      });
+      video.controls = true;
+      video.muted = true;
+      video.loop = true;
+      video.setAttribute("playsinline", "");
+      video.addEventListener("click", (e) => e.stopPropagation());
+      video.play().catch(() => {
+      });
+    }
+  };
+  const close = () => {
+    pauseCurrentVideo();
+    overlay.remove();
+    ac.abort();
+    if (activeLightbox?.ac === ac) activeLightbox = null;
+    if (opener && opener.isConnected) opener.focus();
+  };
+  const focusables = () => [prevBtn, nextBtn].filter((b) => !b.hasClass("gallery-lightbox-nav-hidden"));
+  prevBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    showItem(current - 1);
+  }, { signal });
+  nextBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    showItem(current + 1);
+  }, { signal });
+  let swipedAt = 0;
+  overlay.addEventListener("click", (e) => {
+    if (Date.now() - swipedAt < 300) return;
+    if (e.target === overlay || e.target === mediaContainer) close();
+  }, { signal });
+  doc.addEventListener("keydown", (e) => {
+    const active = doc.activeElement;
+    const tag = active?.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+    if (active?.isContentEditable) return;
+    if (doc.querySelector(".modal-container")) return;
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      close();
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      showItem(current - 1);
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      showItem(current + 1);
+    } else if (e.key === "Tab") {
+      e.preventDefault();
+      const f = focusables();
+      if (f.length === 0) {
+        overlay.focus();
+        return;
+      }
+      const idx = f.indexOf(active);
+      const nextIdx = e.shiftKey ? idx <= 0 ? f.length - 1 : idx - 1 : idx === f.length - 1 ? 0 : idx + 1;
+      f[nextIdx].focus();
+    }
+  }, { signal });
+  let touchStartX = 0;
+  let touchStartY = 0;
+  overlay.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }
+  }, { signal, passive: true });
+  overlay.addEventListener("touchend", (e) => {
+    if (e.changedTouches.length !== 1) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > SWIPE_THRESHOLD_PX && Math.abs(dx) > Math.abs(dy) * SWIPE_DIRECTION_RATIO) {
+      e.preventDefault();
+      swipedAt = Date.now();
+      if (dx < 0) showItem(current + 1);
+      else showItem(current - 1);
+    }
+  }, { signal });
+  showItem(current);
+  (focusables()[0] ?? overlay).focus();
+  return ac;
+}
+function waitForImage(img) {
+  return new Promise((resolve) => {
+    if (img.complete && img.naturalHeight > 0) {
+      resolve();
+      return;
+    }
+    img.addEventListener("load", () => resolve(), { once: true });
+    img.addEventListener("error", () => resolve(), { once: true });
+  });
+}
+async function runWithConcurrency(thunks, limit) {
+  let next = 0;
+  const worker = async () => {
+    while (next < thunks.length) {
+      const idx = next++;
+      await thunks[idx]();
+    }
+  };
+  const workers = Math.max(1, Math.min(limit, thunks.length));
+  await Promise.all(Array.from({ length: workers }, () => worker()));
+}
+var THUMB_CONCURRENCY = 6;
+var DEBOUNCE_MS2 = 300;
+var ImageGalleryBlock = class extends BaseBlock {
+  /** The AbortController for the lightbox opened by THIS instance (if any). */
+  myLightboxAc = null;
+  /** Masonry column ResizeObserver — disconnected before each re-render. */
+  masonryRo = null;
+  onunload() {
+    super.onunload();
+    if (this.myLightboxAc && activeLightbox?.ac === this.myLightboxAc) {
+      abortActiveLightbox();
+    }
+    this.myLightboxAc = null;
+  }
+  render(el) {
+    this.containerEl = el;
+    el.addClass("image-gallery-block");
+    const isRelevant = (file) => this.isRelevantMedia(file.path);
+    const trigger = () => this.scheduleRender(DEBOUNCE_MS2, (e) => {
+      e.empty();
+      return this.loadAndRender(e);
+    });
+    this.registerEvent(this.app.vault.on("create", (f) => {
+      if (isRelevant(f)) trigger();
+    }));
+    this.registerEvent(this.app.vault.on("delete", (f) => {
+      if (isRelevant(f)) {
+        imageCache.invalidate(f.path);
+        trigger();
+      }
+    }));
+    this.registerEvent(this.app.vault.on("rename", (f, oldPath) => {
+      if (isRelevant(f) || this.isRelevantMedia(oldPath)) {
+        imageCache.invalidate(oldPath);
+        trigger();
+      }
+    }));
+    this.registerEvent(this.app.vault.on("modify", (f) => {
+      if (isRelevant(f)) {
+        imageCache.invalidate(f.path);
+        trigger();
+      }
+    }));
+    this.register(() => {
+      this.masonryRo?.disconnect();
+      this.masonryRo = null;
+    });
+    return this.loadAndRender(el).catch((e) => {
+      console.error("[Homepage Blocks] ImageGalleryBlock failed to render:", e);
+      this.renderErrorHint(el, "Couldn\u2019t load this gallery \u2014 check the console for details.");
+    });
+  }
+  isRelevantMedia(path) {
+    const { folder = "" } = this.instance.config;
+    if (!folder) return false;
+    if (!path.startsWith(folder + "/")) return false;
+    const dot = path.lastIndexOf(".");
+    if (dot < 0) return false;
+    const ext = path.slice(dot).toLowerCase();
+    return IMAGE_EXTS.has(ext) || VIDEO_EXTS.has(ext);
+  }
+  async loadAndRender(el) {
+    const gen = this.nextGeneration();
+    const cfg = this.instance.config;
+    const folder = cfg.folder ?? "";
+    const columns = Math.max(1, Math.min(7, Math.floor(Number(cfg.columns) || 3)));
+    const rawMax = Number(cfg.maxItems);
+    const maxItems = rawMax > 0 ? Math.max(1, Math.min(500, Math.floor(rawMax))) : 0;
+    const layout = cfg.layout ?? "grid";
+    const heightMode = cfg.heightMode ?? "auto";
+    this.renderHeader(el, "Gallery");
+    const gallery = el.createDiv({ cls: "image-gallery" });
+    if (heightMode === "fixed") {
+      gallery.addClass("image-gallery--fixed-height");
+    } else {
+      gallery.setAttribute(AUTO_HEIGHT_ATTR, "");
+    }
+    if (layout === "masonry") {
+      gallery.addClass("masonry-layout");
+      let currentCols = -1;
+      const updateCols = () => {
+        const w = gallery.offsetWidth;
+        const effective = w > 0 ? Math.max(1, Math.min(columns, Math.floor(w / 100))) : columns;
+        if (effective !== currentCols) {
+          currentCols = effective;
+          gallery.style.setProperty("--hp-masonry-cols", String(effective));
+        }
+      };
+      updateCols();
+      this.masonryRo?.disconnect();
+      this.masonryRo = new ResizeObserver(updateCols);
+      this.masonryRo.observe(gallery);
+    } else {
+      gallery.style.setProperty("--hp-grid-cols", responsiveGridColumns(columns, 100));
+    }
+    if (!folder) {
+      const hint = gallery.createDiv({ cls: "block-empty-hint" });
+      hint.createDiv({ cls: "block-empty-hint-icon", text: "\u{1F5BC}\uFE0F" });
+      hint.createDiv({ cls: "block-empty-hint-text", text: "No folder selected. Pick an image folder in settings to display a gallery." });
+      return;
+    }
+    const folderObj = this.app.vault.getAbstractFileByPath(folder);
+    if (!(folderObj instanceof import_obsidian17.TFolder)) {
+      gallery.setText(`Folder "${folder}" not found.`);
+      return;
+    }
+    const files = this.getMediaFiles(folderObj, maxItems || Infinity);
+    const lightboxItems = files.map((f) => {
+      const e = `.${f.extension.toLowerCase()}`;
+      return {
+        src: imageCache.fullUrl(this.app, f),
+        alt: f.basename,
+        type: IMAGE_EXTS.has(e) ? "image" : "video"
+      };
+    });
+    const loadPromises = [];
+    const genThunks = [];
+    const useLazy = heightMode === "fixed";
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const ext = `.${file.extension.toLowerCase()}`;
+      const wrapper = gallery.createDiv({ cls: "gallery-item" });
+      wrapper.setAttribute("tabindex", "0");
+      wrapper.setAttribute("role", "button");
+      wrapper.setAttribute("aria-label", file.basename);
+      const index = i;
+      const action = () => {
+        this.myLightboxAc = openMediaLightbox(lightboxItems, index);
+      };
+      wrapper.addEventListener("click", action);
+      wrapper.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          action();
+        }
+      });
+      if (IMAGE_EXTS.has(ext)) {
+        const img = wrapper.createEl("img");
+        img.alt = file.basename;
+        if (useLazy && i >= columns) img.loading = "lazy";
+        const cached = imageCache.getCached(file.path, file.stat.mtime);
+        if (cached) {
+          img.src = cached.thumbUrl;
+          loadPromises.push(waitForImage(img));
+        } else {
+          wrapper.addClass("gallery-item--loading");
+          genThunks.push(
+            () => imageCache.get(this.app, file).then((entry) => {
+              if (this.isStale(gen)) return;
+              img.src = entry.thumbUrl;
+              wrapper.removeClass("gallery-item--loading");
+              return waitForImage(img);
+            })
+          );
+        }
+      } else if (VIDEO_EXTS.has(ext)) {
+        wrapper.addClass("gallery-item-video");
+        wrapper.createDiv({ cls: "video-play-overlay", text: "\u25B6" });
+        const video = wrapper.createEl("video");
+        video.muted = true;
+        video.loop = true;
+        video.setAttribute("playsinline", "");
+        video.preload = "metadata";
+        video.src = lightboxItems[index].src;
+        video.addEventListener("loadedmetadata", () => {
+          video.currentTime = 0.1;
+        }, { once: true });
+        loadPromises.push(
+          new Promise((resolve) => {
+            if (video.readyState >= 1) {
+              resolve();
+              return;
+            }
+            video.addEventListener("loadedmetadata", () => resolve(), { once: true });
+            video.addEventListener("error", () => resolve(), { once: true });
+          })
+        );
+        wrapper.addEventListener("mouseenter", () => {
+          if (!isLightboxOpen()) video.play().catch(() => {
+          });
+        });
+        wrapper.addEventListener("mouseleave", () => {
+          video.pause();
+          video.currentTime = 0.1;
+        });
+      }
+    }
+    await Promise.all([
+      Promise.all(loadPromises),
+      runWithConcurrency(genThunks, THUMB_CONCURRENCY)
+    ]);
+    if (this.isStale(gen)) return;
+    if (heightMode !== "fixed") {
+      this.observeWidthForAutoHeight(gallery);
+    }
+  }
+  getMediaFiles(folder, limit = Infinity) {
+    const files = [];
+    const recurse = (f) => {
+      for (const child of f.children) {
+        if (files.length >= limit) return;
+        if (child instanceof import_obsidian17.TFile) {
+          const ext = `.${child.extension.toLowerCase()}`;
+          if (IMAGE_EXTS.has(ext) || VIDEO_EXTS.has(ext)) {
+            files.push(child);
+          }
+        } else if (child instanceof import_obsidian17.TFolder) {
+          recurse(child);
+        }
+      }
+    };
+    recurse(folder);
+    return files;
+  }
+  renderContentSettings(body, draft) {
+    let folderText;
+    new import_obsidian17.Setting(body).setName("Folder").setDesc("Pick a vault folder.").addText((t) => {
+      folderText = t;
+      t.setValue(draft.folder ?? "").setPlaceholder("Attachments/photos").onChange((v) => {
+        draft.folder = v;
+      });
+    }).addButton(
+      (btn) => btn.setIcon("folder").setTooltip("Browse vault folders").onClick(() => {
+        new FolderSuggestModal(this.app, (folder) => {
+          const path = folder.path === "/" ? "" : folder.path;
+          draft.folder = path;
+          folderText.setValue(path);
+        }).open();
+      })
+    );
+    new import_obsidian17.Setting(body).setName("Height").setDesc("Auto: expands to fit all images. Fixed: uses the block's row height and scrolls.").addDropdown(
+      (d) => d.addOption("auto", "Auto (fit all images)").addOption("fixed", "Fixed (scroll)").setValue(typeof draft.heightMode === "string" ? draft.heightMode : "auto").onChange((v) => {
+        draft.heightMode = v === "fixed" ? "fixed" : "auto";
+      })
+    );
+    new import_obsidian17.Setting(body).setName("Layout").addDropdown(
+      (d) => d.addOption("grid", "Grid").addOption("masonry", "Masonry").setValue(typeof draft.layout === "string" ? draft.layout : "grid").onChange((v) => {
+        draft.layout = v;
+      })
+    );
+    new import_obsidian17.Setting(body).setName("Columns").addDropdown(
+      (d) => d.addOption("2", "2").addOption("3", "3").addOption("4", "4").addOption("5", "5").addOption("6", "6").addOption("7", "7").setValue(String(typeof draft.columns === "number" ? draft.columns : 3)).onChange((v) => {
+        draft.columns = Number(v);
+      })
+    );
+    new import_obsidian17.Setting(body).setName("Max items").setDesc("0 = show all files.").addText(
+      (t) => t.setValue(String(typeof draft.maxItems === "number" ? draft.maxItems : 0)).onChange((v) => {
+        const n = parseInt(v) || 0;
+        draft.maxItems = Math.min(Math.max(0, n), 500);
+      })
+    );
+  }
+};
+
+// src/blocks/EmbeddedNoteBlock.ts
+var import_obsidian18 = require("obsidian");
+var DEBOUNCE_MS3 = 300;
+var EmbeddedNoteBlock = class extends BaseBlock {
+  render(el) {
+    this.containerEl = el;
+    el.addClass("embedded-note-block");
+    const trigger = () => this.scheduleRender(DEBOUNCE_MS3, (e) => this.renderContent(e));
+    this.registerEvent(
+      this.app.vault.on("modify", (modFile) => {
+        const { filePath = "" } = this.instance.config;
+        if (modFile.path === filePath) trigger();
+      })
+    );
+    this.registerEvent(this.app.vault.on("delete", (file) => {
+      const { filePath = "" } = this.instance.config;
+      if (file.path === filePath) trigger();
+    }));
+    this.registerEvent(this.app.vault.on("rename", (file, oldPath) => {
+      const active = this.plugin.activeBlocks();
+      const current = active.find((b) => b.id === this.instance.id);
+      const filePath = current?.config.filePath ?? "";
+      if (oldPath === filePath) {
+        void this.plugin.updateBlockConfig(this.instance.id, { filePath: file.path }).then(trigger);
+        return;
+      }
+      if (file.path === filePath) trigger();
+    }));
+    return this.renderContent(el).catch((e) => {
+      console.error("[Homepage Blocks] EmbeddedNoteBlock failed to render:", e);
+      this.renderErrorHint(el, "Couldn\u2019t render this note \u2014 check the console for details.");
+    });
+  }
+  async renderContent(el) {
+    const gen = this.nextGeneration();
+    const liveConfig = this.plugin.activeBlocks().find((b) => b.id === this.instance.id)?.config ?? this.instance.config;
+    const { filePath = "", showTitle = true, heightMode = "scroll" } = liveConfig;
+    el.empty();
+    el.toggleClass("embedded-note-block--grow", heightMode === "grow");
+    if (!filePath) {
+      const hint = el.createDiv({ cls: "block-empty-hint" });
+      hint.createDiv({ cls: "block-empty-hint-icon", text: "\u{1F4C4}" });
+      hint.createDiv({ cls: "block-empty-hint-text", text: "No note selected. Choose a file path in settings to embed it here." });
+      return;
+    }
+    const file = this.app.vault.getAbstractFileByPath(filePath);
+    if (!(file instanceof import_obsidian18.TFile)) {
+      el.setText(`File not found: ${filePath}`);
+      return;
+    }
+    if (showTitle) {
+      this.renderHeader(el, file.basename);
+    }
+    const contentEl = el.createDiv({ cls: "embedded-note-content" });
+    if (heightMode === "scroll") {
+      contentEl.setAttribute("tabindex", "0");
+      contentEl.setAttribute("role", "region");
+      contentEl.setAttribute("aria-label", file.basename);
+    } else if (heightMode === "grow") {
+      contentEl.setAttribute(AUTO_HEIGHT_ATTR, "");
+    }
+    try {
+      const content = await this.app.vault.read(file);
+      if (this.isStale(gen)) return;
+      await import_obsidian18.MarkdownRenderer.render(this.app, content, contentEl, file.path, this);
+    } catch (e) {
+      console.error("[Homepage Blocks] EmbeddedNoteBlock MarkdownRenderer failed:", e);
+      contentEl.setText("Error rendering file.");
+    }
+  }
+  renderContentSettings(body, draft) {
+    new import_obsidian18.Setting(body).setName("File path").setDesc("Path to the note, such as notes/my-note.md").addText((t) => {
+      t.setValue(draft.filePath ?? "").setPlaceholder("Start typing to search\u2026").onChange((v) => {
+        draft.filePath = v;
+      });
+      new FileSuggest(this.app, t.inputEl);
+    });
+    new import_obsidian18.Setting(body).setName("Show title").addToggle(
+      (t) => t.setValue(draft.showTitle ?? true).onChange((v) => {
+        draft.showTitle = v;
+      })
+    );
+    new import_obsidian18.Setting(body).setName("Height mode").setDesc("Scroll keeps the block compact. Grow to fit expands the card to show the full note.").addDropdown(
+      (d) => d.addOption("scroll", "Scroll (fixed height)").addOption("grow", "Grow to fit all").setValue(draft.heightMode ?? "scroll").onChange((v) => {
+        draft.heightMode = v;
+      })
+    );
+  }
+};
+var FileSuggest = class extends import_obsidian18.AbstractInputSuggest {
+  constructor(app, inputEl) {
+    super(app, inputEl);
+    this.inputEl = inputEl;
+  }
+  getSuggestions(query) {
+    const q = query.toLowerCase();
+    return this.app.vault.getMarkdownFiles().filter((f) => f.path.toLowerCase().includes(q)).sort((a, b) => a.path.localeCompare(b.path)).slice(0, 30);
+  }
+  renderSuggestion(file, el) {
+    el.createSpan({ text: file.path });
+  }
+  selectSuggestion(file) {
+    this.setValue(file.path);
+    this.inputEl.dispatchEvent(new Event("input"));
+    this.close();
+  }
+};
+
+// src/blocks/StaticTextBlock.ts
+var import_obsidian19 = require("obsidian");
+var StaticTextBlock = class extends BaseBlock {
+  /** True while the inline pencil-icon editor is mounted; suppresses GridLayout.rerender. */
+  inlineEditActive = false;
+  hasUnsavedInlineState() {
+    return this.inlineEditActive;
+  }
+  render(el) {
+    el.addClass("static-text-block");
+    this.renderContent(el).catch((e) => {
+      console.error("[Homepage Blocks] StaticTextBlock failed to render:", e);
+      this.renderErrorHint(el, "Couldn\u2019t render this content.");
+    });
+  }
+  async renderContent(el) {
+    const gen = this.nextGeneration();
+    const { content = "", heightMode = "auto" } = this.instance.config;
+    el.empty();
+    this.renderHeader(el, "Text");
+    const editBtn = el.createEl("button", {
+      cls: "static-text-edit-btn",
+      attr: { "aria-label": "Edit content" }
+    });
+    (0, import_obsidian19.setIcon)(editBtn, "pencil");
+    editBtn.addEventListener("click", () => {
+      this.enterInlineEdit(el);
+    });
+    const contentEl = el.createDiv({ cls: "static-text-content" });
+    if (heightMode !== "fixed") {
+      contentEl.setAttribute(AUTO_HEIGHT_ATTR, "");
+    }
+    if (!content) {
+      const hint = contentEl.createDiv({ cls: "block-empty-hint" });
+      hint.createDiv({ cls: "block-empty-hint-icon", text: "\u{1F4DD}" });
+      hint.createDiv({ cls: "block-empty-hint-text", text: "No content yet. Click the pencil icon to add text." });
+      return;
+    }
+    await import_obsidian19.MarkdownRenderer.render(this.app, content, contentEl, "", this);
+    if (this.isStale(gen)) return;
+  }
+  enterInlineEdit(el) {
+    const currentContent = this.instance.config.content ?? "";
+    this.inlineEditActive = true;
+    const contentEl = el.querySelector(".static-text-content");
+    const editBtn = el.querySelector(".static-text-edit-btn");
+    if (contentEl) contentEl.addClass("hp-hidden");
+    if (editBtn) editBtn.addClass("hp-hidden");
+    const editor = el.createDiv({ cls: "static-text-inline-editor" });
+    if ((this.instance.config.heightMode ?? "auto") !== "fixed") {
+      editor.setAttribute(AUTO_HEIGHT_ATTR, "");
+    }
+    const textarea = editor.createEl("textarea");
+    textarea.value = currentContent;
+    const toolbar = editor.createDiv({ cls: "inline-edit-toolbar" });
+    const saveBtn = toolbar.createEl("button", {
+      cls: "inline-edit-btn inline-edit-save",
+      attr: { "aria-label": "Save" }
+    });
+    (0, import_obsidian19.setIcon)(saveBtn, "check");
+    const cancelBtn = toolbar.createEl("button", {
+      cls: "inline-edit-btn inline-edit-cancel",
+      attr: { "aria-label": "Cancel" }
+    });
+    (0, import_obsidian19.setIcon)(cancelBtn, "x");
+    const save = () => {
+      this.inlineEditActive = false;
+      void this.plugin.updateBlockConfig(this.instance.id, { content: textarea.value });
+      this.renderContent(el).then(() => this.requestAutoHeight()).catch(() => {
+      });
+    };
+    const cancel = () => {
+      this.inlineEditActive = false;
+      this.renderContent(el).catch(() => {
+      });
+    };
+    saveBtn.addEventListener("click", save);
+    cancelBtn.addEventListener("click", cancel);
+    textarea.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        save();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        cancel();
+      }
+    });
+    textarea.focus();
+  }
+  renderContentSettings(body, draft) {
+    new import_obsidian19.Setting(body).setName("Height").setDesc("Auto: expands to fit content. Fixed: uses grid cell height with scrollbar.").addDropdown(
+      (d) => d.addOption("auto", "Auto (fit content)").addOption("fixed", "Fixed (scroll)").setValue(typeof draft.heightMode === "string" ? draft.heightMode : "auto").onChange((v) => {
+        draft.heightMode = v;
+      })
+    );
+    new import_obsidian19.Setting(body).setName("Content").setDesc("Supports Markdown.");
+    const textarea = body.createEl("textarea", { cls: "static-text-settings-textarea" });
+    textarea.value = draft.content ?? "";
+    textarea.rows = 10;
+    textarea.addEventListener("input", () => {
+      draft.content = textarea.value;
+    });
+  }
+};
+
+// src/blocks/HtmlBlock.ts
+var import_obsidian20 = require("obsidian");
+var HtmlBlock = class extends BaseBlock {
+  render(el) {
+    el.addClass("html-block");
+    const { html = "" } = this.instance.config;
+    this.renderHeader(el, "HTML");
+    const contentEl = el.createDiv({ cls: "html-block-content" });
+    if (!html) {
+      const hint = contentEl.createDiv({ cls: "block-empty-hint" });
+      hint.createDiv({ cls: "block-empty-hint-icon", text: "</>" });
+      hint.createDiv({ cls: "block-empty-hint-text", text: "No HTML content yet. Add your markup in settings." });
+      return;
+    }
+    if (/<style\b/i.test(html)) {
+      this.renderIframe(contentEl, html);
+      return;
+    }
+    const DANGEROUS_TAGS_RE = /<\/?\s*(iframe|object|embed|form|meta|link|base|script|style|svg)\b[^>]*>/gi;
+    let sanitized = html;
+    let prev;
+    do {
+      prev = sanitized;
+      sanitized = sanitized.replace(DANGEROUS_TAGS_RE, "");
+    } while (sanitized !== prev);
+    contentEl.appendChild((0, import_obsidian20.sanitizeHTMLToDom)(sanitized));
+  }
+  /** Render full HTML documents inside a sandboxed iframe with Obsidian CSS variable bridging. */
+  renderIframe(contentEl, html) {
+    const DANGEROUS_IFRAME_TAGS_RE = /<\/?\s*(script|iframe|object|embed|form|meta|link|base|svg)\b[^>]*>/gi;
+    let safe = html;
+    let prev;
+    do {
+      prev = safe;
+      safe = safe.replace(DANGEROUS_IFRAME_TAGS_RE, "");
+    } while (safe !== prev);
+    const varRefs = /* @__PURE__ */ new Set();
+    const VAR_RE = /var\((--[\w-]+)/g;
+    let m;
+    while ((m = VAR_RE.exec(safe)) !== null) varRefs.add(m[1]);
+    const bridgeParts = [
+      "html{height:100%;margin:0;padding:0}",
+      "html.hp-clipped{overflow:hidden}",
+      "body{margin:0;padding:0;min-height:100%;width:var(--hp-body-width,auto);transform-origin:top left;transform:scale(var(--hp-body-scale,1))}"
+    ];
+    if (varRefs.size > 0) {
+      const rootStyle = contentEl.win.getComputedStyle(contentEl.doc.body);
+      const pairs = [...varRefs].map((v) => {
+        const val = rootStyle.getPropertyValue(v).trim();
+        return val ? `${v}:${val}` : "";
+      }).filter(Boolean);
+      if (pairs.length > 0) bridgeParts.unshift(`:root{${pairs.join(";")}}`);
+    }
+    const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data: https:; media-src data: https:; font-src data: https:;">`;
+    const bridge = `${csp}<style>${bridgeParts.join("")}</style>`;
+    const headMatch = safe.match(/<head\b[^>]*>/i);
+    if (headMatch && headMatch.index !== void 0) {
+      const pos = headMatch.index + headMatch[0].length;
+      safe = safe.slice(0, pos) + bridge + safe.slice(pos);
+    } else {
+      safe = bridge + safe;
+    }
+    const iframe = contentEl.createEl("iframe", {
+      cls: "hp-html-iframe",
+      attr: { sandbox: "allow-same-origin", referrerpolicy: "no-referrer" }
+    });
+    iframe.srcdoc = safe;
+    iframe.addEventListener("load", () => {
+      try {
+        const doc = iframe.contentDocument;
+        if (!doc) return;
+        const availableH = iframe.clientHeight;
+        let contentH = doc.documentElement.scrollHeight;
+        if (contentH <= availableH || availableH <= 0) return;
+        let scale = availableH / contentH;
+        for (let i = 0; i < 4; i++) {
+          doc.body.style.setProperty("--hp-body-width", `${1 / scale * 100}%`);
+          contentH = doc.documentElement.scrollHeight;
+          const next = availableH / contentH;
+          if (Math.abs(next - scale) < 5e-3) {
+            scale = next;
+            break;
+          }
+          scale = next;
+        }
+        doc.documentElement.classList.add("hp-clipped");
+        doc.body.style.setProperty("--hp-body-width", `${1 / scale * 100}%`);
+        doc.body.style.setProperty("--hp-body-scale", `${scale}`);
+      } catch {
+      }
+    });
+  }
+  renderContentSettings(body, draft) {
+    new import_obsidian20.Setting(body).setName("HTML").setDesc("Supports full HTML documents with <style> blocks.");
+    const textarea = body.createEl("textarea", { cls: "html-settings-textarea" });
+    textarea.value = draft.html ?? "";
+    textarea.rows = 12;
+    textarea.setAttribute("spellcheck", "false");
+    textarea.addEventListener("input", () => {
+      draft.html = textarea.value;
+    });
+  }
+};
+
+// src/blocks/VideoEmbedBlock.ts
+var import_obsidian21 = require("obsidian");
+var PLAYLIST_ID_RE = /^[A-Za-z0-9_-]{2,64}$/;
+var YT_VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
+var YT_ORIGIN = "https://www.youtube.com";
+function validListId(raw) {
+  return raw && PLAYLIST_ID_RE.test(raw) ? raw : null;
+}
+function parseUrl(raw) {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  let url;
+  try {
+    url = new URL(trimmed);
+  } catch {
+    return null;
+  }
+  if (/^(www\.)?youtube\.com$/i.test(url.hostname)) {
+    const listId = validListId(url.searchParams.get("list"));
+    if (url.pathname === "/playlist" && listId) {
+      return { type: "playlist", value: listId };
+    }
+    const videoId = url.searchParams.get("v") || url.pathname.match(/^\/(?:embed|shorts)\/([A-Za-z0-9_-]{11})(?:[?/]|$)/)?.[1];
+    if (videoId && YT_VIDEO_ID_RE.test(videoId)) {
+      if (listId) return { type: "playlist", value: listId, videoId };
+      return { type: "video", value: videoId };
+    }
+    if (listId) return { type: "playlist", value: listId };
+  }
+  if (/^youtu\.be$/i.test(url.hostname)) {
+    const id = url.pathname.slice(1);
+    if (YT_VIDEO_ID_RE.test(id)) {
+      const listId = validListId(url.searchParams.get("list"));
+      if (listId) return { type: "playlist", value: listId, videoId: id };
+      return { type: "video", value: id };
+    }
+  }
+  if (/^(www\.)?vimeo\.com$/i.test(url.hostname)) {
+    const id = url.pathname.match(/^\/(\d+)/)?.[1];
+    if (id) return { type: "video", value: `https://player.vimeo.com/video/${id}` };
+  }
+  if (/^(www\.)?dailymotion\.com$/i.test(url.hostname)) {
+    const id = url.pathname.match(/^\/video\/([A-Za-z0-9]+)/)?.[1];
+    if (id) return { type: "video", value: `https://www.dailymotion.com/embed/video/${id}` };
+  }
+  return null;
+}
+function buildEmbedSrc(info, shuffleOnLoad) {
+  if (info.type === "video") {
+    return YT_VIDEO_ID_RE.test(info.value) ? `${YT_ORIGIN}/embed/${info.value}` : info.value;
+  }
+  const params = new URLSearchParams({ list: info.value });
+  if (shuffleOnLoad) params.set("shuffle", "1");
+  const base = info.videoId ? `${YT_ORIGIN}/embed/${info.videoId}` : `${YT_ORIGIN}/embed/videoseries`;
+  return `${base}?${params.toString()}`;
+}
+var ALLOWED_EMBED_HOSTS = /^(?:www\.)?youtube\.com$|^player\.vimeo\.com$|^www\.dailymotion\.com$/;
+var VideoEmbedBlock = class extends BaseBlock {
+  render(el) {
+    el.addClass("video-embed-block");
+    const { url = "", shuffleOnLoad = false } = this.instance.config;
+    this.renderHeader(el, "Video");
+    const wrapper = el.createDiv({ cls: "video-embed-inner" });
+    const info = parseUrl(url);
+    if (!info) {
+      const container2 = wrapper.createDiv({ cls: "video-embed-container" });
+      container2.addClass("hp-no-padding-bottom");
+      const hint = container2.createDiv({ cls: "block-empty-hint" });
+      hint.createDiv({ cls: "block-empty-hint-icon", text: "\u{1F3AC}" });
+      hint.createDiv({
+        cls: "block-empty-hint-text",
+        text: "No video URL. Paste a YouTube, Vimeo, or Dailymotion link in settings."
+      });
+      return;
+    }
+    const src = buildEmbedSrc(info, shuffleOnLoad);
+    const container = wrapper.createDiv({ cls: "video-embed-container" });
+    try {
+      const host = new URL(src).hostname;
+      if (!ALLOWED_EMBED_HOSTS.test(host)) {
+        console.warn("[Homepage Blocks] Blocked iframe src from host:", host);
+        container.setText("Video source blocked for security reasons.");
+        return;
+      }
+    } catch {
+      container.setText("Invalid video URL.");
+      return;
+    }
+    container.createEl("iframe", {
+      cls: "video-embed-iframe",
+      attr: {
+        src,
+        title: "Embedded video",
+        frameborder: "0",
+        // Keep this minimal — only what YouTube/Vimeo/Dailymotion actually need to play.
+        // Notably omitting clipboard-write so the embedded page can't silently overwrite the clipboard.
+        allow: "autoplay; encrypted-media; picture-in-picture",
+        allowfullscreen: "",
+        loading: "lazy",
+        referrerpolicy: "no-referrer",
+        // SECURITY: allow-same-origin + allow-scripts is required by YouTube/Vimeo/
+        // Dailymotion embeds. Safe because ALLOWED_EMBED_HOSTS ensures these are always
+        // cross-origin to the Obsidian app:// origin. Do NOT add same-origin hosts.
+        sandbox: "allow-same-origin allow-scripts allow-popups allow-presentation"
+      }
+    });
+  }
+  renderContentSettings(body, draft) {
+    new import_obsidian21.Setting(body).setName("Video or playlist link").setDesc("Paste a video or playlist link from any supported platform.").addText(
+      (t) => t.setValue(draft.url ?? "").setPlaceholder("https://www.youtube.com/watch?v={video-id}").onChange((v) => {
+        draft.url = v;
+      })
+    );
+    new import_obsidian21.Setting(body).setName("Shuffle on load").setDesc("Start at a random video each time the homepage opens. Only works with playlists.").addToggle(
+      (t) => t.setValue(Boolean(draft.shuffleOnLoad)).onChange((v) => {
+        draft.shuffleOnLoad = v;
+      })
+    );
+  }
+};
+
+// src/blocks/BookmarkBlock.ts
+var import_obsidian22 = require("obsidian");
+var BookmarkBlock = class extends BaseBlock {
+  render(el) {
+    el.addClass("bookmark-block");
+    const { items = [], columns = 2, showDescriptions = true } = this.instance.config;
+    this.renderHeader(el, "Bookmarks");
+    const grid = el.createDiv({ cls: "bookmark-grid" });
+    const safeCols = Math.max(1, Math.min(3, Math.floor(Number(columns) || 2)));
+    grid.style.setProperty("--hp-grid-cols", responsiveGridColumns(safeCols));
+    if (items.length === 0) {
+      const hint = grid.createDiv({ cls: "block-empty-hint" });
+      hint.createDiv({ cls: "block-empty-hint-icon", text: "\u{1F517}" });
+      hint.createDiv({ cls: "block-empty-hint-text", text: "No bookmarks yet. Add links in settings." });
+      return;
+    }
+    for (const item of items) {
+      const card = grid.createEl("button", { cls: "bookmark-card" });
+      if (item.emoji) {
+        card.createSpan({ cls: "bookmark-emoji", text: item.emoji });
+      }
+      card.createSpan({ cls: "bookmark-label", text: item.label });
+      if (item.description && showDescriptions) {
+        card.createSpan({ cls: "bookmark-desc", text: item.description });
+      }
+      card.addEventListener("click", () => {
+        try {
+          const parsed = new URL(item.url);
+          if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+            window.open(item.url, "_blank", "noopener,noreferrer");
+            return;
+          }
+          if (isDangerousUrl(item.url)) {
+            new import_obsidian22.Notice("Homepage blocks: blocked an unsafe link.");
+            return;
+          }
+        } catch {
+        }
+        void this.app.workspace.openLinkText(item.url, "");
+      });
+    }
+  }
+  renderContentSettings(body, draft) {
+    const cfg = draft;
+    if (!Array.isArray(cfg.items)) cfg.items = [];
+    new import_obsidian22.Setting(body).setName("Columns").addDropdown(
+      (d) => d.addOption("1", "1").addOption("2", "2").addOption("3", "3").setValue(String(cfg.columns ?? 2)).onChange((v) => {
+        cfg.columns = Number(v);
+      })
+    );
+    new import_obsidian22.Setting(body).setName("Show descriptions").addToggle(
+      (t) => t.setValue(cfg.showDescriptions !== false).onChange((v) => {
+        cfg.showDescriptions = v;
+      })
+    );
+    body.createEl("p", { text: "Items", cls: "setting-item-name" });
+    const listEl = body.createDiv({ cls: "bookmark-item-list" });
+    const dragState = { dragIdx: -1 };
+    const renderList = () => {
+      listEl.empty();
+      cfg.items.forEach((item, i) => {
+        const row = listEl.createDiv({ cls: "bookmark-item-row" });
+        enableDragReorder(row, i, cfg.items, dragState, renderList);
+        const emojiInput = row.createEl("input", { type: "text", cls: "bookmark-item-emoji" });
+        emojiInput.value = item.emoji ?? "";
+        emojiInput.placeholder = "\u{1F310}";
+        emojiInput.addEventListener("input", () => {
+          item.emoji = emojiInput.value || void 0;
+        });
+        const labelInput = row.createEl("input", { type: "text", cls: "bookmark-item-label" });
+        labelInput.value = item.label;
+        labelInput.placeholder = "Label";
+        labelInput.addEventListener("input", () => {
+          item.label = labelInput.value;
+        });
+        const urlInput = row.createEl("input", { type: "text", cls: "bookmark-item-url" });
+        urlInput.value = item.url;
+        urlInput.placeholder = "URL or note path";
+        urlInput.addEventListener("input", () => {
+          item.url = urlInput.value;
+        });
+        const descInput = row.createEl("input", { type: "text", cls: "bookmark-item-desc" });
+        descInput.value = item.description ?? "";
+        descInput.placeholder = "Description (optional)";
+        descInput.addEventListener("input", () => {
+          item.description = descInput.value || void 0;
+        });
+        const delBtn = row.createEl("button", { cls: "bookmark-item-del", text: "\u2715" });
+        delBtn.addEventListener("click", () => {
+          cfg.items.splice(i, 1);
+          renderList();
+        });
+      });
+    };
+    renderList();
+    new import_obsidian22.Setting(body).addButton(
+      (btn) => btn.setButtonText("+ add item").onClick(() => {
+        cfg.items.push({ label: "", url: "" });
+        renderList();
+      })
+    );
+  }
+};
+
+// src/blocks/RecentFilesBlock.ts
+var import_obsidian23 = require("obsidian");
+var DEBOUNCE_MS4 = 500;
+var RecentFilesBlock = class extends BaseBlock {
+  /** Path of the currently-displayed most-recent file (set each renderContent). */
+  topPath = null;
+  render(el) {
+    this.containerEl = el;
+    el.addClass("recent-files-block");
+    const trigger = () => this.scheduleRender(DEBOUNCE_MS4, (e) => {
+      e.empty();
+      this.renderContent(e);
+    });
+    this.registerEvent(this.app.vault.on("modify", (file) => {
+      if (!file.path.endsWith(".md")) return;
+      const cfg = this.instance.config;
+      const excluded = (cfg.excludeFolders ?? "").split(",").map((f) => f.trim()).filter(Boolean);
+      if (excluded.some((folder) => file.path.startsWith(folder + "/"))) return;
+      if (file.path === this.topPath) return;
+      trigger();
+    }));
+    this.registerEvent(this.app.vault.on("create", () => trigger()));
+    this.registerEvent(this.app.vault.on("delete", () => trigger()));
+    this.registerEvent(this.app.vault.on("rename", () => trigger()));
+    this.renderContent(el);
+  }
+  renderContent(el) {
+    const {
+      maxItems = 10,
+      showTimestamp = true,
+      excludeFolders = ""
+    } = this.instance.config;
+    this.renderHeader(el, "Recent files");
+    const excluded = excludeFolders.split(",").map((f) => f.trim()).filter(Boolean);
+    const files = this.app.vault.getMarkdownFiles().filter((file) => !excluded.some((folder) => file.path.startsWith(folder + "/"))).sort((a, b) => b.stat.mtime - a.stat.mtime).slice(0, maxItems);
+    this.topPath = files[0]?.path ?? null;
+    const list = el.createDiv({ cls: "recent-files-list" });
+    if (files.length === 0) {
+      const hint = list.createDiv({ cls: "block-empty-hint" });
+      hint.createDiv({ cls: "block-empty-hint-icon", text: "\u{1F4C4}" });
+      hint.createDiv({ cls: "block-empty-hint-text", text: "No recent files found." });
+      return;
+    }
+    for (const file of files) {
+      const item = list.createDiv({ cls: "recent-file-item" });
+      const btn = item.createEl("button", { cls: "recent-file-btn" });
+      btn.createSpan({ cls: "recent-file-name", text: file.basename });
+      if (showTimestamp) {
+        btn.createSpan({ cls: "recent-file-time", text: (0, import_obsidian23.moment)(file.stat.mtime).fromNow() });
+      }
+      btn.addEventListener("click", () => {
+        void this.app.workspace.openLinkText(file.path, "");
+      });
+    }
+  }
+  renderContentSettings(body, draft) {
+    const cfg = draft;
+    new import_obsidian23.Setting(body).setName("Max items").setDesc("How many files to show (5\u201320).").addSlider(
+      (s) => s.setLimits(5, 20, 1).setValue(cfg.maxItems ?? 10).setDynamicTooltip().onChange((v) => {
+        cfg.maxItems = v;
+      })
+    );
+    new import_obsidian23.Setting(body).setName("Show timestamps").setDesc("Show relative time next to each file.").addToggle(
+      (t) => t.setValue(cfg.showTimestamp ?? true).onChange((v) => {
+        cfg.showTimestamp = v;
+      })
+    );
+    new import_obsidian23.Setting(body).setName("Exclude folders").setDesc("Comma-separated folder paths to exclude.").addText(
+      (t) => t.setPlaceholder("Templates, archive/old").setValue(cfg.excludeFolders ?? "").onChange((v) => {
+        cfg.excludeFolders = v;
+      })
+    );
+  }
+};
+
+// src/blocks/PomodoroBlock.ts
+var import_obsidian24 = require("obsidian");
+var CIRCUMFERENCE = 2 * Math.PI * 52;
+var timerStore = /* @__PURE__ */ new Map();
+var sharedAudioCtx = null;
+function clearPomodoroState() {
+  timerStore.clear();
+}
+function closeSharedAudioCtx() {
+  if (!sharedAudioCtx) return;
+  void sharedAudioCtx.close().catch(() => {
+  });
+  sharedAudioCtx = null;
+}
+var PomodoroBlock = class _PomodoroBlock extends BaseBlock {
+  phase = "idle";
+  secondsLeft = 0;
+  completedSessions = 0;
+  running = false;
+  timerEl = null;
+  ringEl = null;
+  phaseEl = null;
+  sessionDotsEl = null;
+  startPauseBtn = null;
+  /** Total seconds for the current phase (used to compute ring progress). */
+  totalSeconds = 0;
+  render(el) {
+    const {
+      workMinutes = 25
+    } = this.instance.config;
+    el.addClass("pomodoro-block");
+    this.renderHeader(el, "Pomodoro");
+    const container = el.createDiv({ cls: "pomodoro-container" });
+    const ringWrap = container.createDiv({ cls: "pomodoro-ring" });
+    const svg = ringWrap.createSvg("svg", { attr: { viewBox: "0 0 120 120" } });
+    svg.createSvg("circle", {
+      attr: {
+        cx: "60",
+        cy: "60",
+        r: "52",
+        stroke: "var(--background-modifier-border)",
+        "stroke-width": "8",
+        fill: "transparent"
+      }
+    });
+    const progressCircle = svg.createSvg("circle", {
+      attr: {
+        cx: "60",
+        cy: "60",
+        r: "52",
+        stroke: "var(--block-accent, var(--color-accent))",
+        "stroke-width": "8",
+        fill: "transparent",
+        "stroke-linecap": "round",
+        transform: "rotate(-90 60 60)",
+        "stroke-dasharray": String(CIRCUMFERENCE),
+        "stroke-dashoffset": String(CIRCUMFERENCE)
+      }
+    });
+    this.ringEl = progressCircle;
+    this.timerEl = ringWrap.createDiv({ cls: "pomodoro-time" });
+    this.phaseEl = container.createDiv({ cls: "pomodoro-phase" });
+    this.sessionDotsEl = container.createDiv({ cls: "pomodoro-dots" });
+    const controls = container.createDiv({ cls: "pomodoro-controls" });
+    const startPauseBtn = controls.createEl("button", {
+      cls: "pomodoro-btn is-primary"
+    });
+    const startPauseIcon = startPauseBtn.createSpan({ cls: "pomodoro-btn-icon" });
+    (0, import_obsidian24.setIcon)(startPauseIcon, "play");
+    startPauseBtn.createSpan({ cls: "pomodoro-btn-label", text: "Start" });
+    this.registerDomEvent(startPauseBtn, "click", () => this.toggleStartPause());
+    this.startPauseBtn = startPauseBtn;
+    const resetBtn = controls.createEl("button", {
+      cls: "pomodoro-btn pomodoro-btn-reset"
+    });
+    const resetIcon = resetBtn.createSpan({ cls: "pomodoro-btn-icon" });
+    (0, import_obsidian24.setIcon)(resetIcon, "rotate-ccw");
+    resetBtn.createSpan({ cls: "pomodoro-btn-label", text: "Reset" });
+    this.registerDomEvent(resetBtn, "click", () => this.resetTimer());
+    const skipBtn = controls.createEl("button", {
+      cls: "pomodoro-btn pomodoro-btn-skip"
+    });
+    const skipIcon = skipBtn.createSpan({ cls: "pomodoro-btn-icon" });
+    (0, import_obsidian24.setIcon)(skipIcon, "skip-forward");
+    skipBtn.createSpan({ cls: "pomodoro-btn-label", text: "Skip" });
+    this.registerDomEvent(skipBtn, "click", () => this.skipPhase());
+    const saved = timerStore.get(this.instance.id);
+    if (saved) {
+      this.phase = saved.phase;
+      this.secondsLeft = saved.secondsLeft;
+      this.totalSeconds = saved.totalSeconds;
+      this.completedSessions = saved.completedSessions;
+      this.running = saved.running;
+    } else {
+      this.secondsLeft = workMinutes * 60;
+      this.totalSeconds = this.secondsLeft;
+    }
+    this.updateDisplay();
+    this.registerInterval(window.setInterval(() => this.tick(), 1e3));
+    this.register(() => {
+      const s = timerStore.get(this.instance.id);
+      if (!s || !s.running) timerStore.delete(this.instance.id);
+    });
+  }
+  // ── Timer logic ────────────────────────────────────────────────────────
+  /** Persist timer state to module-level store so it survives re-renders. */
+  saveState() {
+    timerStore.set(this.instance.id, {
+      phase: this.phase,
+      secondsLeft: this.secondsLeft,
+      totalSeconds: this.totalSeconds,
+      completedSessions: this.completedSessions,
+      running: this.running
+    });
+  }
+  tick() {
+    if (!this.running || this.phase === "idle") return;
+    this.secondsLeft--;
+    if (this.secondsLeft <= 0) {
+      this.secondsLeft = 0;
+      this.onPhaseComplete();
+    }
+    this.updateDisplay();
+    this.saveState();
+  }
+  onPhaseComplete() {
+    const {
+      breakMinutes = 5,
+      longBreakMinutes = 15,
+      sessionsBeforeLong = 4,
+      workMinutes = 25,
+      soundType = "crystal",
+      autoStartCycle = false
+    } = this.instance.config;
+    if (soundType !== "none") {
+      _PomodoroBlock.playNotificationSound(soundType);
+    }
+    const previousPhase = this.phase;
+    if (this.phase === "work") {
+      this.completedSessions++;
+      if (this.completedSessions % sessionsBeforeLong === 0) {
+        this.startPhase("longBreak", longBreakMinutes);
+        if (!autoStartCycle) this.running = false;
+      } else {
+        this.startPhase("break", breakMinutes);
+        if (!autoStartCycle) this.running = false;
+      }
+    } else {
+      this.phase = "work";
+      this.secondsLeft = workMinutes * 60;
+      this.totalSeconds = this.secondsLeft;
+      if (previousPhase === "longBreak") {
+        this.running = false;
+        this.completedSessions = 0;
+      } else {
+        this.running = !!autoStartCycle;
+      }
+      this.updateDisplay();
+      this.saveState();
+    }
+  }
+  static playNotificationSound(type) {
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      if (!sharedAudioCtx) {
+        sharedAudioCtx = new AudioContextClass();
+      }
+      const ctx = sharedAudioCtx;
+      if (ctx.state === "suspended") {
+        void ctx.resume();
+      }
+      const t = ctx.currentTime;
+      if (type === "crystal") {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(1200, t);
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.5, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 1);
+        osc.start(t);
+        osc.stop(t + 1.1);
+      } else if (type === "chime") {
+        [800, 1e3].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(freq, t + i * 0.2);
+          gain.gain.setValueAtTime(0, t + i * 0.2);
+          gain.gain.linearRampToValueAtTime(0.3, t + i * 0.2 + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + i * 0.2 + 1);
+          osc.start(t + i * 0.2);
+          osc.stop(t + i * 0.2 + 1.1);
+        });
+      } else if (type === "bowl") {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(300, t);
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.6, t + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 4);
+        osc.start(t);
+        osc.stop(t + 4.1);
+      }
+    } catch (e) {
+      console.error("[Homepage Blocks] Pomodoro audio playback failed", e instanceof Error ? e.message : "unknown error");
+    }
+  }
+  startPhase(phase, minutes) {
+    this.phase = phase;
+    this.secondsLeft = minutes * 60;
+    this.totalSeconds = this.secondsLeft;
+    this.running = true;
+    this.updateDisplay();
+    this.saveState();
+  }
+  toggleStartPause() {
+    if (this.phase === "idle") {
+      const { workMinutes = 25 } = this.instance.config;
+      this.startPhase("work", workMinutes);
+      return;
+    }
+    this.running = !this.running;
+    this.updateDisplay();
+    this.saveState();
+  }
+  resetTimer() {
+    const { workMinutes = 25 } = this.instance.config;
+    this.phase = "idle";
+    this.running = false;
+    this.completedSessions = 0;
+    this.secondsLeft = workMinutes * 60;
+    this.totalSeconds = this.secondsLeft;
+    this.updateDisplay();
+    this.saveState();
+  }
+  skipPhase() {
+    if (this.phase === "idle") return;
+    this.secondsLeft = 0;
+    this.onPhaseComplete();
+    this.updateDisplay();
+  }
+  // ── Display ────────────────────────────────────────────────────────────
+  updateDisplay() {
+    if (this.timerEl) {
+      const mins = Math.floor(this.secondsLeft / 60);
+      const secs = this.secondsLeft % 60;
+      this.timerEl.setText(
+        `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
+      );
+    }
+    if (this.ringEl) {
+      const progress = this.totalSeconds > 0 ? (this.totalSeconds - this.secondsLeft) / this.totalSeconds : 0;
+      const offset = CIRCUMFERENCE * (1 - progress);
+      this.ringEl.setAttribute("stroke-dashoffset", String(offset));
+    }
+    if (this.phaseEl) {
+      const labels = {
+        idle: "Ready",
+        work: "Work",
+        break: "Break",
+        longBreak: "Long break"
+      };
+      this.phaseEl.setText(labels[this.phase]);
+    }
+    if (this.sessionDotsEl) {
+      const { sessionsBeforeLong = 4 } = this.instance.config;
+      this.sessionDotsEl.empty();
+      for (let i = 0; i < sessionsBeforeLong; i++) {
+        const dot = this.sessionDotsEl.createSpan({ cls: "pomodoro-dot" });
+        if (i < this.completedSessions % sessionsBeforeLong) {
+          dot.addClass("is-complete");
+        }
+      }
+    }
+    if (this.startPauseBtn) {
+      const label = this.startPauseBtn.querySelector(".pomodoro-btn-label");
+      const icon = this.startPauseBtn.querySelector(".pomodoro-btn-icon");
+      if (this.phase === "idle") {
+        label?.setText("Start");
+        if (icon instanceof HTMLElement) (0, import_obsidian24.setIcon)(icon, "play");
+      } else if (this.running) {
+        label?.setText("Pause");
+        if (icon instanceof HTMLElement) (0, import_obsidian24.setIcon)(icon, "pause");
+      } else {
+        label?.setText("Resume");
+        if (icon instanceof HTMLElement) (0, import_obsidian24.setIcon)(icon, "play");
+      }
+    }
+  }
+  // ── Settings ───────────────────────────────────────────────────────────
+  renderContentSettings(body, draft) {
+    new import_obsidian24.Setting(body).setName("Work duration").setDesc("Minutes per work session.").addSlider(
+      (s) => s.setLimits(1, 60, 1).setValue(draft.workMinutes ?? 25).setDynamicTooltip().onChange((v) => {
+        draft.workMinutes = v;
+      })
+    );
+    new import_obsidian24.Setting(body).setName("Break duration").setDesc("Minutes per short break.").addSlider(
+      (s) => s.setLimits(1, 30, 1).setValue(draft.breakMinutes ?? 5).setDynamicTooltip().onChange((v) => {
+        draft.breakMinutes = v;
+      })
+    );
+    new import_obsidian24.Setting(body).setName("Long break duration").setDesc("Minutes per long break.").addSlider(
+      (s) => s.setLimits(1, 60, 1).setValue(draft.longBreakMinutes ?? 15).setDynamicTooltip().onChange((v) => {
+        draft.longBreakMinutes = v;
+      })
+    );
+    new import_obsidian24.Setting(body).setName("Sessions before long break").setDesc("Work sessions before a long break.").addSlider(
+      (s) => s.setLimits(2, 8, 1).setValue(draft.sessionsBeforeLong ?? 4).setDynamicTooltip().onChange((v) => {
+        draft.sessionsBeforeLong = v;
+      })
+    );
+    new import_obsidian24.Setting(body).setName("Notification sound").setDesc("Play a sound when a phase ends.").addDropdown((d) => {
+      d.addOption("none", "None").addOption("crystal", "Crystal").addOption("chime", "Chime").addOption("bowl", "Singing bowl").setValue(draft.soundType ?? "crystal").onChange((v) => {
+        draft.soundType = v;
+        if (v !== "none") {
+          _PomodoroBlock.playNotificationSound(v);
+        }
+      });
+    });
+    new import_obsidian24.Setting(body).setName("Auto-start next session").setDesc("Start the next phase automatically.").addToggle(
+      (t) => t.setValue(draft.autoStartCycle ?? false).onChange((v) => {
+        draft.autoStartCycle = v;
+      })
+    );
+  }
+};
+
+// src/blocks/SpacerBlock.ts
+var SpacerBlock = class extends BaseBlock {
+  render(el) {
+    el.addClass("spacer-block");
+  }
+};
+
+// src/blocks/RandomNoteBlock.ts
+var import_obsidian25 = require("obsidian");
+var DEBOUNCE_MS5 = 500;
+var DELETE_RENAME_DEBOUNCE_MS = 2e3;
+function stripWikiLink(raw) {
+  const m = raw.match(/^\[\[(.+?)(?:\|.*)?\]\]$/);
+  return m ? m[1] : raw;
+}
+var RandomNoteBlock = class extends BaseBlock {
+  /** Cached daily-seed file path so the selection is stable across file-count changes. */
+  dailyCache = null;
+  getTag() {
+    const { tag = "" } = this.instance.config;
+    return tag;
+  }
+  render(el) {
+    this.containerEl = el;
+    el.addClass("random-note-block");
+    const trigger = () => this.scheduleRender(DEBOUNCE_MS5, (e) => {
+      e.empty();
+      return this.loadAndRender(e);
+    });
+    const slowTrigger = () => this.scheduleRender(DELETE_RENAME_DEBOUNCE_MS, (e) => {
+      e.empty();
+      return this.loadAndRender(e);
+    });
+    this.registerEvent(this.app.metadataCache.on("changed", (_file, _data, cache) => {
+      const tag = this.getTag();
+      if (!tag) return;
+      const tagSearch = normalizeTag(tag);
+      if (cacheHasTag(cache, tagSearch)) trigger();
+    }));
+    this.registerEvent(this.app.vault.on("delete", (file) => {
+      if (!this.getTag() || !file.path.endsWith(".md")) return;
+      slowTrigger();
+    }));
+    this.registerEvent(this.app.vault.on("rename", (file) => {
+      if (!this.getTag() || !file.path.endsWith(".md")) return;
+      slowTrigger();
+    }));
+    this.loadAndRender(el).catch((e) => {
+      console.error("[Homepage Blocks] RandomNoteBlock failed to render:", e);
+      this.renderErrorHint(el, "Couldn\u2019t load a random note \u2014 check the console for details.");
+    });
+  }
+  async loadAndRender(el) {
+    const gen = this.nextGeneration();
+    const {
+      tag = "",
+      dailySeed = false,
+      imageProperty = "cover",
+      titleProperty = "title",
+      showImage = true,
+      showPreview = true
+    } = this.instance.config;
+    this.renderHeader(el, "Random note");
+    if (!tag) {
+      const hint = el.createDiv({ cls: "block-empty-hint" });
+      hint.createDiv({ cls: "block-empty-hint-icon", text: "\u{1F3B2}" });
+      hint.createDiv({ cls: "block-empty-hint-text", text: "No tag configured. Add a tag in settings to show random notes." });
+      return;
+    }
+    const tagSearch = normalizeTag(tag);
+    const files = getFilesWithTag(this.app, tagSearch).sort((a, b) => a.path.localeCompare(b.path));
+    if (files.length === 0) {
+      el.createDiv({ cls: "block-empty-hint" }).createDiv({
+        cls: "block-empty-hint-text",
+        text: `No files found with tag ${tagSearch}`
+      });
+      return;
+    }
+    const file = this.pickFile(files, dailySeed);
+    const cache = this.app.metadataCache.getFileCache(file);
+    const fm = cache?.frontmatter ?? {};
+    let preview = "";
+    if (showPreview) {
+      const desc = typeof fm["description"] === "string" ? fm["description"] : typeof fm["excerpt"] === "string" ? fm["excerpt"] : "";
+      if (desc) {
+        preview = desc;
+      } else {
+        try {
+          const content = await this.app.vault.read(file);
+          if (this.isStale(gen)) return;
+          preview = this.extractPreview(content, cache?.frontmatterPosition?.end.offset ?? 0);
+        } catch (e) {
+          console.error("[Homepage Blocks] RandomNoteBlock failed to read file:", e);
+        }
+      }
+    }
+    if (this.isStale(gen)) return;
+    el.setAttribute(AUTO_HEIGHT_ATTR, "");
+    this.observeWidthForAutoHeight(el);
+    if (showImage) {
+      const rawProp = fm[imageProperty];
+      const rawImage = typeof rawProp === "string" ? rawProp : Array.isArray(rawProp) && typeof rawProp[0] === "string" ? rawProp[0] : "";
+      if (rawImage) {
+        const trimmed = rawImage.trim();
+        let imgSrc = "";
+        if (trimmed.startsWith("https://")) {
+          imgSrc = trimmed;
+        } else {
+          const imagePath = stripWikiLink(trimmed);
+          const resolved = this.app.metadataCache.getFirstLinkpathDest(imagePath, file.path);
+          const imageFile = resolved ?? this.app.vault.getAbstractFileByPath(imagePath) ?? null;
+          if (imageFile instanceof import_obsidian25.TFile) {
+            imgSrc = this.app.vault.getResourcePath(imageFile);
+          }
+        }
+        if (imgSrc) {
+          const img = el.createEl("img", { cls: "random-note-cover" });
+          img.src = imgSrc;
+          img.alt = file.basename;
+          img.referrerPolicy = "no-referrer";
+        }
+      }
+    }
+    const rawTitle = fm[titleProperty];
+    const title = typeof rawTitle === "string" && rawTitle ? rawTitle : file.basename;
+    const titleEl = el.createEl("button", { cls: "random-note-title" });
+    titleEl.setText(title);
+    titleEl.addEventListener("click", () => {
+      void this.app.workspace.openLinkText(file.path, "");
+    });
+    if (preview) {
+      el.createDiv({ cls: "random-note-preview", text: preview });
+    }
+    const footer = el.createDiv({ cls: "random-note-footer" });
+    footer.createSpan({ cls: "random-note-filename", text: file.basename });
+    const openBtn = footer.createEl("button", { cls: "random-note-open-btn", text: "Open" });
+    openBtn.addEventListener("click", () => {
+      void this.app.workspace.openLinkText(file.path, "");
+    });
+    this.requestAutoHeight();
+  }
+  /** Pick the file to display. Daily seed caches the path so the selection
+   *  is stable even when the tagged-file count changes mid-day. */
+  pickFile(files, dailySeed) {
+    if (!dailySeed) return files[Math.floor(Math.random() * files.length)];
+    const dayIndex = dailyEpochDay();
+    if (this.dailyCache?.dayIndex === dayIndex) {
+      const cached = files.find((f) => f.path === this.dailyCache.path);
+      if (cached) return cached;
+    }
+    const idx = dayIndex % files.length;
+    const picked = files[idx];
+    this.dailyCache = { dayIndex, path: picked.path };
+    return picked;
+  }
+  extractPreview(content, fmEnd) {
+    const afterFm = content.slice(fmEnd);
+    for (const line of afterFm.split("\n")) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith("#") && !trimmed.startsWith("!") && !trimmed.startsWith("```") && !trimmed.startsWith("---")) {
+        const capped = trimmed.slice(0, 500);
+        return capped.replace(/\*\*(.+?)\*\*/g, "$1").replace(/\*(.+?)\*/g, "$1").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, "$1").slice(0, 200);
+      }
+    }
+    return "";
+  }
+  renderContentSettings(body, draft) {
+    const cfg = draft;
+    new import_obsidian25.Setting(body).setName("Tag filter").setDesc("Only notes with this tag will appear.").addText(
+      (t) => t.setPlaceholder("Tag, with or without #").setValue(cfg.tag ?? "").onChange((v) => {
+        cfg.tag = v.trim();
+      })
+    );
+    new import_obsidian25.Setting(body).setName("Daily seed").setDesc("Same note all day, changes at midnight.").addToggle(
+      (t) => t.setValue(cfg.dailySeed ?? false).onChange((v) => {
+        cfg.dailySeed = v;
+      })
+    );
+    new import_obsidian25.Setting(body).setName("Show cover image").addToggle(
+      (t) => t.setValue(cfg.showImage ?? true).onChange((v) => {
+        cfg.showImage = v;
+      })
+    );
+    new import_obsidian25.Setting(body).setName("Cover image property").setDesc("Frontmatter property with the image path.").addText(
+      (t) => t.setPlaceholder("Cover").setValue(cfg.imageProperty ?? "").onChange((v) => {
+        cfg.imageProperty = v.trim() || "cover";
+      })
+    );
+    new import_obsidian25.Setting(body).setName("Title property").setDesc("Frontmatter property for the title. Falls back to filename.").addText(
+      (t) => t.setPlaceholder("Title").setValue(cfg.titleProperty ?? "title").onChange((v) => {
+        cfg.titleProperty = v.trim() || "title";
+      })
+    );
+    new import_obsidian25.Setting(body).setName("Show content preview").setDesc("Show the first paragraph or frontmatter description.").addToggle(
+      (t) => t.setValue(cfg.showPreview ?? true).onChange((v) => {
+        cfg.showPreview = v;
+      })
+    );
+  }
+};
+
+// src/blocks/VoiceDictationBlock.ts
+var import_obsidian26 = require("obsidian");
+var CONSENT_STORAGE_KEY = "hp-voice-consent";
+function hasMediaRecorderSupport() {
+  if (typeof MediaRecorder === "undefined") return false;
+  const md = navigator.mediaDevices;
+  return typeof md?.getUserMedia === "function";
+}
+function readConsent(app) {
+  try {
+    const raw = app.loadLocalStorage(CONSENT_STORAGE_KEY);
+    return raw && typeof raw === "object" ? raw : {};
+  } catch {
+    return {};
+  }
+}
+function hasConsent(app, provider) {
+  return readConsent(app)[provider] === true;
+}
+function setConsent(app, provider) {
+  try {
+    app.saveLocalStorage(CONSENT_STORAGE_KEY, { ...readConsent(app), [provider]: true });
+  } catch {
+  }
+}
+var WHISPER_MODELS = {
+  "whisper-1": "Whisper 1",
+  "gpt-4o-transcribe": "GPT-4o Transcribe",
+  "gpt-4o-mini-transcribe": "GPT-4o Mini Transcribe"
+};
+var GEMINI_MODELS = {
+  "gemini-2.0-flash": "Gemini 2.0 Flash",
+  "gemini-2.5-flash": "Gemini 2.5 Flash",
+  "gemini-2.5-pro": "Gemini 2.5 Pro",
+  "gemini-2.0-flash-lite": "Gemini 2.0 Flash Lite"
+};
+var VoiceDictationBlock = class extends BaseBlock {
+  statusEl = null;
+  micBtn = null;
+  micIconEl = null;
+  timerEl = null;
+  // Cloud transcription (Whisper / Gemini)
+  mediaRecorder = null;
+  activeStream = null;
+  // Generation counter: invalidates stale async callbacks (onstop, transcription result) after
+  // a re-render, plugin unload, or a rapid stop→start sequence. Every recording captures the
+  // generation it started with and checks it before touching DOM / calling saveNote.
+  recordingGen = 0;
+  // Elapsed timer handle
+  elapsedSeconds = 0;
+  elapsedIntervalRef = null;
+  render(el) {
+    const cfg = this.instance.config;
+    el.addClass("voice-block");
+    this.containerEl = el;
+    this.setState(el, "idle");
+    this.register(() => this.stopActiveStream());
+    this.renderHeader(el, "Voice notes");
+    const body = el.createDiv({ cls: "voice-body" });
+    this.statusEl = body.createDiv({
+      cls: "voice-status",
+      text: "Tap to record",
+      // Announce recording / transcribing / saved transitions to screen readers.
+      attr: { role: "status", "aria-live": "polite" }
+    });
+    const micZone = body.createDiv({ cls: "voice-mic-zone" });
+    this.micBtn = micZone.createEl("button", { cls: "voice-mic" });
+    this.micBtn.setAttribute("aria-label", "Start recording voice note");
+    this.micIconEl = this.micBtn.createSpan({ cls: "voice-mic-icon" });
+    (0, import_obsidian26.setIcon)(this.micIconEl, "microphone");
+    this.timerEl = micZone.createDiv({ cls: "voice-timer", text: "0:00" });
+    const flash = body.createDiv({ cls: "voice-saved-flash" });
+    const checkIconEl = flash.createSpan();
+    (0, import_obsidian26.setIcon)(checkIconEl, "check");
+    flash.createSpan({ cls: "voice-saved-label", text: "Saved" });
+    if (!cfg.apiKey) {
+      new import_obsidian26.Notice("Voice notes require an API key. Configure it in block settings.");
+      this.micBtn.disabled = true;
+      this.micBtn.addClass("voice-mic--unavailable");
+      return;
+    }
+    if (!hasMediaRecorderSupport()) {
+      if (this.statusEl) this.statusEl.setText("Not available on this platform");
+      this.micBtn.disabled = true;
+      this.micBtn.addClass("voice-mic--unavailable");
+      return;
+    }
+    if (cfg.triggerMode === "push") {
+      this.micBtn.setAttribute("aria-label", "Hold to record voice note");
+      this.micBtn.addEventListener("pointerdown", () => {
+        void this.startRecording();
+      });
+      const stop = () => {
+        if (this.getState(el) === "recording") this.stopRecording(el);
+      };
+      this.micBtn.addEventListener("pointerup", stop);
+      this.micBtn.addEventListener("pointercancel", stop);
+    } else {
+      this.micBtn.addEventListener("click", () => {
+        if (this.getState(el) === "idle") {
+          void this.startRecording();
+        } else if (this.getState(el) === "recording") {
+          this.stopRecording(el);
+        }
+      });
+    }
+    this.register(() => {
+      this.recordingGen++;
+      if (this.mediaRecorder) {
+        this.mediaRecorder.ondataavailable = null;
+        this.mediaRecorder.onstop = null;
+        if (this.mediaRecorder.state !== "inactive") this.mediaRecorder.stop();
+        this.mediaRecorder = null;
+      }
+      this.stopActiveStream();
+      if (this.elapsedIntervalRef !== null) window.clearInterval(this.elapsedIntervalRef);
+    });
+  }
+  getState(el) {
+    return el.dataset.voiceState ?? "idle";
+  }
+  setState(el, state) {
+    el.dataset.voiceState = state;
+    if (!this.statusEl || !this.micBtn || !this.micIconEl) return;
+    const labels = {
+      idle: "Tap to record",
+      recording: "Recording\u2026",
+      transcribing: "Transcribing\u2026",
+      saved: ""
+    };
+    this.statusEl.setText(labels[state]);
+    if (state === "recording") {
+      this.micBtn.setAttribute("aria-label", "Stop recording");
+      (0, import_obsidian26.setIcon)(this.micIconEl, "square");
+      this.startElapsedTimer();
+    } else {
+      const cfg = this.instance.config;
+      const ariaLabel = cfg.triggerMode === "push" ? "Hold to record voice note" : "Start recording voice note";
+      this.micBtn.setAttribute("aria-label", ariaLabel);
+      (0, import_obsidian26.setIcon)(this.micIconEl, "microphone");
+      this.stopElapsedTimer();
+    }
+  }
+  startElapsedTimer() {
+    this.elapsedSeconds = 0;
+    if (this.timerEl) this.timerEl.setText("0:00");
+    this.elapsedIntervalRef = this.registerInterval(window.setInterval(() => {
+      this.elapsedSeconds++;
+      const m = Math.floor(this.elapsedSeconds / 60);
+      const s = String(this.elapsedSeconds % 60).padStart(2, "0");
+      if (this.timerEl) this.timerEl.setText(`${m}:${s}`);
+    }, 1e3));
+  }
+  stopElapsedTimer() {
+    if (this.elapsedIntervalRef !== null) {
+      window.clearInterval(this.elapsedIntervalRef);
+      this.elapsedIntervalRef = null;
+    }
+    if (this.timerEl) this.timerEl.setText("0:00");
+  }
+  showSavedFlash(el) {
+    this.setState(el, "saved");
+    const id = window.setTimeout(() => {
+      if (el.isConnected) this.setState(el, "idle");
+    }, 1500);
+    this.register(() => window.clearTimeout(id));
+  }
+  // ── Note creation ──────────────────────────────────────────────────────────
+  async saveNote(transcript, cfg) {
+    if (!transcript.trim()) return;
+    const rawFolder = (cfg.folder ?? "").replace(/^[/\\~]+/, "").replace(/^[A-Za-z]:/, "").replaceAll("\0", "").replace(/\\/g, "/").trim();
+    const segments = rawFolder.split("/").filter(Boolean);
+    if (segments.some((s) => s === "..")) return;
+    const safePath = (0, import_obsidian26.normalizePath)(segments.join("/"));
+    const timestamp = (0, import_obsidian26.moment)().format("YYYY-MM-DD HH-mm-ss");
+    const notePath = safePath && safePath !== "/" ? `${safePath}/${timestamp}.md` : `${timestamp}.md`;
+    if (safePath && safePath !== "/") {
+      let accumulated = "";
+      for (const seg of safePath.split("/")) {
+        accumulated = accumulated ? `${accumulated}/${seg}` : seg;
+        if (!this.app.vault.getAbstractFileByPath(accumulated)) {
+          await this.app.vault.createFolder(accumulated);
+        }
+      }
+    }
+    const content = cfg.noteTemplate ?? "" ? (cfg.noteTemplate ?? "").replaceAll("{{transcript}}", transcript) : transcript;
+    await this.app.vault.create(notePath, content);
+  }
+  // ── Recording ─────────────────────────────────────────────────────────────
+  async startRecording() {
+    const el = this.containerEl;
+    if (!el) return;
+    const cfg = this.instance.config;
+    if (!cfg.apiKey) {
+      new import_obsidian26.Notice("API key required \u2014 configure it in block settings");
+      return;
+    }
+    const provider = cfg.provider ?? "whisper";
+    if (!hasConsent(this.app, provider)) {
+      const confirmed = await confirmVoiceConsent(this.app, provider);
+      if (!confirmed) return;
+      setConsent(this.app, provider);
+    }
+    this.stopActiveStream();
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      const name = err?.name ?? "";
+      if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+        new import_obsidian26.Notice("No microphone found on this device");
+      } else if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+        new import_obsidian26.Notice("Microphone access denied");
+      } else {
+        new import_obsidian26.Notice("Microphone unavailable");
+      }
+      return;
+    }
+    let recordedMimeType = "audio/webm";
+    const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/aac", "audio/ogg"];
+    for (const mt of candidates) {
+      if (MediaRecorder.isTypeSupported(mt)) {
+        recordedMimeType = mt.split(";")[0];
+        break;
+      }
+    }
+    const chunks = [];
+    const gen = ++this.recordingGen;
+    const recorder = new MediaRecorder(stream, {
+      mimeType: MediaRecorder.isTypeSupported(recordedMimeType) ? recordedMimeType : void 0
+    });
+    this.activeStream = stream;
+    this.mediaRecorder = recorder;
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
+    recorder.onstop = () => {
+      if (gen !== this.recordingGen) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+      void this.handleCloudStop(el, gen, chunks, recordedMimeType);
+    };
+    recorder.start();
+    this.setState(el, "recording");
+  }
+  stopRecording(el) {
+    if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
+      this.setState(el, "transcribing");
+      this.mediaRecorder.stop();
+    }
+  }
+  stopActiveStream() {
+    if (this.activeStream) {
+      this.activeStream.getTracks().forEach((t) => t.stop());
+      this.activeStream = null;
+    }
+  }
+  async handleCloudStop(el, gen, chunks, mimeType) {
+    const cfg = this.instance.config;
+    const blob = new Blob(chunks, { type: mimeType });
+    this.stopActiveStream();
+    if (blob.size === 0) {
+      if (gen === this.recordingGen && el.isConnected) {
+        new import_obsidian26.Notice("No audio captured");
+        this.setState(el, "idle");
+      }
+      return;
+    }
+    let transcript = "";
+    try {
+      transcript = (cfg.provider ?? "whisper") === "gemini" ? await this.transcribeWithGemini(blob, cfg, mimeType) : await this.transcribeWithWhisper(blob, cfg, mimeType);
+    } catch (err) {
+      const safe = err instanceof Error ? err.message : "unknown error";
+      console.error("[Homepage Blocks] VoiceDictation transcription failed:", safe);
+      if (gen === this.recordingGen && el.isConnected) {
+        new import_obsidian26.Notice("Transcription failed");
+        this.setState(el, "idle");
+      }
+      return;
+    }
+    if (gen !== this.recordingGen || !el.isConnected) return;
+    if (!transcript) {
+      this.setState(el, "idle");
+      return;
+    }
+    try {
+      await this.saveNote(transcript, cfg);
+      if (gen === this.recordingGen && el.isConnected) this.showSavedFlash(el);
+    } catch (e) {
+      const safe = e instanceof Error ? e.message : "unknown error";
+      console.error("[Homepage Blocks] VoiceDictation save failed:", safe);
+      if (gen === this.recordingGen && el.isConnected) {
+        new import_obsidian26.Notice("Failed to save note");
+        this.setState(el, "idle");
+      }
+    }
+  }
+  // ── Whisper transcription ───────────────────────────────────────────────
+  async transcribeWithWhisper(blob, cfg, mimeType) {
+    const ext = mimeType.includes("mp4") ? "mp4" : mimeType.includes("ogg") ? "ogg" : mimeType.includes("aac") ? "aac" : "webm";
+    const boundary = "----FormBoundary" + Math.random().toString(36).slice(2);
+    const encoder = new TextEncoder();
+    const textFields = { model: cfg.model || "whisper-1" };
+    if (cfg.language) textFields["language"] = cfg.language;
+    let preamble = "";
+    for (const [key, value] of Object.entries(textFields)) {
+      preamble += `--${boundary}\r
+Content-Disposition: form-data; name="${key}"\r
+\r
+${value}\r
+`;
+    }
+    preamble += `--${boundary}\r
+Content-Disposition: form-data; name="file"; filename="audio.${ext}"\r
+Content-Type: ${mimeType}\r
+\r
+`;
+    const prefix = encoder.encode(preamble);
+    const suffix = encoder.encode(`\r
+--${boundary}--\r
+`);
+    const fileBytes = new Uint8Array(await blob.arrayBuffer());
+    const body = new Uint8Array(prefix.length + fileBytes.length + suffix.length);
+    body.set(prefix, 0);
+    body.set(fileBytes, prefix.length);
+    body.set(suffix, prefix.length + fileBytes.length);
+    const res = await (0, import_obsidian26.requestUrl)({
+      url: "https://api.openai.com/v1/audio/transcriptions",
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${cfg.apiKey ?? ""}`,
+        "Content-Type": `multipart/form-data; boundary=${boundary}`
+      },
+      body: body.buffer,
+      throw: false
+    });
+    if (res.status !== 200) {
+      throw new Error(`Whisper API error ${res.status}`);
+    }
+    const json = res.json;
+    return (json.text ?? "").trim();
+  }
+  // ── Gemini transcription ────────────────────────────────────────────────
+  async transcribeWithGemini(blob, cfg, mimeType) {
+    const base64Audio = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result;
+        resolve(dataUrl.split(",")[1]);
+      };
+      reader.onerror = () => reject(reader.error ?? new Error("FileReader failed"));
+      reader.readAsDataURL(blob);
+    });
+    const rawModel = cfg.model || "gemini-2.0-flash";
+    if (!/^[a-zA-Z0-9._-]+$/.test(rawModel)) {
+      throw new Error("Invalid Gemini model name");
+    }
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${rawModel}:generateContent`;
+    const lang = cfg.language ?? "";
+    const langHint = /^[a-z]{2,3}(-[A-Z]{2})?$/.test(lang) ? ` The audio is in language code "${lang}".` : "";
+    const res = await (0, import_obsidian26.requestUrl)({
+      url,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": cfg.apiKey ?? ""
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: `Transcribe this audio exactly. Output only the transcription, nothing else.${langHint}` },
+            { inlineData: { mimeType, data: base64Audio } }
+          ]
+        }]
+      }),
+      throw: false
+    });
+    if (res.status !== 200) {
+      throw new Error(`Gemini API error ${res.status}`);
+    }
+    const json = res.json;
+    return (json.candidates?.[0]?.content?.parts?.[0]?.text ?? "").trim();
+  }
+  renderContentSettings(body, draft) {
+    const cfg = draft;
+    const renderSettings = () => {
+      body.empty();
+      new import_obsidian26.Setting(body).setName("Destination folder").setDesc("Where new voice notes go. Leave blank for vault root.").addText((t) => {
+        t.setPlaceholder("Voice notes").setValue(cfg.folder ?? "").onChange((v) => {
+          cfg.folder = v.trim();
+        });
+        t.inputEl.addEventListener("click", () => {
+          new FolderSuggestModal(this.app, (folder) => {
+            cfg.folder = folder.path;
+            t.setValue(folder.path);
+          }).open();
+        });
+      });
+      new import_obsidian26.Setting(body).setName("Trigger mode").setDesc("How the mic button starts recording.").addDropdown((d) => {
+        d.addOption("tap", "Tap to record").addOption("push", "Push to talk").setValue(cfg.triggerMode ?? "tap").onChange((v) => {
+          cfg.triggerMode = v;
+        });
+      });
+      new import_obsidian26.Setting(body).setName("Transcription provider").setDesc("Service used for transcription.").addDropdown((d) => {
+        d.addOption("whisper", "Whisper").addOption("gemini", "Gemini").setValue(cfg.provider ?? "whisper").onChange((v) => {
+          cfg.provider = v;
+          cfg.model = v === "gemini" ? "gemini-2.0-flash" : "whisper-1";
+          renderSettings();
+        });
+      });
+      const isGemini = (cfg.provider ?? "whisper") === "gemini";
+      new import_obsidian26.Setting(body).setName("API key").setDesc(isGemini ? "Google AI API key for Gemini. Encrypted at rest with a device-specific key; it cannot be decrypted on another device (re-enter it there), and it is never included in layout exports." : "OpenAI API key for Whisper. Encrypted at rest with a device-specific key; it cannot be decrypted on another device (re-enter it there), and it is never included in layout exports.").addText((t) => {
+        t.inputEl.type = "password";
+        t.setPlaceholder(isGemini ? "AIza..." : "sk-...").setValue(cfg.apiKey ?? "").onChange((v) => {
+          cfg.apiKey = v.trim();
+        });
+      });
+      const models = isGemini ? GEMINI_MODELS : WHISPER_MODELS;
+      const defaultModel = isGemini ? "gemini-2.0-flash" : "whisper-1";
+      new import_obsidian26.Setting(body).setName("Model").setDesc("Transcription model.").addDropdown((d) => {
+        for (const [value, label] of Object.entries(models)) {
+          d.addOption(value, label);
+        }
+        d.setValue(cfg.model && cfg.model in models ? cfg.model : defaultModel);
+        d.onChange((v) => {
+          cfg.model = v;
+        });
+      });
+      new import_obsidian26.Setting(body).setName("Language").setDesc("Language code (en, it, fr). Leave blank to auto-detect.").addText((t) => {
+        t.setPlaceholder("Auto").setValue(cfg.language ?? "").onChange((v) => {
+          cfg.language = v.trim();
+        });
+      });
+      new import_obsidian26.Setting(body).setName("Note template").setDesc("Optional. Use {{transcript}} where the text should appear.").addTextArea((t) => {
+        t.setPlaceholder("{{transcript}}").setValue(cfg.noteTemplate ?? "").onChange((v) => {
+          cfg.noteTemplate = v;
+        });
+        t.inputEl.rows = 4;
+      });
+    };
+    renderSettings();
+  }
+};
+var VoiceConsentModal = class extends import_obsidian26.Modal {
+  constructor(app, provider, onResult) {
+    super(app);
+    this.provider = provider;
+    this.onResult = onResult;
+  }
+  confirmed = false;
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    new import_obsidian26.Setting(contentEl).setName("Voice dictation consent").setHeading();
+    const providerName = this.provider === "gemini" ? "Google Gemini" : "OpenAI Whisper";
+    const endpoint = this.provider === "gemini" ? "generativelanguage.googleapis.com" : "api.openai.com";
+    contentEl.createEl("p", {
+      text: `Recording voice notes sends the captured audio to ${providerName} (${endpoint}) for transcription. Your API key is attached to the request.`
+    });
+    contentEl.createEl("p", {
+      text: `Do not record sensitive information unless you trust ${providerName}'s data handling.`
+    });
+    contentEl.createEl("p", {
+      text: "This confirmation is remembered per provider \u2014 you will not see it again for this provider.",
+      cls: "setting-item-description"
+    });
+    const buttons = contentEl.createDiv({ cls: "modal-button-container" });
+    const cancel = buttons.createEl("button", { text: "Cancel" });
+    cancel.addEventListener("click", () => this.close());
+    const confirm = buttons.createEl("button", { text: "Upload audio to " + providerName, cls: "mod-cta" });
+    confirm.addEventListener("click", () => {
+      this.confirmed = true;
+      this.close();
+    });
+  }
+  onClose() {
+    this.contentEl.empty();
+    this.onResult(this.confirmed);
+  }
+};
+function confirmVoiceConsent(app, provider) {
+  return new Promise((resolve) => {
+    new VoiceConsentModal(app, provider, resolve).open();
+  });
+}
+
+// src/blocks/VaultSearchBlock.ts
+var import_obsidian27 = require("obsidian");
+var DEBOUNCE_MS6 = 150;
+var MAX_RESULTS = 10;
+var BLUR_DELAY_MS = 50;
+var VaultSearchBlock = class extends BaseBlock {
+  dropdownEl = null;
+  inputEl = null;
+  wrapperEl = null;
+  selectedIndex = -1;
+  debounceTimer = null;
+  blurTimer = null;
+  results = [];
+  repositionRaf = 0;
+  viewportTracking = false;
+  /** rAF-throttled reposition so the fixed dropdown follows the input on scroll/resize. */
+  onViewportChange = () => {
+    window.cancelAnimationFrame(this.repositionRaf);
+    this.repositionRaf = window.requestAnimationFrame(() => this.positionDropdown());
+  };
+  /**
+   * The typed query lives only in the DOM <input> (never persisted), so a full
+   * rerender would wipe it mid-search. Opt into the rerender-suppression guard
+   * (BaseBlock contract) whenever the field has a non-empty query.
+   */
+  hasUnsavedInlineState() {
+    return !!this.inputEl && this.inputEl.value.trim().length > 0;
+  }
+  render(el) {
+    const cfg = this.instance.config;
+    el.addClass("vault-search-block");
+    this.renderHeader(el, "Vault Search");
+    const wrapper = el.createDiv({ cls: "vault-search-input-wrapper" });
+    this.wrapperEl = wrapper;
+    const iconEl = wrapper.createSpan({ cls: "vault-search-icon" });
+    (0, import_obsidian27.setIcon)(iconEl, "search");
+    const input = wrapper.createEl("input", {
+      cls: "vault-search-input",
+      attr: {
+        type: "text",
+        placeholder: cfg.placeholder || "Search vault...",
+        spellcheck: "false",
+        autocomplete: "off"
+      }
+    });
+    this.inputEl = input;
+    const dropdown = el.doc.body.createDiv({ cls: "vault-search-dropdown vault-search-dropdown--hidden" });
+    this.dropdownEl = dropdown;
+    this.register(() => {
+      dropdown.remove();
+    });
+    this.register(() => this.stopViewportTracking());
+    input.addEventListener("input", () => {
+      if (this.debounceTimer) window.clearTimeout(this.debounceTimer);
+      this.debounceTimer = window.setTimeout(() => {
+        this.debounceTimer = null;
+        this.search(input.value.trim());
+      }, DEBOUNCE_MS6);
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        this.moveSelection(1);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        this.moveSelection(-1);
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (this.debounceTimer) {
+          window.clearTimeout(this.debounceTimer);
+          this.debounceTimer = null;
+          this.search(input.value.trim());
+        }
+        this.openSelected();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        this.closeDropdown();
+        input.value = "";
+        input.blur();
+      }
+    });
+    input.addEventListener("focus", () => {
+      if (input.value.trim()) this.showDropdown();
+    });
+    input.addEventListener("blur", () => {
+      if (this.blurTimer) window.clearTimeout(this.blurTimer);
+      this.blurTimer = window.setTimeout(() => {
+        this.blurTimer = null;
+        this.closeDropdown();
+      }, BLUR_DELAY_MS);
+    });
+    this.register(() => {
+      if (this.debounceTimer) window.clearTimeout(this.debounceTimer);
+      if (this.blurTimer) window.clearTimeout(this.blurTimer);
+    });
+  }
+  search(query) {
+    if (!query) {
+      this.closeDropdown();
+      return;
+    }
+    const lower = query.toLowerCase();
+    const files = this.app.vault.getMarkdownFiles();
+    const matches = [];
+    for (const file of files) {
+      const idx = file.basename.toLowerCase().indexOf(lower);
+      if (idx >= 0) {
+        matches.push({ name: file.basename, path: file.path, score: idx });
+      }
+    }
+    matches.sort((a, b) => a.score - b.score || a.name.localeCompare(b.name));
+    this.results = matches.slice(0, MAX_RESULTS);
+    this.selectedIndex = -1;
+    this.renderResults();
+    if (this.results.length > 0) {
+      this.showDropdown();
+    } else {
+      this.closeDropdown();
+    }
+  }
+  renderResults() {
+    if (!this.dropdownEl) return;
+    this.dropdownEl.empty();
+    for (const [i, result] of this.results.entries()) {
+      const item = this.dropdownEl.createDiv({
+        cls: "vault-search-result" + (i === this.selectedIndex ? " is-selected" : "")
+      });
+      const iconEl = item.createSpan({ cls: "vault-search-result-icon" });
+      (0, import_obsidian27.setIcon)(iconEl, "file-text");
+      const textEl = item.createDiv({ cls: "vault-search-result-text" });
+      textEl.createDiv({ cls: "vault-search-result-name", text: result.name });
+      const folder = result.path.substring(0, result.path.lastIndexOf("/"));
+      if (folder) {
+        textEl.createDiv({ cls: "vault-search-result-path", text: folder });
+      }
+      const openResult = (e) => {
+        e.preventDefault();
+        void this.app.workspace.openLinkText(result.path, "");
+        this.closeDropdown();
+        if (this.inputEl) this.inputEl.value = "";
+      };
+      item.addEventListener("mousedown", openResult);
+      item.addEventListener("touchstart", openResult, { passive: false });
+      item.addEventListener("mouseenter", () => {
+        this.selectedIndex = i;
+        this.updateSelection();
+      });
+    }
+  }
+  moveSelection(delta) {
+    if (this.results.length === 0) return;
+    this.selectedIndex = (this.selectedIndex + delta + this.results.length) % this.results.length;
+    this.updateSelection();
+  }
+  updateSelection() {
+    if (!this.dropdownEl) return;
+    const items = this.dropdownEl.querySelectorAll(".vault-search-result");
+    items.forEach((el, i) => {
+      el.toggleClass("is-selected", i === this.selectedIndex);
+    });
+  }
+  openSelected() {
+    const index = this.selectedIndex >= 0 ? this.selectedIndex : 0;
+    const result = this.results[index];
+    if (result) {
+      void this.app.workspace.openLinkText(result.path, "");
+      this.closeDropdown();
+      if (this.inputEl) this.inputEl.value = "";
+    }
+  }
+  positionDropdown() {
+    if (!this.dropdownEl || !this.wrapperEl) return;
+    const rect = this.wrapperEl.getBoundingClientRect();
+    this.dropdownEl.style.setProperty("--hp-search-dropdown-top", `${rect.bottom + 4}px`);
+    this.dropdownEl.style.setProperty("--hp-search-dropdown-left", `${rect.left}px`);
+    this.dropdownEl.style.setProperty("--hp-search-dropdown-width", `${rect.width}px`);
+  }
+  showDropdown() {
+    if (this.dropdownEl) {
+      this.positionDropdown();
+      this.dropdownEl.removeClass("vault-search-dropdown--hidden");
+      this.startViewportTracking();
+    }
+  }
+  closeDropdown() {
+    if (this.dropdownEl) {
+      this.dropdownEl.addClass("vault-search-dropdown--hidden");
+    }
+    this.stopViewportTracking();
+    this.selectedIndex = -1;
+    this.results = [];
+  }
+  /**
+   * Track scroll/resize while the dropdown is open so the position:fixed
+   * dropdown stays glued to the input. Capture-phase scroll catches scrolling
+   * on any ancestor container, not just the window. Listeners are added only
+   * while open and removed on close (and on teardown via this.register).
+   */
+  startViewportTracking() {
+    if (this.viewportTracking) return;
+    this.viewportTracking = true;
+    window.addEventListener("scroll", this.onViewportChange, true);
+    window.addEventListener("resize", this.onViewportChange);
+  }
+  stopViewportTracking() {
+    if (!this.viewportTracking) return;
+    this.viewportTracking = false;
+    window.removeEventListener("scroll", this.onViewportChange, true);
+    window.removeEventListener("resize", this.onViewportChange);
+    cancelAnimationFrame(this.repositionRaf);
+  }
+  renderContentSettings(body, draft) {
+    const cfg = draft;
+    new import_obsidian27.Setting(body).setName("Placeholder text").setDesc("Text shown when the search field is empty.").addText(
+      (t) => t.setPlaceholder("Search vault...").setValue(cfg.placeholder ?? "").onChange((v) => {
+        cfg.placeholder = v;
+      })
+    );
+  }
+};
+
+// src/main.ts
+function registerBlocks() {
+  BlockRegistry.clear();
+  BlockRegistry.register({
+    type: "greeting",
+    displayName: "Greeting",
+    defaultConfig: { name: "World", showTime: true },
+    defaultSize: { w: 1, h: 3 },
+    create: (app, instance, plugin) => new GreetingBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "clock",
+    displayName: "Clock / date",
+    defaultConfig: { showSeconds: false, showDate: true },
+    defaultSize: { w: 1, h: 3 },
+    create: (app, instance, plugin) => new ClockBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "folder-links",
+    displayName: "Quick links",
+    defaultConfig: { _titleLabel: "Quick links", folder: "", links: [] },
+    defaultSize: { w: 1, h: 3 },
+    create: (app, instance, plugin) => new FolderLinksBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "button-grid",
+    displayName: "Button grid",
+    defaultConfig: { _titleLabel: "Button grid", columns: 2, items: [] },
+    defaultSize: { w: 1, h: 5 },
+    autoHeight: true,
+    create: (app, instance, plugin) => new ButtonGridBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "quotes-list",
+    displayName: "Quotes",
+    defaultConfig: { tag: "", _titleLabel: "Quotes", columns: 2, maxItems: 0, quoteStyle: "classic", fontStyle: "default", customFont: "", dailySeed: true, showNoteTitle: true },
+    defaultSize: { w: 2, h: 3 },
+    autoHeight: true,
+    create: (app, instance, plugin) => new QuotesListBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "image-gallery",
+    displayName: "Image gallery",
+    defaultConfig: { folder: "", _titleLabel: "Gallery", columns: 3, maxItems: 0 },
+    defaultSize: { w: 3, h: 3 },
+    autoHeight: true,
+    create: (app, instance, plugin) => new ImageGalleryBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "embedded-note",
+    displayName: "Embedded note",
+    defaultConfig: { filePath: "", showTitle: true },
+    defaultSize: { w: 1, h: 3 },
+    autoHeight: true,
+    create: (app, instance, plugin) => new EmbeddedNoteBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "static-text",
+    displayName: "Static text",
+    defaultConfig: { content: "" },
+    defaultSize: { w: 1, h: 3 },
+    autoHeight: true,
+    create: (app, instance, plugin) => new StaticTextBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "html",
+    displayName: "HTML block",
+    defaultConfig: { html: "" },
+    defaultSize: { w: 1, h: 3 },
+    create: (app, instance, plugin) => new HtmlBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "video-embed",
+    displayName: "Video embed",
+    defaultConfig: { url: "", shuffleOnLoad: false },
+    defaultSize: { w: 2, h: 4 },
+    create: (app, instance, plugin) => new VideoEmbedBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "bookmarks",
+    displayName: "Bookmarks",
+    defaultConfig: { _titleLabel: "Bookmarks", items: [], columns: 2, showDescriptions: true },
+    defaultSize: { w: 2, h: 3 },
+    create: (app, instance, plugin) => new BookmarkBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "recent-files",
+    displayName: "Recent files",
+    defaultConfig: { _titleLabel: "Recent files", maxItems: 10, showTimestamp: true, excludeFolders: "" },
+    defaultSize: { w: 1, h: 4 },
+    create: (app, instance, plugin) => new RecentFilesBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "pomodoro",
+    displayName: "Pomodoro timer",
+    defaultConfig: { _titleLabel: "Pomodoro", workMinutes: 25, breakMinutes: 5, longBreakMinutes: 15, sessionsBeforeLong: 4 },
+    defaultSize: { w: 1, h: 4 },
+    create: (app, instance, plugin) => new PomodoroBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "spacer",
+    displayName: "Spacer",
+    defaultConfig: { _showTitle: false, _showBorder: false, _showBackground: false, _showHeaderAccent: false },
+    defaultSize: { w: 1, h: 2 },
+    create: (app, instance, plugin) => new SpacerBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "random-note",
+    displayName: "Random note",
+    defaultConfig: { _titleLabel: "Random note", tag: "", dailySeed: false, imageProperty: "cover", titleProperty: "title", showImage: true, showPreview: true },
+    defaultSize: { w: 1, h: 4 },
+    autoHeight: true,
+    create: (app, instance, plugin) => new RandomNoteBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "voice-dictation",
+    displayName: "Voice notes",
+    defaultConfig: {
+      folder: "",
+      triggerMode: "tap",
+      provider: "whisper",
+      apiKey: "",
+      model: "",
+      language: "",
+      noteTemplate: ""
+    },
+    defaultSize: { w: 2, h: 3 },
+    create: (app, instance, plugin) => new VoiceDictationBlock(app, instance, plugin)
+  });
+  BlockRegistry.register({
+    type: "vault-search",
+    displayName: "Vault Search",
+    defaultConfig: { placeholder: "Search vault..." },
+    defaultSize: { w: 2, h: 2 },
+    create: (app, instance, plugin) => new VaultSearchBlock(app, instance, plugin)
+  });
+}
+function layoutHasApiKey(layout) {
+  const anyIn = (blocks) => Array.isArray(blocks) && blocks.some(
+    (b) => typeof b?.config?.apiKey === "string" && b.config.apiKey !== ""
+  );
+  return anyIn(layout.blocks) || anyIn(layout.mobileBlocks);
+}
+async function encryptApiKeys(layout, priorOnDisk) {
+  const buildPriorMap = (blocks2) => {
+    const m = /* @__PURE__ */ new Map();
+    if (!Array.isArray(blocks2)) return m;
+    for (const b of blocks2) {
+      const k = b?.config?.apiKey;
+      if (typeof k === "string" && k) m.set(b.id, k);
+    }
+    return m;
+  };
+  const priorDesktop = buildPriorMap(priorOnDisk?.blocks);
+  const priorMobile = buildPriorMap(priorOnDisk?.mobileBlocks);
+  const encryptBlocks = async (blocks2, prior) => Promise.all(blocks2.map(async (b) => {
+    const key = b.config.apiKey;
+    if (typeof key !== "string" || !key || isEncrypted(key)) return b;
+    const r = await encryptStringEx(key);
+    if (!r.ok) {
+      const previously = prior.get(b.id);
+      if (typeof previously === "string" && isEncrypted(previously)) {
+        return { ...b, config: { ...b.config, apiKey: previously } };
+      }
+      if (r.transient) {
+        return { ...b, config: { ...b.config, apiKey: "" } };
+      }
+    }
+    return { ...b, config: { ...b.config, apiKey: r.value } };
+  }));
+  const [blocks, mobileBlocks] = await Promise.all([
+    encryptBlocks(layout.blocks, priorDesktop),
+    encryptBlocks(layout.mobileBlocks, priorMobile)
+  ]);
+  return { ...layout, blocks, mobileBlocks };
+}
+async function decryptApiKeys(layout) {
+  let stable = true;
+  let notifiedTransient = false;
+  let notifiedPermanent = false;
+  const decryptBlocks = async (blocks) => {
+    const out = [];
+    for (const b of blocks) {
+      const key = b.config.apiKey;
+      if (typeof key !== "string" || !key || !isEncrypted(key)) {
+        out.push(b);
+        continue;
+      }
+      const r = await decryptStringEx(key);
+      if (r.ok) {
+        out.push({ ...b, config: { ...b.config, apiKey: r.plaintext } });
+      } else if (r.reason === "no-key" && r.transient) {
+        stable = false;
+        if (!notifiedTransient) {
+          notifiedTransient = true;
+          new import_obsidian28.Notice("Homepage blocks: voice API key could not be loaded right now. It will be retried on next restart.", 1e4);
+        }
+        out.push(b);
+      } else {
+        out.push({ ...b, config: { ...b.config, apiKey: "" } });
+        if (!notifiedPermanent) {
+          notifiedPermanent = true;
+          new import_obsidian28.Notice("Homepage blocks: voice API key could not be decrypted on this device. Please re-enter it in settings.", 1e4);
+        }
+      }
+    }
+    return out;
+  };
+  const desktop = await decryptBlocks(layout.blocks);
+  const mobile = await decryptBlocks(layout.mobileBlocks);
+  layout.blocks = desktop;
+  layout.mobileBlocks = mobile;
+  return { stable };
+}
+var HomepagePlugin = class extends import_obsidian28.Plugin {
+  layout = getDefaultLayout();
+  async onload() {
+    registerBlocks();
+    imageCache.reset();
+    installTagCacheListeners(this);
+    const raw = await this.loadData();
+    const validated = validateLayout(raw, (badRaw) => {
+      void this.stashCorruptedData(badRaw).catch((err) => {
+        console.error("[Homepage Blocks] Failed to stash corrupted data.json", err instanceof Error ? err.message : "unknown error");
+      });
+      new import_obsidian28.Notice("Homepage blocks: data.json was unreadable and has been backed up. Layout has been reset to defaults.", 12e3);
+    }, (droppedCount) => {
+      console.warn(`[Homepage Blocks] ${droppedCount} invalid block(s) were dropped from the layout on load`);
+      void this.stashCorruptedData(raw).catch((err) => {
+        console.error("[Homepage Blocks] Failed to stash layout with dropped blocks", err instanceof Error ? err.message : "unknown error");
+      });
+      new import_obsidian28.Notice(`Homepage blocks: ${droppedCount} invalid block(s) couldn't be loaded and were removed. A backup of your data.json was saved alongside the plugin.`, 12e3);
+    });
+    const decryptResult = await decryptApiKeys(validated);
+    this.layout = validated;
+    if (decryptResult.stable) {
+      await this.saveLayout(this.layout);
+    }
+    this.registerView(VIEW_TYPE, (leaf) => new HomepageView(leaf, this));
+    this.addCommand({
+      id: "open-homepage",
+      name: "Open homepage",
+      callback: () => {
+        void this.openHomepage(this.activeManualOpenMode());
+      }
+    });
+    this.addCommand({
+      id: "toggle-edit-mode",
+      name: "Toggle edit mode",
+      callback: () => {
+        const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE);
+        for (const leaf of leaves) {
+          if (leaf.view instanceof HomepageView) {
+            leaf.view.toggleEditMode();
+          }
+        }
+      }
+    });
+    this.addCommand({
+      id: "add-block",
+      name: "Add block",
+      callback: () => {
+        const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE);
+        for (const leaf of leaves) {
+          if (leaf.view instanceof HomepageView) {
+            leaf.view.openAddBlockModal();
+          }
+        }
+      }
+    });
+    this.addRibbonIcon("home", "Open homepage", () => {
+      void this.openHomepage(this.activeManualOpenMode());
+    });
+    this.addSettingTab(new HomepageSettingTab(this.app, this));
+    let layoutReady = false;
+    this.app.workspace.onLayoutReady(() => {
+      layoutReady = true;
+      if (this.activeOpenOnStartup()) {
+        void this.openHomepage(this.activeOpenMode());
+      }
+    });
+    let emptyCheckTimer = null;
+    let lastEmptyOpen = 0;
+    this.register(() => {
+      if (emptyCheckTimer) window.clearTimeout(emptyCheckTimer);
+    });
+    this.registerEvent(
+      this.app.workspace.on("layout-change", () => {
+        if (!layoutReady || !this.activeOpenWhenEmpty()) return;
+        if (emptyCheckTimer) window.clearTimeout(emptyCheckTimer);
+        emptyCheckTimer = window.setTimeout(() => {
+          emptyCheckTimer = null;
+          if (this.app.workspace.getLeavesOfType(VIEW_TYPE).length > 0) return;
+          if (Date.now() - lastEmptyOpen < 2e3) return;
+          let hasContent = false;
+          this.app.workspace.iterateRootLeaves((leaf) => {
+            if (leaf.view.getViewType() !== "empty") hasContent = true;
+          });
+          if (!hasContent) {
+            lastEmptyOpen = Date.now();
+            void this.openHomepage("retain");
+          }
+        }, 500);
+      })
+    );
+  }
+  onunload() {
+    imageCache.destroy();
+    clearPomodoroState();
+    closeSharedAudioCtx();
+    abortActiveLightbox();
+    _resetDeviceKeyCache();
+  }
+  /**
+   * Write a copy of corrupted data.json content to a sibling file so the user
+   * can manually recover. Only invoked from validateLayout's corruption hook;
+   * silent in normal flow. Uses a single fixed sibling name (no timestamp) to
+   * avoid accumulating files when data.json corrupts repeatedly -- the most
+   * recent bad copy is the one the user typically wants.
+   */
+  async stashCorruptedData(badRaw) {
+    const dir = this.manifest.dir;
+    if (!dir) return;
+    let serialized;
+    if (typeof badRaw === "string") {
+      serialized = badRaw;
+    } else {
+      try {
+        serialized = JSON.stringify(badRaw, null, 2);
+      } catch {
+        serialized = String(badRaw);
+      }
+    }
+    const base = `${dir}/data.json.invalid`;
+    let target = base;
+    try {
+      if (await this.app.vault.adapter.exists(base)) {
+        target = `${base}.${Date.now()}`;
+      }
+    } catch {
+    }
+    await this.app.vault.adapter.write(target, serialized);
+  }
+  // ── Platform-aware layout helpers ─────────────────────────────────
+  isMobileActive() {
+    return import_obsidian28.Platform.isMobile && this.layout.responsiveMode === "separate";
+  }
+  activeBlocks() {
+    return this.isMobileActive() ? this.layout.mobileBlocks : this.layout.blocks;
+  }
+  activeColumns() {
+    return this.isMobileActive() ? this.layout.mobileColumns : this.layout.columns;
+  }
+  activeLayoutPriority() {
+    return this.isMobileActive() ? this.layout.mobileLayoutPriority : this.layout.layoutPriority;
+  }
+  // ── Platform-aware startup helpers ────────────────────────────────
+  //
+  // Gated on `separateStartup` (NOT `responsiveMode`): startup behaviour can
+  // diverge per platform even with a single unified layout. When the gate is
+  // off, every accessor returns the desktop value, so existing vaults behave
+  // exactly as before.
+  isMobileStartupActive() {
+    return mobileStartupActive(this.layout, import_obsidian28.Platform.isMobile);
+  }
+  activeOpenOnStartup() {
+    return resolveStartup(this.layout, import_obsidian28.Platform.isMobile).openOnStartup;
+  }
+  activeOpenMode() {
+    return resolveStartup(this.layout, import_obsidian28.Platform.isMobile).openMode;
+  }
+  activeManualOpenMode() {
+    return resolveStartup(this.layout, import_obsidian28.Platform.isMobile).manualOpenMode;
+  }
+  activeOpenWhenEmpty() {
+    return resolveStartup(this.layout, import_obsidian28.Platform.isMobile).openWhenEmpty;
+  }
+  activePin() {
+    return resolveStartup(this.layout, import_obsidian28.Platform.isMobile).pin;
+  }
+  // ── Persistence ───────────────────────────────────────────────────
+  savePromise = Promise.resolve();
+  saveErrorNotified = false;
+  async saveLayout(layout) {
+    this.layout = layout;
+    this.savePromise = this.savePromise.then(async () => {
+      if (!layoutHasApiKey(layout)) {
+        await this.saveData(layout);
+        return;
+      }
+      let priorOnDisk = null;
+      try {
+        const prior = await this.loadData();
+        if (prior && typeof prior === "object" && !Array.isArray(prior)) {
+          priorOnDisk = prior;
+        }
+      } catch {
+      }
+      const persistable = await encryptApiKeys(layout, priorOnDisk);
+      await this.saveData(persistable);
+    }).then(
+      () => {
+        this.saveErrorNotified = false;
+      },
+      (err) => {
+        const safeMsg = err instanceof Error ? err.message : "unknown error";
+        console.error("[Homepage Blocks] Failed to save layout:", safeMsg);
+        if (!this.saveErrorNotified) {
+          this.saveErrorNotified = true;
+          new import_obsidian28.Notice("Homepage blocks: failed to save layout. Check disk space / permissions.", 8e3);
+        }
+      }
+    );
+    await this.savePromise;
+  }
+  async saveActiveBlocks(blocks) {
+    const next = this.isMobileActive() ? { ...this.layout, mobileBlocks: blocks } : { ...this.layout, blocks };
+    await this.saveLayout(next);
+  }
+  /**
+   * Atomically patch one block's config. The patcher reads `activeBlocks()`
+   * here at call time, but if a positional save (dragstop) is currently
+   * waiting on the savePromise chain it will land BEFORE this read -- so
+   * the snapshot we capture already reflects the dragged positions. Then
+   * saveLayout serializes our update behind it. The previous saveActiveBlocks
+   * pattern read positions inside the rename handler (before the chain),
+   * which lost any dragstop that hadn't yet been awaited.
+   */
+  async updateBlockConfig(id, patch) {
+    try {
+      await this.savePromise;
+    } catch {
+    }
+    const live = this.activeBlocks();
+    if (!live.some((b) => b.id === id)) {
+      console.warn(`[Homepage Blocks] updateBlockConfig: block ${id} no longer exists; config patch dropped`);
+      return;
+    }
+    const next = live.map(
+      (b) => b.id === id ? { ...b, config: { ...b.config, ...patch } } : b
+    );
+    await this.saveActiveBlocks(next);
+  }
+  async openHomepage(mode = "retain") {
+    const { workspace } = this.app;
+    const existing = workspace.getLeavesOfType(VIEW_TYPE);
+    if (existing.length > 0) {
+      await workspace.revealLeaf(existing[0]);
+      if (this.activePin()) existing[0].setPinned(true);
+      return;
+    }
+    let leaf;
+    if (mode === "replace-all") {
+      const toClose = [];
+      workspace.iterateAllLeaves((l) => {
+        if (l.getRoot() === workspace.rootSplit) toClose.push(l);
+      });
+      toClose.forEach((l) => l.detach());
+      leaf = workspace.getLeaf(true);
+    } else if (mode === "replace-last") {
+      leaf = workspace.getLeaf(false);
+    } else {
+      leaf = workspace.getLeaf("tab");
+    }
+    await leaf.setViewState({ type: VIEW_TYPE, active: true });
+    await workspace.revealLeaf(leaf);
+    if (this.activePin()) leaf.setPinned(true);
+  }
+};
+/*! Bundled license information:
+
+gridstack/dist/gridstack.js:
+  (*!
+   * GridStack 12.4.2
+   * https://gridstackjs.com/
+   *
+   * Copyright (c) 2021-2025  Alain Dumesny
+   * see root license https://github.com/gridstack/gridstack.js/tree/master/LICENSE
+   *)
+*/
+
+/* nosourcemap */

@@ -1,0 +1,28 @@
+/* === Callout personnalisé : "block" === */
+.callout[data-callout="block"] {
+  --callout-color: 200, 200, 200;
+  border-left: 4px solid rgb(200, 200, 200); /* ✅ barre blanche à gauche */
+}
+
+/* 2) retirer complètement l'icône (couvre la plupart des thèmes/versions) */
+.callout[data-callout="block"] .callout-icon {
+  display: none !important;
+}
+
+/* Style du titre */
+.callout[data-callout="block"] .callout-title {
+  /* color: rgb(210, 120, 40); */
+}
+
+/* Style du contenu */
+.callout[data-callout="block"] .callout-content {
+  /* background-color: #3b3b3b; */
+}
+
+.callout span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}

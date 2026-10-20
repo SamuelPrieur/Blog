@@ -1,0 +1,153 @@
+{
+  "columns": 3,
+  "layoutPriority": "row",
+  "responsiveMode": "unified",
+  "mobileColumns": 1,
+  "mobileLayoutPriority": "row",
+  "mobileBlocks": [],
+  "openOnStartup": false,
+  "openMode": "retain",
+  "manualOpenMode": "retain",
+  "openWhenEmpty": false,
+  "pin": false,
+  "separateStartup": false,
+  "mobileOpenOnStartup": false,
+  "mobileOpenMode": "retain",
+  "mobileManualOpenMode": "retain",
+  "mobileOpenWhenEmpty": false,
+  "mobilePin": false,
+  "showScrollbar": true,
+  "compactLayout": true,
+  "hoverHighlight": true,
+  "blocks": [
+    {
+      "id": "default-static-text",
+      "type": "static-text",
+      "x": 0,
+      "y": 0,
+      "w": 1,
+      "h": 2,
+      "config": {
+        "content": ""
+      },
+      "collapsed": false,
+      "_expandedH": 2
+    },
+    {
+      "id": "default-clock",
+      "type": "clock",
+      "x": 1,
+      "y": 0,
+      "w": 1,
+      "h": 3,
+      "config": {
+        "showSeconds": false,
+        "showDate": true
+      }
+    },
+    {
+      "id": "default-folder-links",
+      "type": "folder-links",
+      "x": 2,
+      "y": 0,
+      "w": 1,
+      "h": 3,
+      "config": {
+        "_titleLabel": "Quick links",
+        "links": []
+      }
+    },
+    {
+      "id": "default-insight",
+      "type": "quotes-list",
+      "x": 0,
+      "y": 3,
+      "w": 2,
+      "h": 3,
+      "config": {
+        "tag": "",
+        "_titleLabel": "Daily insight",
+        "dailySeed": true
+      }
+    },
+    {
+      "id": "default-button-grid",
+      "type": "button-grid",
+      "x": 2,
+      "y": 3,
+      "w": 1,
+      "h": 5,
+      "config": {
+        "_titleLabel": "Quick actions",
+        "columns": 2,
+        "items": [
+          {
+            "emoji": "📝",
+            "label": "New note"
+          },
+          {
+            "emoji": "📅",
+            "label": "Today"
+          },
+          {
+            "emoji": "⭐",
+            "label": "Favorites"
+          },
+          {
+            "emoji": "🔍",
+            "label": "Search"
+          },
+          {
+            "emoji": "📚",
+            "label": "Library"
+          },
+          {
+            "emoji": "⚙️",
+            "label": "Settings"
+          }
+        ]
+      }
+    },
+    {
+      "id": "default-quotes",
+      "type": "quotes-list",
+      "x": 0,
+      "y": 5,
+      "w": 2,
+      "h": 3,
+      "config": {
+        "tag": "",
+        "_titleLabel": "Quotes",
+        "columns": 2,
+        "maxItems": 0
+      }
+    },
+    {
+      "id": "default-voice-dictation",
+      "type": "voice-dictation",
+      "x": 0,
+      "y": 7,
+      "w": 2,
+      "h": 3,
+      "config": {
+        "folder": "",
+        "triggerMode": "tap",
+        "_titleLabel": "Voice notes"
+      }
+    },
+    {
+      "id": "default-gallery",
+      "type": "image-gallery",
+      "x": 0,
+      "y": 10,
+      "w": 3,
+      "h": 3,
+      "config": {
+        "folder": "",
+        "_titleLabel": "Gallery",
+        "columns": 3,
+        "maxItems": 0
+      }
+    }
+  ]
+}

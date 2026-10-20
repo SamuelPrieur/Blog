@@ -1,24 +1,24 @@
 {
   "main": {
-    "id": "1759b7bfe46ccde3",
+    "id": "e80abf35f388a244",
     "type": "split",
     "children": [
       {
-        "id": "9048ac7bf01d0e4c",
+        "id": "64ed05ed4f58d798",
         "type": "tabs",
         "children": [
           {
-            "id": "5e7e953a1f2166d3",
+            "id": "4781d1d56929e07e",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "posts/Article Court.md",
+                "file": "posts/guide-styles-markdown.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Article Court"
+              "title": "guide-styles-markdown"
             }
           }
         ]
@@ -27,15 +27,15 @@
     "direction": "vertical"
   },
   "left": {
-    "id": "42fbba255feb282d",
+    "id": "a9b97d3be47ac6cc",
     "type": "split",
     "children": [
       {
-        "id": "9de91abd6a738e8e",
+        "id": "e935007bc8fddc0e",
         "type": "tabs",
         "children": [
           {
-            "id": "b68be2a5f5e56ba5",
+            "id": "fb9d90e206761712",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -50,7 +50,7 @@
             }
           },
           {
-            "id": "6e58479d903b131f",
+            "id": "3877b36cce9ea795",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -67,7 +67,7 @@
             }
           },
           {
-            "id": "b87c4aeb0210808a",
+            "id": "8975963224bfe2d1",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
@@ -86,20 +86,20 @@
     "width": 300
   },
   "right": {
-    "id": "585f83303ac276b7",
+    "id": "44f6e4cb98e441aa",
     "type": "split",
     "children": [
       {
-        "id": "8452ba490a6ee225",
+        "id": "cc56bb101abb2fe2",
         "type": "tabs",
         "children": [
           {
-            "id": "b1228650643d5339",
+            "id": "1a5a52c01f1b8143",
             "type": "leaf",
             "state": {
               "type": "backlink",
               "state": {
-                "file": "posts/Article Court.md",
+                "file": "TryHackMe temp.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -113,49 +113,12 @@
             }
           },
           {
-            "id": "816dd277146469a1",
-            "type": "leaf",
-            "state": {
-              "type": "outline",
-              "state": {
-                "file": "posts/Premier Article.md",
-                "followCursor": false,
-                "showSearch": false,
-                "searchQuery": ""
-              },
-              "icon": "lucide-list",
-              "title": "Plan"
-            }
-          },
-          {
-            "id": "2e48c4ba19717f12",
-            "type": "leaf",
-            "state": {
-              "type": "git-view",
-              "state": {},
-              "icon": "git-pull-request",
-              "title": "Source Control"
-            }
-          },
-          {
-            "id": "19270c1fafbc195c",
-            "type": "leaf",
-            "state": {
-              "type": "file-properties",
-              "state": {
-                "file": "posts/Article Court.md"
-              },
-              "icon": "lucide-info",
-              "title": "Propriétés du fichier"
-            }
-          },
-          {
-            "id": "d3a09a657318545c",
+            "id": "7fbb2b8a5c7ed046",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "posts/Premier Article.md",
+                "file": "TryHackMe temp.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -164,7 +127,7 @@
             }
           },
           {
-            "id": "196e34313414126c",
+            "id": "efa8b58364326192",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -179,21 +142,42 @@
             }
           },
           {
-            "id": "60399dd894dd1979",
+            "id": "0e70b3a5dcf42587",
             "type": "leaf",
             "state": {
-              "type": "all-properties",
+              "type": "outline",
               "state": {
-                "sortOrder": "frequency",
+                "file": "TryHackMe temp.md",
+                "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
-              "icon": "lucide-archive",
-              "title": "Toutes les propriétés"
+              "icon": "lucide-list",
+              "title": "Plan"
+            }
+          },
+          {
+            "id": "439a9ec35ca4a259",
+            "type": "leaf",
+            "state": {
+              "type": "calendar",
+              "state": {},
+              "icon": "calendar-with-checkmark",
+              "title": "Calendar"
+            }
+          },
+          {
+            "id": "5ccae245cd2e8d73",
+            "type": "leaf",
+            "state": {
+              "type": "git-view",
+              "state": {},
+              "icon": "git-pull-request",
+              "title": "Source Control"
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 5
       }
     ],
     "direction": "horizontal",
@@ -201,29 +185,52 @@
   },
   "left-ribbon": {
     "hiddenItems": {
-      "canvas:Créer un nouveau canvas": false,
       "switcher:Ouvrir le sélecteur rapide": false,
       "graph:Ouvrir la vue graphique": false,
+      "canvas:Créer un nouveau canvas": false,
       "daily-notes:Ouvrir la note quotidienne": false,
       "templates:Insérer le modèle": false,
       "command-palette:Ouvrir la palette de commandes": false,
+      "audio-recorder:Démarrer/Arrêter l'enregistrement": false,
       "bases:Créer une nouvelle base": false,
+      "obsidian-excalidraw-plugin:New drawing": false,
+      "obsidian-book-search-plugin:Create new book note": false,
+      "file-cleaner-redux:Clean files": false,
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "2e48c4ba19717f12",
+  "active": "4781d1d56929e07e",
   "lastOpenFiles": [
-    "posts/guide-styles-markdown.md",
     "posts/Article Court.md",
-    "2026-10-13.md",
+    "posts/guide-styles-markdown.md",
     "posts/dark-mode.md",
     "posts/astuces-css.md",
     "posts/animations-gsap.md",
-    "posts/setup-react-vite.md",
-    "posts/Premier Article.md",
-    "posts/Premier Article 1.md",
-    "Blog",
-    "Bienvenue.md",
-    "posts"
+    "Script Backup/AD Copy.md",
+    "Script Backup/AD User Creation.md",
+    "Script Backup/Script Backup.md",
+    "Script Backup/Migration AD ISE.md",
+    "Script Backup/Migration AD.md",
+    "WIP Article/Injection noSQL.md",
+    "Script Backup",
+    "WIP Article/Injection SQL.md",
+    "WIP Article/Différence entre l'injection SQL et noSQL.md",
+    "WIP Article",
+    "Tutoriel/Déploiement nouveau PC.md",
+    "Linux/Classic command bash.md",
+    "Linux/Home Project.md",
+    "Linux/Linux.md",
+    "Notion/ISO 27005.md",
+    "Untitled.canvas",
+    "TryHackMe temp.md",
+    "Theme.md",
+    "Quick note.md",
+    "Mémoire modif.md",
+    "Windows/WSUS.md",
+    "Windows/Windows.md",
+    "Windows/Powershell.md",
+    "Windows/Microsoft Azure.md",
+    "Attachements/Pasted image 20261012103134.png",
+    "Attachements/Pasted image 20261012102043.png"
   ]
 }

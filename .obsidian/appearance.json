@@ -1,1 +1,9 @@
-{}
+{
+  "cssTheme": "Minimal",
+  "theme": "obsidian",
+  "accentColor": "#da4b0b",
+  "enabledCssSnippets": [],
+  "interfaceFontFamily": "",
+  "textFontFamily": "",
+  "baseFontSize": 15
+}

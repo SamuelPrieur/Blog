@@ -1,1 +1,16 @@
-{}
+{
+  "promptDelete": false,
+  "alwaysUpdateLinks": true,
+  "attachmentFolderPath": "Attachements",
+  "newFileLocation": "current",
+  "tabSize": 4,
+  "readableLineLength": true,
+  "pdfExportSettings": {
+    "includeName": false,
+    "pageSize": "A4",
+    "landscape": false,
+    "margin": "0",
+    "downscalePercent": 100
+  },
+  "showInlineTitle": true
+}

@@ -1,0 +1,72 @@
+/* --- Style des Tableaux inspiré de Lumo/Proton --- */
+
+/* Conteneur principal du tableau */
+.markdown-rendered .table-wrapper {
+  border-radius: 8px;
+  border: solid 1px #373737;
+}
+
+/* Conteneur principal du tableau */
+.markdown-rendered {
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+
+/* Conteneur principal du tableau */
+.markdown-rendered table {
+  border-collapse: separate; /* Nécessaire pour border-radius */
+  border-spacing: 0;
+  font-size: 0.95rem;
+}
+
+/* En-têtes du tableau */
+.markdown-rendered tr th {
+  background-color: #242424 !important; /* Gris foncé subtil */
+  letter-spacing: 0.02em;
+  border-radius: 0 !important;
+}
+
+/* Effet de survol sur les lignes */
+.markdown-rendered tr:hover td div {
+  background-color: #202020 !important; /* Légère illumination au survol */
+  transition: background-color 0.2s ease;
+}
+
+/* Style spécifique pour les lignes paires (optionnel, pour l'alternance) */
+.markdown-rendered tr:nth-child(even) td div {
+  background-color: #1a1a1a;
+}
+
+/* Style spécifique pour les lignes paires (optionnel, pour l'alternance) */
+.markdown-rendered tr td .table-cell-wrapper {
+  padding: var(--table-cell-padding) !important;
+}
+
+/* Supprimer l'alternance si vous préférez un look uniforme, décommentez ci-dessous */
+/* .markdown-rendered tr:nth-child(even) td { background-color: #1e1e1e; } */
+
+/* Liens à l'intérieur des cellules */
+.markdown-rendered td a {
+  color: #8ab4f8; /* Bleu Proton/Lumo typique */
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.markdown-rendered td a:hover {
+  text-decoration: underline;
+  color: #a3c6ff;
+}
+
+/* Boutons ou éléments interactifs dans les tableaux (si présents) */
+.markdown-rendered td button,
+.markdown-rendered td .btn {
+  background-color: #3a3a3a;
+  color: white;
+  border: 1px solid #4a4a4a;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.markdown-rendered td button:hover {
+  background-color: #4a4a4a;
+}

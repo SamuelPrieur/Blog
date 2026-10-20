@@ -2,6 +2,9 @@
 title: Showcase Markdown du blog
 date: 2026-10-14
 description: Guide des styles Markdown compatibles avec Obsidian et ReactMarkdown.
+tags:
+  - design
+  - astuces
 ---
 
 # Showcase Markdown du blog
